@@ -723,13 +723,18 @@ function Ink({ active, payload, label, variable, trace }) {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap');
 
+html,body,#root{margin:0;padding:0;min-height:100%;background:#0E1728}
+body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+
 .wx{
   --night:#0E1728; --panel:#16223A; --panel2:#1B2942; --rule:#2A3B5A; --rule2:#22314D;
   --text:#E9EEF7; --muted:#8FA1BC; --dim:#B7C4D8;
   --sky:#5AB3F0; --warm:#F5A24B; --mint:#6FD99A; --rose:#F27878;
-  position:relative;min-height:100%;background:var(--night);color:var(--text);
+  position:relative;min-height:100vh;background:var(--night);color:var(--text);
   font-family:'IBM Plex Sans Hebrew',system-ui,sans-serif;font-weight:400;line-height:1.6;
-  font-variant-numeric:tabular-nums;padding:0 18px 60px;overflow:hidden;
+  font-variant-numeric:tabular-nums;overflow:hidden;
+  padding:env(safe-area-inset-top) max(18px,env(safe-area-inset-right))
+          calc(60px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
 }
 .wx *{box-sizing:border-box}
 .wx h1,.wx h2,.wx h3{margin:0;letter-spacing:-.02em;line-height:1.15}
@@ -919,7 +924,8 @@ const CSS = `
   font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.75}
 
 @media (max-width:760px){
-  .wx{padding:0 12px 48px}
+  .wx{padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right))
+      calc(48px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
   .head{padding-top:28px;gap:20px}
   .head-r{flex:1 1 100%}
   .wrow{gap:3px}
