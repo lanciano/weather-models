@@ -428,11 +428,13 @@ function Weather({ lang, setLang }) {
       <style>{CSS}</style>
       <div className="sky" />
 
-      <div className="topbar"><LangSwitch lang={lang} setLang={setLang} /></div>
+      <div className="topbar">
+        <div className="eyebrow">{t("eyebrow")}</div>
+        <LangSwitch lang={lang} setLang={setLang} />
+      </div>
 
       <header className="head">
         <div className="head-l">
-          <div className="eyebrow">{t("eyebrow")}</div>
           <h1>{t("title")}</h1>
           <p className="dek"><Rich text={t("dek", { place: place.name })} /></p>
         </div>
@@ -1074,8 +1076,8 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .sub b{color:var(--dim)}
 
 /* language */
-.topbar{position:relative;z-index:40;max-width:1120px;margin:0 auto;padding-top:14px;
-  display:flex;direction:ltr;justify-content:flex-start}
+.topbar{position:relative;z-index:40;max-width:1120px;margin:0 auto;padding-top:18px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px}
 .lang{position:relative}
 .lang-btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
   border:1px solid var(--rule);border-radius:999px;padding:6px 14px 6px 11px;
@@ -1083,7 +1085,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .lang-btn:hover{border-color:#42598A;color:var(--text)}
 .lang-ic{width:17px;height:17px;display:block;color:var(--sky);flex:none}
 .lang-ic svg{width:100%;height:100%;display:block}
-.lang-menu{position:absolute;z-index:50;inset-inline-start:0;top:100%;margin:7px 0 0;padding:5px;
+.lang-menu{position:absolute;z-index:50;inset-inline-end:0;top:100%;margin:7px 0 0;padding:5px;
   list-style:none;min-width:186px;background:var(--panel2);border:1px solid var(--rule);
   border-radius:11px;box-shadow:0 16px 38px rgba(0,0,0,.5)}
 .lang-menu button{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
@@ -1102,9 +1104,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .utog button.on{background:var(--rule);color:var(--text);font-weight:600}
 
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
-  max-width:1120px;margin:0 auto;padding:26px 0 26px;border-bottom:1px solid var(--rule)}
+  max-width:1120px;margin:0 auto;padding:16px 0 26px;border-bottom:1px solid var(--rule)}
 .head-l{flex:1 1 400px;min-width:0}
-.eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--sky);margin-bottom:12px;font-weight:500}
+.eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--sky);font-weight:500;line-height:1.4}
 .head h1{font-size:clamp(30px,5.5vw,50px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
 .head-r{flex:0 1 300px;position:relative}
@@ -1321,8 +1323,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 @media (max-width:760px){
   .wx{padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right))
       calc(48px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
-  .topbar{padding-top:10px}
-  .head{padding-top:20px;gap:20px}
+  .topbar{padding-top:12px;gap:10px}
+  .eyebrow{font-size:10.5px;letter-spacing:.16em}
+  .head{padding-top:12px;gap:20px}
   .head-r{flex:1 1 100%}
   .wrow{gap:3px}
   .wcell{padding:8px 1px 7px;border-radius:9px;gap:2px}
