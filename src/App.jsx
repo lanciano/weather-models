@@ -3,37 +3,25 @@ import {
   ComposedChart, Line, Area, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, ReferenceArea,
 } from "recharts";
+import { LANGS, LANG_BY, detectLang, createT, I18nCtx, useI18n, makeDates } from "./i18n";
 
 /* ═══════════════════════ models ═══════════════════════ */
+/* טקסט תיאורי חי ב-i18n.js — כאן רק מה שלא תלוי שפה */
 
 const MODELS = [
-  { id: "ecmwf_ifs025", short: "ECMWF", ink: "#5AB3F0", name: "IFS", agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "9 ק״מ · מוגש בגריד 25 ק״מ", runs: "00 · 06 · 12 · 18 UTC",
-    note: "המודל הגלובלי המדויק ביותר שקיים, כבר יותר מעשור ברציפות. אם מודל אחר סותר אותו, ברוב המקרים הטעות אצל האחר. חלש יותר בפירוט מקומי — הוא מכוון לתמונה הגדולה ולטווח של 3–10 ימים." },
-  { id: "gfs_seamless", short: "GFS", ink: "#F5A24B", name: "Global Forecast System", agency: "NOAA / NCEP", home: "ארצות הברית", grid: "13 ק״מ · עד 16 ימים", runs: "00 · 06 · 12 · 18 UTC",
-    note: "המודל הפתוח והנפוץ בעולם — רוב אפליקציות מזג האוויר החינמיות רצות עליו. נוטה להגזים בכמויות משקעים ולהמציא סופות שלא יקרו בטווח הארוך. אם רק הוא צועק גשם, קח בערבון מוגבל." },
-  { id: "icon_seamless", short: "ICON", ink: "#6FD99A", name: "ICON", agency: "DWD — השירות המטאורולוגי הגרמני", home: "אופנבך, גרמניה", grid: "13 ק״מ גלובלי · 7 ק״מ אירופה", runs: "00 · 06 · 12 · 18 UTC",
-    note: "גריד מבוסס איקוסהדרון במקום רשת קווי אורך ורוחב, מה שנותן רזולוציה אחידה על כל כדור הארץ. חזק במיוחד באגן הים התיכון, ולכן רלוונטי לישראל יותר מרוב הגלובליים." },
-  { id: "ukmo_seamless", short: "UKMO", ink: "#C58BF0", name: "Unified Model", agency: "Met Office", home: "אקסטר, אנגליה", grid: "10 ק״מ", runs: "00 · 06 · 12 · 18 UTC",
-    note: "אותו קוד רץ בכל הסקאלות, מתחזית עולמית ועד תחזית שכונתית — מכאן השם. שמרני יחסית: כשהוא כן חוזה גשם, שווה להקשיב." },
-  { id: "gem_seamless", short: "GEM", ink: "#F27878", name: "GEM", agency: "Environment Canada", home: "מונטריאול, קנדה", grid: "15 ק״מ", runs: "00 · 12 UTC",
-    note: "הקול השלישי בחדר. כשהוא מסכים עם ECMWF ו-GFS זה מחזק מאוד את התחזית, וכשהוא בורח לכיוון אחר זה סימן טוב שהמצב לא יציב." },
-  { id: "meteofrance_seamless", short: "ARPEGE", ink: "#4FD8D0", name: "ARPEGE / AROME", agency: "Météo-France", home: "טולוז, צרפת", grid: "11 ק״מ · 1.3 ק״מ מעל צרפת", runs: "00 · 06 · 12 · 18 UTC",
-    note: "בנוי במשותף עם ECMWF ומתמחה בים התיכון המערבי. מטפל יפה בסופות שמתפתחות מעל ים חם — בדיוק הסוג שמגיע אלינו בחורף." },
-  { id: "jma_seamless", short: "JMA", ink: "#F0D45E", name: "GSM", agency: "הסוכנות המטאורולוגית היפנית", home: "טוקיו, יפן", grid: "20 ק״מ", runs: "00 · 06 · 12 · 18 UTC",
-    note: "מכויל סביב מונסונים וטייפונים באסיה. מחוץ לאזור שלו הוא לא הכי חד, אבל מוסיף זווית שונה לגמרי ולכן שימושי כבדיקת שפיות." },
+  { id: "ecmwf_ifs025",         short: "ECMWF",  ink: "#5AB3F0", name: "IFS",                    runs: "00 · 06 · 12 · 18 UTC" },
+  { id: "gfs_seamless",         short: "GFS",    ink: "#F5A24B", name: "Global Forecast System", runs: "00 · 06 · 12 · 18 UTC" },
+  { id: "icon_seamless",        short: "ICON",   ink: "#6FD99A", name: "ICON",                   runs: "00 · 06 · 12 · 18 UTC" },
+  { id: "ukmo_seamless",        short: "UKMO",   ink: "#C58BF0", name: "Unified Model",          runs: "00 · 06 · 12 · 18 UTC" },
+  { id: "gem_seamless",         short: "GEM",    ink: "#F27878", name: "GEM",                    runs: "00 · 12 UTC" },
+  { id: "meteofrance_seamless", short: "ARPEGE", ink: "#4FD8D0", name: "ARPEGE / AROME",         runs: "00 · 06 · 12 · 18 UTC" },
+  { id: "jma_seamless",         short: "JMA",    ink: "#F0D45E", name: "GSM",                    runs: "00 · 06 · 12 · 18 UTC" },
 ];
 
 const M = Object.fromEntries(MODELS.map((m) => [m.id, m]));
 const DEFAULT_ON = ["ecmwf_ifs025", "gfs_seamless", "icon_seamless", "ukmo_seamless", "gem_seamless"];
-
-const VARS = {
-  precipitation: { label: "משקעים", unit: "מ״מ/ש׳" },
-  temperature_2m: { label: "טמפרטורה", unit: "°C" },
-  wind_speed_10m: { label: "רוח", unit: "קמ״ש" },
-};
-
-const DAYS_HE = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
-const DAYS_S = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+const VAR_KEYS = { precipitation: "varPrecip", temperature_2m: "varTemp", wind_speed_10m: "varWind" };
+const VAR_UNITS = { precipitation: "unitMmH", temperature_2m: "unitC", wind_speed_10m: "unitKmh" };
 
 /* ═══════════════════════ icons ═══════════════════════ */
 
@@ -82,7 +70,14 @@ const ICONS = {
     </svg>
   ),
 };
-const LABEL = { clear: "בהיר", partly: "מעונן חלקית", cloudy: "מעונן", drizzle: "טפטוף", rain: "גשם", storm: "גשם כבד", snow: "שלג" };
+
+const Globe = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3Z" />
+  </svg>
+);
 
 function pickIcon(med, cloud, tmax) {
   if (med >= 0.5 && typeof tmax === "number" && tmax <= 2) return "snow";
@@ -95,7 +90,7 @@ function pickIcon(med, cloud, tmax) {
   return "clear";
 }
 
-/* ═══════════════════════ math ═══════════════════════ */
+/* ═══════════════════════ helpers ═══════════════════════ */
 
 const pick = (o, base, m) => { if (!o) return null; const v = o[`${base}_${m}`]; return v !== undefined ? v : o[base]; };
 const nums = (a) => a.filter((v) => typeof v === "number" && !Number.isNaN(v));
@@ -104,18 +99,28 @@ const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
 const median = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const isoDate = (d) => d.toISOString().slice(0, 10);
 
+/** מרנדר **מודגש** בתוך מחרוזת מתורגמת */
+function Rich({ text }) {
+  const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
+  return <>{parts.map((p, i) =>
+    p.startsWith("**") && p.endsWith("**")
+      ? <b key={i}>{p.slice(2, -2)}</b>
+      : <React.Fragment key={i}>{p}</React.Fragment>
+  )}</>;
+}
+
 function agreement(values) {
   const v = nums(values);
   if (!v.length) return null;
   const lo = Math.min(...v), hi = Math.max(...v);
   const wet = v.filter((x) => x >= 0.5).length, spread = hi - lo;
-  let level, text;
-  if (hi < 0.5) { level = "dry"; text = "כולם: יבש"; }
-  else if (wet === 0) { level = "dry"; text = "כמעט כולם יבשים"; }
-  else if (wet === v.length && spread / Math.max(hi, 0.1) < 0.45) { level = "high"; text = "הסכמה גבוהה"; }
-  else if (spread / Math.max(hi, 0.1) > 0.7 || wet / v.length < 0.6) { level = "split"; text = "מחלוקת"; }
-  else { level = "mid"; text = "הסכמה חלקית"; }
-  return { lo, hi, spread, wet, total: v.length, level, text, med: median(v) };
+  let level, key;
+  if (hi < 0.5) { level = "dry"; key = "agAllDry"; }
+  else if (wet === 0) { level = "dry"; key = "agMostDry"; }
+  else if (wet === v.length && spread / Math.max(hi, 0.1) < 0.45) { level = "high"; key = "agHigh"; }
+  else if (spread / Math.max(hi, 0.1) > 0.7 || wet / v.length < 0.6) { level = "split"; key = "agSplit"; }
+  else { level = "mid"; key = "agPartial"; }
+  return { lo, hi, spread, wet, total: v.length, level, key, med: median(v) };
 }
 
 function outliers(pairs) {
@@ -123,8 +128,7 @@ function outliers(pairs) {
   if (v.length < 3) return [];
   const med = median(v.map((p) => p.v)), out = [];
   for (const p of v) {
-    const d = Math.abs(p.v - med);
-    if (d < 3) continue;
+    if (Math.abs(p.v - med) < 3) continue;
     if (med < 0.4 && p.v >= 3) out.push({ ...p, dir: "wet", med });
     else if (med >= 0.4 && p.v >= med * 2.5) out.push({ ...p, dir: "wet", med });
     else if (med >= 5 && p.v <= med * 0.3) out.push({ ...p, dir: "dry", med });
@@ -132,9 +136,9 @@ function outliers(pairs) {
   return out;
 }
 
-/* ═══════════════════════ app ═══════════════════════ */
+/* ═══════════════════════ root ═══════════════════════ */
 
-const FALLBACK = { name: "תל אביב-יפו", region: "ישראל", lat: 32.0853, lon: 34.7818 };
+const FALLBACK = { name: "Tel Aviv-Yafo", region: "Israel", lat: 32.0853, lon: 34.7818 };
 const loadSaved = () => {
   try {
     const s = JSON.parse(localStorage.getItem("wx-place"));
@@ -143,6 +147,64 @@ const loadSaved = () => {
 };
 
 export default function App() {
+  const [lang, setLang] = useState(detectLang);
+  const meta = LANG_BY[lang] || LANG_BY.en;
+  const ctx = useMemo(() => ({
+    lang, t: createT(lang), dir: meta.dir, locale: meta.locale, dates: makeDates(meta.locale),
+  }), [lang, meta]);
+
+  useEffect(() => { try { localStorage.setItem("wx-lang", lang); } catch { /* private */ } }, [lang]);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = meta.dir;
+  }, [lang, meta.dir]);
+
+  return (
+    <I18nCtx.Provider value={ctx}>
+      <Weather lang={lang} setLang={setLang} />
+    </I18nCtx.Provider>
+  );
+}
+
+/* ═══════════════════════ language switch ═══════════════════════ */
+
+function LangSwitch({ lang, setLang }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  return (
+    <div className="lang" ref={ref}>
+      <button className="lang-btn" onClick={() => setOpen(!open)} aria-label={t("langLabel")} aria-expanded={open}>
+        <span className="lang-ic"><Globe /></span>
+        <span className="lang-cur">{LANG_BY[lang].native}</span>
+      </button>
+      {open && (
+        <ul className="lang-menu">
+          {LANGS.map((l) => (
+            <li key={l.code}>
+              <button className={l.code === lang ? "on" : ""} dir={l.dir}
+                onClick={() => { setLang(l.code); setOpen(false); }}>
+                <span className="lm-native">{l.native}</span>
+                <span className="lm-en">{l.english}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════ app ═══════════════════════ */
+
+function Weather({ lang, setLang }) {
+  const { t, dir, dates } = useI18n();
+
   const [place, setPlace] = useState(() => loadSaved() || FALLBACK);
   const [locating, setLocating] = useState(false);
   const [query, setQuery] = useState("");
@@ -160,6 +222,11 @@ export default function App() {
     () => typeof window !== "undefined" && window.matchMedia("(max-width:760px)").matches
   );
 
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const boxRef = useRef(null);
+
   useEffect(() => {
     const mq = window.matchMedia("(max-width:760px)");
     const h = (e) => setNarrow(e.matches);
@@ -167,39 +234,31 @@ export default function App() {
     return () => mq.removeEventListener("change", h);
   }, []);
 
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const boxRef = useRef(null);
-
-  /* לזכור את המקום האחרון */
   useEffect(() => {
-    try { localStorage.setItem("wx-place", JSON.stringify(place)); } catch { /* מצב פרטי */ }
+    try { localStorage.setItem("wx-place", JSON.stringify(place)); } catch { /* private */ }
   }, [place]);
 
-  /* לאתר את המיקום הנוכחי */
   const locate = useCallback(() => {
     if (!navigator.geolocation) return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const lat = pos.coords.latitude, lon = pos.coords.longitude;
-        let name = "המיקום שלי", region = "";
+        let name = t("myLocation"), region = "";
         try {
-          const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=he`);
+          const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${LANG_BY[lang].geo}`);
           const j = await r.json();
           name = j.city || j.locality || j.principalSubdivision || name;
           region = [j.principalSubdivision, j.countryName].filter(Boolean).join(", ");
-        } catch { /* בלי שם, רק קואורדינטות */ }
+        } catch { /* coords only */ }
         setPlace({ name, region, lat, lon });
         setDaySel(0); setScope("week"); setLocating(false);
       },
       () => setLocating(false),
       { timeout: 8000, maximumAge: 600000 }
     );
-  }, []);
+  }, [lang, t]);
 
-  /* בכניסה ראשונה בלבד — לנסות לזהות איפה אנחנו */
   useEffect(() => { if (!loadSaved()) locate(); }, [locate]);
 
   const load = useCallback(async () => {
@@ -212,11 +271,11 @@ export default function App() {
       `&models=${active.join(",")}&timezone=auto&forecast_days=7`;
     try {
       const r = await fetch(url);
-      if (!r.ok) throw new Error(`השרת החזיר ${r.status}`);
+      if (!r.ok) throw new Error(`${r.status}`);
       const j = await r.json();
-      if (j.error) throw new Error(j.reason || "בקשה לא תקינה");
+      if (j.error) throw new Error(j.reason || "bad request");
       setData(j);
-    } catch (e) { setError(e.message || "לא הצלחתי להביא נתונים"); setData(null); }
+    } catch (e) { setError(e.message || "error"); setData(null); }
     finally { setLoading(false); }
   }, [place, active]);
 
@@ -225,17 +284,17 @@ export default function App() {
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return; }
     let dead = false;
-    const t = setTimeout(async () => {
+    const tm = setTimeout(async () => {
       setSearching(true);
       try {
-        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=he&format=json`);
+        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=${LANG_BY[lang].geo}&format=json`);
         const j = await r.json();
         if (!dead) setResults(j.results || []);
       } catch { if (!dead) setResults([]); }
       finally { if (!dead) setSearching(false); }
     }, 350);
-    return () => { dead = true; clearTimeout(t); };
-  }, [query]);
+    return () => { dead = true; clearTimeout(tm); };
+  }, [query, lang]);
 
   useEffect(() => {
     const h = (e) => { if (boxRef.current && !boxRef.current.contains(e.target)) setResults([]); };
@@ -283,33 +342,31 @@ export default function App() {
       }
       const tMax = tmax.length ? mean(tmax) : null;
       return {
-        i, iso, dow: DAYS_HE[d.getDay()], dowS: DAYS_S[d.getDay()], date: `${d.getDate()}.${d.getMonth() + 1}`,
+        i, iso, dow: dates.weekday(d), dowS: dates.weekdayShort(d), date: dates.dayMonth(d),
         rain, pairs, ag, tmax: tMax, tmin: tmin.length ? mean(tmin) : null,
         wind: wind.length ? Math.max(...wind) : null,
         icon: pickIcon(ag?.med ?? 0, cc.length ? mean(cc) : null, tMax),
         outs: outliers(pairs),
       };
     });
-  }, [data, active]);
+  }, [data, active, dates]);
 
   const sel = days[daySel];
   const maxWeekRain = useMemo(() => Math.max(1, ...days.map((d) => d.ag?.hi || 0)), [days]);
 
-  /* שעה־שעה ליום הנבחר: חציון המודלים, התרחיש הגשום, וכמה מסכימים */
   const hourly24 = useMemo(() => {
     if (!data?.hourly?.time) return [];
     const out = [];
     for (let i = daySel * 24; i < (daySel + 1) * 24 && i < data.hourly.time.length; i++) {
       const vals = nums(active.map((m) => pick(data.hourly, "precipitation", m)?.[i]));
       const temps = nums(active.map((m) => pick(data.hourly, "temperature_2m", m)?.[i]));
-      const t = new Date(data.hourly.time[i]);
+      const d = new Date(data.hourly.time[i]);
       const med = vals.length ? median(vals) : 0;
       const max = vals.length ? Math.max(...vals) : 0;
       out.push({
-        i, h: t.getHours(), label: `${String(t.getHours()).padStart(2, "0")}:00`,
+        i, h: d.getHours(), label: `${String(d.getHours()).padStart(2, "0")}:00`,
         med, max, extra: Math.max(0, max - med),
-        wet: vals.filter((v) => v >= 0.1).length,
-        total: vals.length,
+        wet: vals.filter((v) => v >= 0.1).length, total: vals.length,
         temp: temps.length ? median(temps) : null,
       });
     }
@@ -323,8 +380,7 @@ export default function App() {
     return Math.ceil(v / step) * step;
   }, [hourly24]);
   const peak = useMemo(
-    () => hourly24.reduce((a, b) => (b.med > (a?.med ?? -1) ? b : a), null),
-    [hourly24]
+    () => hourly24.reduce((a, b) => (b.med > (a?.med ?? -1) ? b : a), null), [hourly24]
   );
 
   const weekTotals = useMemo(() => {
@@ -339,28 +395,28 @@ export default function App() {
     return v.length ? Math.max(1, Math.ceil(Math.max(...v) * 1.15 * 10) / 10) : 1;
   }, [shown, active, variable]);
 
-  const V = VARS[variable];
   const PAD_L = 44, PAD_R = 10;
+  const unit = t(VAR_UNITS[variable]);
+  const mm = t("unitMm");
 
   return (
-    <div dir="rtl" className="wx">
+    <div dir={dir} className="wx">
       <style>{CSS}</style>
       <div className="sky" />
 
+      <div className="topbar"><LangSwitch lang={lang} setLang={setLang} /></div>
+
       <header className="head">
         <div className="head-l">
-          <div className="eyebrow">תחזית רב־מודלית</div>
-          <h1>חיזוי מזג אוויר חכם</h1>
-          <p className="dek">
-            שבעה מכונים לאומיים מריצים סופר־מחשבים על אותה אטמוספירה ומגיעים לתשובות שונות.
-            זה מה שהם אומרים על <b>{place.name}</b> — ומי מהם צדק כאן בעבר.
-          </p>
+          <div className="eyebrow">{t("eyebrow")}</div>
+          <h1>{t("title")}</h1>
+          <p className="dek"><Rich text={t("dek", { place: place.name })} /></p>
         </div>
         <div className="head-r" ref={boxRef}>
-          <label className="lab" htmlFor="q">חיפוש מקום</label>
+          <label className="lab" htmlFor="q">{t("searchLabel")}</label>
           <input id="q" className="srch" value={query} autoComplete="off"
-            placeholder="תל אביב, ירושלים, רייקיאוויק…" onChange={(e) => setQuery(e.target.value)} />
-          {searching && <div className="hint">מחפש…</div>}
+            placeholder={t("searchPlaceholder")} onChange={(e) => setQuery(e.target.value)} />
+          {searching && <div className="hint">{t("searching")}</div>}
           {!!results.length && (
             <ul className="res">
               {results.map((r) => (
@@ -379,7 +435,7 @@ export default function App() {
           <div className="coords">
             {place.region && <>{place.region} · </>}{place.lat.toFixed(3)}°, {place.lon.toFixed(3)}°
             <button className="geo" onClick={locate} disabled={locating}>
-              {locating ? "מאתר…" : "המיקום שלי"}
+              {locating ? t("locating") : t("myLocation")}
             </button>
           </div>
         </div>
@@ -387,8 +443,8 @@ export default function App() {
 
       {/* ── week strip ── */}
       <section className="week">
-        {loading && <div className="wload">טוען תחזיות…</div>}
-        {error && <div className="werr">{error} <button onClick={load}>נסה שוב</button></div>}
+        {loading && <div className="wload">{t("loading")}</div>}
+        {error && <div className="werr">{error} <button onClick={load}>{t("retry")}</button></div>}
 
         <div className="wrow">
           {days.map((d) => {
@@ -401,7 +457,7 @@ export default function App() {
                 <span className="w-ic"><Ic /></span>
                 <span className="w-t"><b>{fmt(d.tmax, 0)}°</b><em>{fmt(d.tmin, 0)}°</em></span>
                 <span className={`w-mm ${d.ag && d.ag.med >= 0.1 ? "wet" : ""}`}>
-                  {d.ag && d.ag.med >= 0.1 ? `${fmt(d.ag.med)} מ״מ` : "יבש"}
+                  {d.ag && d.ag.med >= 0.1 ? `${fmt(d.ag.med)} ${mm}` : t("dryWord")}
                 </span>
                 <span className="w-bar"><i style={{ width: `${Math.min(100, ((d.ag?.med || 0) / maxWeekRain) * 100)}%` }} /></span>
                 {!!d.outs.length && <span className="w-warn" />}
@@ -415,34 +471,34 @@ export default function App() {
             <div className="d-main">
               <span className="d-ic">{React.createElement(ICONS[sel.icon])}</span>
               <div className="d-txt">
-                <div className="d-day">יום {sel.dow} · {sel.date}</div>
-                <div className="d-cond">{LABEL[sel.icon]}</div>
+                <div className="d-day">{t("scopeDay", { day: sel.dow })} · {sel.date}</div>
+                <div className="d-cond">{t(`cond.${sel.icon}`)}</div>
                 <div className="d-temps"><b>{fmt(sel.tmax, 0)}°</b> <span>/ {fmt(sel.tmin, 0)}°</span>
-                  {typeof sel.wind === "number" && <span className="d-wind">· רוח עד {fmt(sel.wind, 0)} קמ״ש</span>}</div>
+                  {typeof sel.wind === "number" && <span className="d-wind">{t("windTo", { v: fmt(sel.wind, 0) })}</span>}</div>
               </div>
               <div className={`d-verdict v-${sel.ag?.level || "dry"}`}>
-                <b>{sel.ag?.text || "—"}</b>
-                <span>{sel.ag ? sel.ag.wet : 0} מתוך {sel.ag ? sel.ag.total : 0} מודלים חוזים גשם</span>
+                <b>{sel.ag ? t(sel.ag.key) : "—"}</b>
+                <span>{t("modelsRain", { wet: sel.ag ? sel.ag.wet : 0, total: sel.ag ? sel.ag.total : 0 })}</span>
               </div>
             </div>
 
             <div className="d-scale">
               <div className="d-track">
                 {sel.pairs.map((p) => typeof p.v === "number" && (
-                  <span key={p.id} className="d-tick" title={`${M[p.id].short} · ${fmt(p.v)} מ״מ`}
+                  <span key={p.id} className="d-tick" title={`${M[p.id].short} · ${fmt(p.v)} ${mm}`}
                     style={{ background: M[p.id].ink, insetInlineStart: `${Math.min(100, (p.v / Math.max(1, sel.ag?.hi || 1)) * 100)}%` }} />
                 ))}
               </div>
               <div className="d-nums">
-                <span>{fmt(sel.ag?.lo)} מ״מ · התרחיש היבש</span>
-                <span>{fmt(sel.ag?.hi)} מ״מ · התרחיש הגשום</span>
+                <span>{t("scaleDry", { v: fmt(sel.ag?.lo) })}</span>
+                <span>{t("scaleWet", { v: fmt(sel.ag?.hi) })}</span>
               </div>
               <div className="d-chips">
                 {[...sel.pairs].filter((p) => typeof p.v === "number").sort((a, b) => a.v - b.v).map((p) => (
                   <span className="d-chip" key={p.id} style={{ borderColor: M[p.id].ink + "66" }}>
                     <i style={{ background: M[p.id].ink }} />
                     <b style={{ color: M[p.id].ink }}>{M[p.id].short}</b>
-                    <em>{fmt(p.v)} מ״מ</em>
+                    <em>{fmt(p.v)} {mm}</em>
                   </span>
                 ))}
               </div>
@@ -452,9 +508,9 @@ export default function App() {
               <div className="d-outs">
                 {sel.outs.map((o, k) => (
                   <div className="d-out" key={k} style={{ borderInlineStartColor: M[o.id].ink }}>
-                    <b style={{ color: M[o.id].ink }}>{M[o.id].short}</b>{" "}
-                    {o.dir === "wet" ? "בורח מהחבורה:" : "יבש לעומת השאר:"} <b>{fmt(o.v)} מ״מ</b> מול חציון של {fmt(o.med)} מ״מ.
-                    כשמודל בודד רחוק כל כך, זה בדרך כלל סימן שהמערכת גבולית — לא נבואה.
+                    <Rich text={t(o.dir === "wet" ? "outWet" : "outDry", {
+                      model: M[o.id].short, v: fmt(o.v), med: fmt(o.med),
+                    })} />
                   </div>
                 ))}
               </div>
@@ -463,25 +519,22 @@ export default function App() {
         )}
       </section>
 
-      {/* ── שעה־שעה ── */}
+      {/* ── hourly ── */}
       {!!hourly24.length && (
         <section className="hourly">
           <div className="sec-head">
-            <h2>שעה־שעה</h2>
-            <span className="sub">יום {sel?.dow} · {sel?.date}</span>
+            <h2>{t("hourlyTitle")}</h2>
+            <span className="sub">{t("scopeDay", { day: sel?.dow })} · {sel?.date}</span>
           </div>
 
           <div className="hpanel">
             <div className={`hlead ${hourlyDry ? "dry" : ""}`}>
-              {hourlyDry ? (
-                <>כל {active.length} המודלים חוזים <b>יום יבש</b> — אין שעה אחת שבה אפילו אחד מהם מצפה למשקעים.
-                  הקו הכתום הוא הטמפרטורה לאורך היום.</>
-              ) : peak && peak.med > 0.05 ? (
-                <>השיא הצפוי סביב <b>{peak.label}</b> — כ־<b>{fmt(peak.med)} מ״מ</b> לפי חציון המודלים,
-                  ועד <b>{fmt(peak.max)} מ״מ</b> בתרחיש הגשום.</>
-              ) : (
-                <>רוב המודלים חוזים יום יבש, אבל יש שעות שבהן חלקם מצפים למשקעים קלים.</>
-              )}
+              <Rich text={
+                hourlyDry ? t("hourlyDry", { n: active.length })
+                  : peak && peak.med > 0.05
+                    ? t("hourlyPeak", { time: peak.label, med: fmt(peak.med), max: fmt(peak.max) })
+                    : t("hourlyMixed")
+              } />
             </div>
 
             {narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} pos="top" />}
@@ -518,10 +571,10 @@ export default function App() {
             </div>
 
             <div className="hlegend">
-              <span><i className="sw solid" /> חלק כהה בעמודה — חציון המודלים</span>
-              <span><i className="sw ghost" /> ההמשך הבהיר — עד לתרחיש הגשום ביותר</span>
-              <span><i className="sw warm" /> טמפרטורה (ציר ימין)</span>
-              <span><i className="sw grad" /> כמה מודלים מסכימים שתרד טיפה</span>
+              <span><i className="sw solid" /> {t("legMedian")}</span>
+              <span><i className="sw ghost" /> {t("legGhost")}</span>
+              <span><i className="sw warm" /> {t("legTemp")}</span>
+              <span><i className="sw grad" /> {t("legAgree")}</span>
             </div>
           </div>
         </section>
@@ -529,7 +582,7 @@ export default function App() {
 
       {/* ── pens ── */}
       <section className="pens">
-        <div className="sec-head"><h2>עטים על הנייר</h2><span className="sub">כבו והדליקו מודלים כדי לראות איך התמונה משתנה</span></div>
+        <div className="sec-head"><h2>{t("pensTitle")}</h2><span className="sub">{t("pensSub")}</span></div>
         <div className="pen-row">
           {MODELS.map((m) => {
             const on = active.includes(m.id);
@@ -547,19 +600,19 @@ export default function App() {
       <section className="graph">
         <div className="gbar">
           <div className="vars">
-            {Object.entries(VARS).map(([k, v]) => (
-              <button key={k} className={`vtab ${variable === k ? "on" : ""}`} onClick={() => setVariable(k)}>{v.label}</button>
+            {Object.entries(VAR_KEYS).map(([k, key]) => (
+              <button key={k} className={`vtab ${variable === k ? "on" : ""}`} onClick={() => setVariable(k)}>{t(key)}</button>
             ))}
           </div>
           <div className="vars">
-            <button className={`vtab ${scope === "week" ? "on" : ""}`} onClick={() => setScope("week")}>כל השבוע</button>
-            <button className={`vtab ${scope === "day" ? "on" : ""}`} onClick={() => setScope("day")}>יום {sel?.dow}</button>
+            <button className={`vtab ${scope === "week" ? "on" : ""}`} onClick={() => setScope("week")}>{t("scopeWeek")}</button>
+            <button className={`vtab ${scope === "day" ? "on" : ""}`} onClick={() => setScope("day")}>{t("scopeDay", { day: sel?.dow || "" })}</button>
           </div>
         </div>
 
         <div className="panel">
-          {!active.length && <div className="veil">כל העטים כבויים. הדליקו לפחות מודל אחד.</div>}
-          <div className="ptop"><span className="unit">{V.unit}</span></div>
+          {!active.length && <div className="veil">{t("pensEmpty")}</div>}
+          <div className="ptop"><span className="unit">{unit}</span></div>
 
           {scope === "week" && (
             <div className="bands" dir="ltr" style={{ marginLeft: PAD_L, marginRight: PAD_R }}>
@@ -572,7 +625,7 @@ export default function App() {
             </div>
           )}
 
-          {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} variable={variable} pos="top" />}
+          {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} unit={unit} dates={dates} pos="top" />}
 
           <div dir="ltr" style={{ width: "100%", height: narrow ? 230 : 290 }}>
             <ResponsiveContainer>
@@ -587,7 +640,7 @@ export default function App() {
                   <ReferenceArea key={d.i} x1={d.i * 24} x2={d.i * 24 + 23} fill="#FFFFFF" fillOpacity={0.028} strokeOpacity={0} />
                 ))}
                 {scope === "week" && days.slice(1).map((d) => <ReferenceLine key={d.i} x={d.i * 24} stroke="#2E4166" />)}
-                <Tooltip content={<ChartTip variable={variable} trace={trace} narrow={narrow} onHover={setHoverIdx} />}
+                <Tooltip content={<ChartTip unit={unit} trace={trace} dates={dates} narrow={narrow} onHover={setHoverIdx} />}
                   cursor={{ stroke: "#7E93B8", strokeDasharray: "3 3" }} />
                 <Area dataKey="band" stroke="none" fill="#9BB6E8" fillOpacity={0.16} isAnimationActive={false} connectNulls />
                 {active.map((m) => (
@@ -598,9 +651,9 @@ export default function App() {
             </ResponsiveContainer>
           </div>
 
-          {!narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} variable={variable} />}
+          {!narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} unit={unit} dates={dates} />}
 
-          <div className="pkey"><span className="kb" /> אזור אי־ההסכמה — הפער בין המודל הקיצוני ביותר לכל כיוון</div>
+          <div className="pkey"><span className="kb" /> {t("bandKey")}</div>
         </div>
       </section>
 
@@ -608,29 +661,28 @@ export default function App() {
 
       {weekTotals.length > 1 && (
         <section className="totals">
-          <h2>סך הכל לשבוע, לפי מודל</h2>
+          <h2>{t("totalsTitle")}</h2>
           <div className="trows">
-            {weekTotals.map((t) => (
-              <div className="tot" key={t.id}>
-                <span className="tname" style={{ color: M[t.id].ink }}>{M[t.id].short}</span>
-                <span className="tbar"><span style={{ background: M[t.id].ink, width: `${weekTotals[0].total > 0 ? (t.total / weekTotals[0].total) * 100 : 0}%` }} /></span>
-                <span className="tnum">{fmt(t.total)} מ״מ</span>
+            {weekTotals.map((tt) => (
+              <div className="tot" key={tt.id}>
+                <span className="tname" style={{ color: M[tt.id].ink }}>{M[tt.id].short}</span>
+                <span className="tbar"><span style={{ background: M[tt.id].ink, width: `${weekTotals[0].total > 0 ? (tt.total / weekTotals[0].total) * 100 : 0}%` }} /></span>
+                <span className="tnum">{fmt(tt.total)} {mm}</span>
               </div>
             ))}
           </div>
           <p className="tnote">
-            {weekTotals[0].total - weekTotals[weekTotals.length - 1].total > 8
-              ? "פער גדול בין המודלים לאורך השבוע — סימן שהמערכת עוד לא התייצבה. שווה לבדוק שוב אחרי הריצה הבאה."
-              : "המודלים קרובים יחסית זה לזה השבוע. תחזית יציבה."}
+            {weekTotals[0].total - weekTotals[weekTotals.length - 1].total > 8 ? t("totalsSpread") : t("totalsStable")}
           </p>
         </section>
       )}
 
       <section className="learn">
-        <h2>מי מריץ מה</h2>
+        <h2>{t("learnTitle")}</h2>
         <div className="lgrid">
           {MODELS.map((m) => {
             const open = openModel === m.id;
+            const info = t(`models.${m.id}`) || {};
             return (
               <article key={m.id} className={`mc ${open ? "open" : ""}`}>
                 <button className="mc-top" onClick={() => setOpenModel(open ? null : m.id)} aria-expanded={open}>
@@ -641,12 +693,12 @@ export default function App() {
                 {open && (
                   <div className="mc-body">
                     <dl>
-                      <div><dt>מפעיל</dt><dd>{m.agency}</dd></div>
-                      <div><dt>מיקום</dt><dd>{m.home}</dd></div>
-                      <div><dt>גודל תא</dt><dd>{m.grid}</dd></div>
-                      <div><dt>ריצות ביום</dt><dd>{m.runs}</dd></div>
+                      <div><dt>{t("fOperator")}</dt><dd>{info.agency}</dd></div>
+                      <div><dt>{t("fHome")}</dt><dd>{info.home}</dd></div>
+                      <div><dt>{t("fGrid")}</dt><dd>{info.grid}</dd></div>
+                      <div><dt>{t("fRuns")}</dt><dd>{m.runs}</dd></div>
                     </dl>
-                    <p>{m.note}</p>
+                    <p>{info.note}</p>
                   </div>
                 )}
               </article>
@@ -654,46 +706,54 @@ export default function App() {
           })}
         </div>
         <div className="primer">
-          <h3>למה בכלל יש יותר ממודל אחד</h3>
-          <p>מודל חיזוי מחלק את האטמוספירה לתאים — כל תא הוא קופסה של כמה קילומטרים על כמה קילומטרים, בעשרות שכבות מהקרקע ועד לסטרטוספירה. הוא מכניס לכל תא את מה שנמדד עכשיו, מריץ את משוואות זרימת הנוזלים קדימה בצעדים של דקות, וחוזר על זה מאות אלפי פעמים.</p>
-          <p>שני דברים מייצרים את ההבדלים. הראשון הוא <b>איך כל מודל מטפל במה שקטן מדי מכדי להיכנס לתא</b> — ענן בודד, טיפה שמתעבה, ערבול מעל שדה חרוש. אין דרך לחשב את זה ישירות, אז כל מכון כותב לזה קירוב משלו. הקירובים האלה הם מקור המחלוקת האמיתי.</p>
-          <p>השני הוא <b>הכאוס</b>. הפרש זעיר בתנאי ההתחלה תופח לתחזיות שונות לגמרי בתוך ימים. לכן הפער בין המודלים מתרחב ככל שמתרחקים — <b>רוחב אזור אי־ההסכמה הוא מדד ישיר לכמה כדאי לסמוך על התחזית</b>.</p>
+          <h3>{t("primerTitle")}</h3>
+          <p><Rich text={t("primer1")} /></p>
+          <p><Rich text={t("primer2")} /></p>
+          <p><Rich text={t("primer3")} /></p>
         </div>
       </section>
 
-      <footer className="foot">
-        נתונים דרך Open-Meteo, שמוריד את קבצי ה־GRIB2 הגולמיים משרתי NOAA, ECMWF, DWD, Met Office,
-        Environment Canada, Météo-France ו־JMA. כרטיס הציונים מבוסס על ארכיון הריצות הקודמות מול סדרת האנליזה.
-      </footer>
+      <footer className="foot">{t("foot")}</footer>
     </div>
   );
 }
 
-/* ═══════════════════════ readout ═══════════════════════ */
+/* ═══════════════════════ readouts ═══════════════════════ */
 
-/** מגשר: מקבל את אירועי המגע של recharts ומדווח החוצה, ומצייר טולטיפ רק במסך רחב */
-function ChartTip({ active, payload, label, variable, trace, narrow, onHover }) {
+function ChartTip({ active, payload, label, unit, trace, dates, narrow, onHover }) {
   const live = !!(active && payload && payload.length);
   useEffect(() => { onHover(live ? label : null); }, [live, label, onHover]);
   if (narrow || !live) return null;
-  return <Ink active={active} payload={payload} label={label} variable={variable} trace={trace} />;
+  const row = trace[label];
+  const lines = payload.filter((p) => p.dataKey !== "band" && typeof p.value === "number").sort((a, b) => b.value - a.value);
+  if (!lines.length) return null;
+  const d = row ? new Date(row.iso) : null;
+  return (
+    <div className="tip">
+      <div className="tip-h">{d ? `${dates.weekday(d)} · ${String(d.getHours()).padStart(2, "0")}:00` : ""}</div>
+      {lines.map((p) => (
+        <div className="tip-r" key={p.dataKey}>
+          <span className="tip-nib" style={{ background: p.stroke }} />
+          <span className="tip-n">{M[p.dataKey]?.short}</span>
+          <span className="tip-v">{p.value.toFixed(1)} <em>{unit}</em></span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-function Readout({ row, models, variable, pos }) {
+function Readout({ row, models, unit, dates, pos }) {
+  const { t } = useI18n();
   const cls = `readout${pos === "top" ? " top" : ""}`;
-  if (!row) {
-    return <div className={`${cls} empty`}>העבירו את האצבע או הסמן על הגרף כדי לראות מה כל מודל אומר</div>;
-  }
+  if (!row) return <div className={`${cls} empty`}>{t("chartHint")}</div>;
   const d = new Date(row.iso);
-  const vals = models
-    .map((m) => ({ id: m, v: row[m] }))
-    .filter((p) => typeof p.v === "number")
-    .sort((a, b) => b.v - a.v);
+  const vals = models.map((m) => ({ id: m, v: row[m] }))
+    .filter((p) => typeof p.v === "number").sort((a, b) => b.v - a.v);
   return (
     <div className={cls}>
       <span className="ro-time">
         <b>{String(d.getHours()).padStart(2, "0")}:00</b>
-        <em>{DAYS_HE[d.getDay()]}</em>
+        <em>{dates.weekday(d)}</em>
       </span>
       <div className="ro-chips">
         {vals.map((p) => (
@@ -703,32 +763,12 @@ function Readout({ row, models, variable, pos }) {
             <em>{p.v.toFixed(1)}</em>
           </span>
         ))}
-        <span className="ro-unit">{VARS[variable].unit}</span>
+        <span className="ro-unit">{unit}</span>
       </div>
     </div>
   );
 }
 
-function HourTip({ active, payload, label, narrow, onHover }) {
-  const live = !!(active && payload && payload.length);
-  useEffect(() => { onHover(live ? label : null); }, [live, label, onHover]);
-  if (narrow || !live) return null;
-  const r = payload[0]?.payload;
-  if (!r) return null;
-  return (
-    <div dir="rtl" className="tip">
-      <div className="tip-h">{r.label}</div>
-      <div className="tip-r"><span className="tip-n">חציון המודלים</span><span className="tip-v">{fmt(r.med)} מ״מ</span></div>
-      <div className="tip-r"><span className="tip-n">התרחיש הגשום</span><span className="tip-v">{fmt(r.max)} מ״מ</span></div>
-      <div className="tip-r"><span className="tip-n">מסכימים על טיפה</span><span className="tip-v">{r.wet} מתוך {r.total}</span></div>
-      {typeof r.temp === "number" && (
-        <div className="tip-r"><span className="tip-n">טמפרטורה</span><span className="tip-v">{fmt(r.temp, 0)}°</span></div>
-      )}
-    </div>
-  );
-}
-
-/** בועה קטנה עם המעלות, צמודה לנקודה שהאצבע נמצאת עליה */
 function TempDot({ cx, cy, payload }) {
   if (cx == null || cy == null || typeof payload?.temp !== "number") return null;
   const w = 42, h = 22, gap = 11;
@@ -738,37 +778,53 @@ function TempDot({ cx, cy, payload }) {
   return (
     <g style={{ pointerEvents: "none" }}>
       <circle cx={cx} cy={cy} r={5.5} fill="#F5A24B" stroke="#0E1728" strokeWidth={2.5} />
-      <path d={above
-        ? `M${cx - 5} ${ty} L${cx} ${ty + 5} L${cx + 5} ${ty} Z`
-        : `M${cx - 5} ${ty} L${cx} ${ty - 5} L${cx + 5} ${ty} Z`}
-        fill="#F5A24B" />
+      <path d={above ? `M${cx - 5} ${ty} L${cx} ${ty + 5} L${cx + 5} ${ty} Z`
+        : `M${cx - 5} ${ty} L${cx} ${ty - 5} L${cx + 5} ${ty} Z`} fill="#F5A24B" />
       <rect x={cx - w / 2} y={y} width={w} height={h} rx={8} fill="#F5A24B" />
       <text x={cx} y={y + h / 2} textAnchor="middle" dominantBaseline="central"
-        fontSize="13.5" fontWeight="700" fill="#0E1728"
-        fontFamily="'IBM Plex Sans Hebrew',system-ui,sans-serif">
-        {Math.round(payload.temp)}°
-      </text>
+        fontSize="13.5" fontWeight="700" fill="#0E1728">{Math.round(payload.temp)}°</text>
     </g>
   );
 }
 
+function HourTip({ active, payload, label, narrow, onHover }) {
+  const { t } = useI18n();
+  const live = !!(active && payload && payload.length);
+  useEffect(() => { onHover(live ? label : null); }, [live, label, onHover]);
+  if (narrow || !live) return null;
+  const r = payload[0]?.payload;
+  if (!r) return null;
+  const mm = t("unitMm");
+  return (
+    <div className="tip">
+      <div className="tip-h">{r.label}</div>
+      <div className="tip-r"><span className="tip-n">{t("tipMedian")}</span><span className="tip-v">{fmt(r.med)} {mm}</span></div>
+      <div className="tip-r"><span className="tip-n">{t("tipWettest")}</span><span className="tip-v">{fmt(r.max)} {mm}</span></div>
+      <div className="tip-r"><span className="tip-n">{t("tipAgree")}</span><span className="tip-v">{t("ofTotal", { a: r.wet, b: r.total })}</span></div>
+      {typeof r.temp === "number" && (
+        <div className="tip-r"><span className="tip-n">{t("tipTemp")}</span><span className="tip-v">{fmt(r.temp, 0)}°</span></div>
+      )}
+    </div>
+  );
+}
+
 function HourReadout({ row, pos }) {
+  const { t } = useI18n();
   const cls = `readout${pos === "top" ? " top" : ""}`;
-  if (!row) {
-    return <div className={`${cls} empty`}>געו בגרף כדי לראות מה צפוי בכל שעה</div>;
-  }
+  if (!row) return <div className={`${cls} empty`}>{t("hourHint")}</div>;
+  const mm = t("unitMm");
   return (
     <div className={cls}>
       <span className="ro-time"><b>{row.label}</b></span>
       <div className="ro-chips">
         <span className="ro-chip" style={{ borderColor: "#5AB3F055" }}>
-          <i style={{ background: "#5AB3F0" }} /><b style={{ color: "#5AB3F0" }}>חציון</b><em>{fmt(row.med)} מ״מ</em>
+          <i style={{ background: "#5AB3F0" }} /><b style={{ color: "#5AB3F0" }}>{t("roMedian")}</b><em>{fmt(row.med)} {mm}</em>
         </span>
         <span className="ro-chip" style={{ borderColor: "#9BB6E855" }}>
-          <i style={{ background: "#9BB6E8", opacity: 0.6 }} /><b style={{ color: "#9BB6E8" }}>גשום</b><em>{fmt(row.max)} מ״מ</em>
+          <i style={{ background: "#9BB6E8", opacity: 0.6 }} /><b style={{ color: "#9BB6E8" }}>{t("roWet")}</b><em>{fmt(row.max)} {mm}</em>
         </span>
         <span className="ro-chip" style={{ borderColor: "#8FA1BC44" }}>
-          <b style={{ color: "var(--muted)" }}>מסכימים</b><em>{row.wet}/{row.total}</em>
+          <b style={{ color: "var(--muted)" }}>{t("roAgree")}</b><em>{row.wet}/{row.total}</em>
         </span>
       </div>
     </div>
@@ -780,13 +836,13 @@ function HourReadout({ row, pos }) {
 const findSeries = (hourly, base, lead, model) => {
   if (!hourly) return null;
   const v = `${base}_previous_day${lead}`;
-  const cands = [`${v}_${model}`, `${base}_${model}_previous_day${lead}`, v];
-  for (const c of cands) if (Array.isArray(hourly[c])) return hourly[c];
+  for (const c of [`${v}_${model}`, `${base}_${model}_previous_day${lead}`, v]) {
+    if (Array.isArray(hourly[c])) return hourly[c];
+  }
   const k = Object.keys(hourly).find((k) => k.startsWith(base) && k.includes(`previous_day${lead}`));
   return k ? hourly[k] : null;
 };
 
-/** שעות → ימים. מדלג על ימים חלקיים בקצוות. */
 function bucketDaily(times, values, mode) {
   const acc = new Map(), out = new Map();
   if (!times) return out;
@@ -819,6 +875,7 @@ function score(pred, obs) {
 }
 
 function Scorecard({ place, models }) {
+  const { t } = useI18n();
   const [win, setWin] = useState(90);
   const [lead, setLead] = useState(3);
   const [state, setState] = useState({ status: "idle" });
@@ -834,20 +891,18 @@ function Scorecard({ place, models }) {
     const geo = `latitude=${place.lat}&longitude=${place.lon}&timezone=auto`;
 
     try {
-      // האמת: סדרת האנליזה
       const tRes = await fetch(`https://historical-forecast-api.open-meteo.com/v1/forecast?${geo}` +
         `&start_date=${isoDate(start)}&end_date=${isoDate(end)}&daily=precipitation_sum,temperature_2m_max`);
       const truth = await tRes.json();
       if (truth.error) throw new Error(truth.reason);
       const oRain = new Map(), oTemp = new Map();
       (truth.daily?.time || []).forEach((d, i) => {
-        const r = truth.daily.precipitation_sum?.[i], t = truth.daily.temperature_2m_max?.[i];
+        const r = truth.daily.precipitation_sum?.[i], tp = truth.daily.temperature_2m_max?.[i];
         if (typeof r === "number") oRain.set(d, r);
-        if (typeof t === "number") oTemp.set(d, t);
+        if (typeof tp === "number") oTemp.set(d, tp);
       });
-      if (!oRain.size) throw new Error("לא חזרו נתוני אמת לתקופה הזו");
+      if (!oRain.size) throw new Error(t("errNoTruth"));
 
-      // מה כל מודל ניבא, שעה־שעה, בטווח הנבחר
       const rows = await Promise.all(models.map(async (m) => {
         try {
           const url = `https://previous-runs-api.open-meteo.com/v1/forecast?${geo}` +
@@ -858,7 +913,7 @@ function Scorecard({ place, models }) {
           if (j.error) return { id: m, err: j.reason };
           const pr = findSeries(j.hourly, "precipitation", lead, m);
           const pt = findSeries(j.hourly, "temperature_2m", lead, m);
-          if (!pr) return { id: m, err: "אין סדרה בטווח הזה", keys: Object.keys(j.hourly || {}) };
+          if (!pr) return { id: m, err: t("errNoSeries") };
           return {
             id: m,
             rain: score(bucketDaily(j.hourly.time, pr, "sum"), oRain),
@@ -870,89 +925,86 @@ function Scorecard({ place, models }) {
       const ok = rows.filter((r) => r.rain);
       if (!ok.length) {
         const why = rows.find((r) => r.err)?.err;
-        throw new Error(why ? `לא הצלחתי לחשב ציונים — ${why}` : "לא הצלחתי לחשב ציונים לתקופה הזו");
+        throw new Error(why ? t("errNoScoresWhy", { why }) : t("errNoScores"));
       }
       ok.sort((a, b) => a.rain.mae - b.rain.mae);
       setState({
         status: "done", rows: ok, failed: rows.filter((r) => !r.rain),
         days: ok[0].rain.n, wetDays: ok[0].rain.hit + ok[0].rain.miss,
       });
-    } catch (e) { setState({ status: "error", msg: e.message || "משהו נכשל" }); }
-  }, [place, models, win, lead]);
+    } catch (e) { setState({ status: "error", msg: e.message || t("errGeneric") }); }
+  }, [place, models, win, lead, t]);
 
   const s = state;
   const worst = s.rows ? Math.max(...s.rows.map((r) => r.rain.mae), 0.01) : 1;
+  const mm = t("unitMm");
 
   return (
     <section className="score">
-      <div className="sec-head"><h2>מי צדק כאן בעבר</h2></div>
-      <p className="sub wide">
-        לכל מודל יש ארכיון של מה שהוא <b>ניבא</b> בעבר. משווים אותו למה שבאמת קרה ומקבלים דירוג
-        אמיתי — <b>לנקודה הזו בלבד</b>. המודל שמנצח בתל אביב הוא לא בהכרח זה שמנצח בהרי הגולן.
-      </p>
+      <div className="sec-head"><h2>{t("scoreTitle")}</h2></div>
+      <p className="sub wide"><Rich text={t("scoreIntro")} /></p>
 
       <div className="s-ctl">
         <div className="s-grp">
-          <span className="s-lab">כמה ימים מראש נבדק</span>
+          <span className="s-lab">{t("scoreLeadLabel")}</span>
           <div className="vars">
             {[1, 2, 3, 5].map((d) => <button key={d} className={`vtab ${lead === d ? "on" : ""}`} onClick={() => setLead(d)}>{d}</button>)}
           </div>
         </div>
         <div className="s-grp">
-          <span className="s-lab">תקופת הבדיקה</span>
+          <span className="s-lab">{t("scoreWinLabel")}</span>
           <div className="vars">
-            {[30, 60, 90].map((d) => <button key={d} className={`vtab ${win === d ? "on" : ""}`} onClick={() => setWin(d)}>{d} יום</button>)}
+            {[30, 60, 90].map((d) => <button key={d} className={`vtab ${win === d ? "on" : ""}`} onClick={() => setWin(d)}>{t("scoreDaysOpt", { n: d })}</button>)}
           </div>
         </div>
         <button className="s-run" onClick={run} disabled={s.status === "loading"}>
-          {s.status === "loading" ? "מחשב…" : "חשב ציונים"}
+          {s.status === "loading" ? t("scoreRunning") : t("scoreRun")}
         </button>
       </div>
 
-      {s.status === "idle" && <div className="s-empty">בחרו טווח ולחצו “חשב ציונים”. הבדיקה רצה על ארכיון הריצות של Open-Meteo, עד 92 יום אחורה.</div>}
+      {s.status === "idle" && <div className="s-empty">{t("scoreIdle")}</div>}
       {s.status === "error" && <div className="s-err">{s.msg}</div>}
 
       {s.status === "done" && (
         <>
           <div className="s-lead">
-            על פני <b>{s.days}</b> ימים ב{place.name}, מתוכם <b>{s.wetDays}</b> ימים גשומים,
-            הכי מדויק בטווח של {lead} ימים מראש היה{" "}
-            <b style={{ color: M[s.rows[0].id].ink }}>{M[s.rows[0].id].short}</b>.
+            <Rich text={t("scoreResult", {
+              days: s.days, place: place.name, wet: s.wetDays, lead, model: M[s.rows[0].id].short,
+            })} />
           </div>
 
           <div className="s-table">
             <div className="s-hrow">
-              <span>מודל</span><span>טעות ממוצעת</span><span>פספס גשם</span><span>התריע לשווא</span><span>טעות מעלות</span>
+              <span>{t("thModel")}</span><span>{t("thMae")}</span><span>{t("thMiss")}</span>
+              <span>{t("thFa")}</span><span>{t("thTempErr")}</span>
             </div>
             {s.rows.map((r, k) => (
               <div className={`s-row ${k === 0 ? "best" : ""}`} key={r.id}>
                 <span className="s-name" style={{ color: M[r.id].ink }}>
-                  {M[r.id].short}{k === 0 && <i className="s-crown">הכי מדויק</i>}
+                  {M[r.id].short}{k === 0 && <i className="s-crown">{t("bestTag")}</i>}
                 </span>
                 <span className="s-mae">
                   <i className="s-bar"><em style={{ background: M[r.id].ink, width: `${(r.rain.mae / worst) * 100}%` }} /></i>
-                  <b>{fmt(r.rain.mae, 2)} מ״מ</b>
+                  <b>{fmt(r.rain.mae, 2)} {mm}</b>
                 </span>
-                <span className="s-n" data-l="פספס">{r.rain.miss} ימים</span>
-                <span className="s-n" data-l="שווא">{r.rain.fa} ימים</span>
-                <span className="s-n" data-l="מעלות">{r.temp ? `${fmt(r.temp.mae, 1)}°` : "–"}</span>
+                <span className="s-n" data-l={t("thMiss")}>{r.rain.miss} {t("daysUnit")}</span>
+                <span className="s-n" data-l={t("thFa")}>{r.rain.fa} {t("daysUnit")}</span>
+                <span className="s-n" data-l={t("thTempErr")}>{r.temp ? `${fmt(r.temp.mae, 1)}°` : "–"}</span>
               </div>
             ))}
           </div>
 
           {!!s.failed.length && (
-            <div className="s-note">אין ארכיון מספיק ל: {s.failed.map((f) => `${M[f.id]?.short}${f.err ? ` (${f.err})` : ""}`).join(" · ")}</div>
+            <div className="s-note">{t("noArchive", {
+              list: s.failed.map((f) => `${M[f.id]?.short}${f.err ? ` (${f.err})` : ""}`).join(" · "),
+            })}</div>
           )}
 
           <div className="s-legend">
-            <p><b>טעות ממוצעת</b> — בכמה מ״מ המודל פספס ביום ממוצע. נמוך יותר טוב יותר.</p>
-            <p><b>פספס גשם</b> — ימים שבהם ירד גשם משמעותי והמודל אמר יבש. זו הטעות שהכי כואבת.</p>
-            <p><b>התריע לשווא</b> — ימים שבהם המודל הבטיח גשם ולא ירד. מודל עם המון התרעות שווא נראה בטוח בעצמו אבל שווה פחות.</p>
-            <p className="s-caveat">
-              ה״אמת“ כאן היא סדרת אנליזה — שחזור של מה שקרה מתוך מדידות שהוטמעו למודל, לא מד גשם פיזי.
-              היא טובה לטמפרטורה ולמגמות, אבל מחליקה גשמים מקומיים חזקים. אמת מדויקת יותר לישראל תגיע
-              מתחנות המדידה של השירות המטאורולוגי.
-            </p>
+            <p><Rich text={t("legMae")} /></p>
+            <p><Rich text={t("legMiss")} /></p>
+            <p><Rich text={t("legFa")} /></p>
+            <p className="s-caveat">{t("caveat")}</p>
           </div>
         </>
       )}
@@ -960,32 +1012,10 @@ function Scorecard({ place, models }) {
   );
 }
 
-/* ═══════════════════════ tooltip ═══════════════════════ */
-
-function Ink({ active, payload, label, variable, trace }) {
-  if (!active || !payload?.length) return null;
-  const row = trace[label];
-  const lines = payload.filter((p) => p.dataKey !== "band" && typeof p.value === "number").sort((a, b) => b.value - a.value);
-  if (!lines.length) return null;
-  const d = row ? new Date(row.iso) : null;
-  return (
-    <div dir="rtl" className="tip">
-      <div className="tip-h">{d ? `${DAYS_HE[d.getDay()]} · ${String(d.getHours()).padStart(2, "0")}:00` : ""}</div>
-      {lines.map((p) => (
-        <div className="tip-r" key={p.dataKey}>
-          <span className="tip-nib" style={{ background: p.stroke }} />
-          <span className="tip-n">{M[p.dataKey]?.short}</span>
-          <span className="tip-v">{p.value.toFixed(1)} <em>{VARS[variable].unit}</em></span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ═══════════════════════ styles ═══════════════════════ */
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap');
 
 html,body,#root{margin:0;padding:0;min-height:100%;background:#0E1728}
 body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
@@ -995,8 +1025,8 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   --text:#E9EEF7; --muted:#8FA1BC; --dim:#B7C4D8;
   --sky:#5AB3F0; --warm:#F5A24B; --mint:#6FD99A; --rose:#F27878;
   position:relative;min-height:100vh;background:var(--night);color:var(--text);
-  font-family:'IBM Plex Sans Hebrew',system-ui,sans-serif;font-weight:400;line-height:1.6;
-  font-variant-numeric:tabular-nums;overflow:hidden;
+  font-family:'IBM Plex Sans Hebrew','IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;
+  font-weight:400;line-height:1.6;font-variant-numeric:tabular-nums;overflow:hidden;
   padding:env(safe-area-inset-top) max(18px,env(safe-area-inset-right))
           calc(60px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
 }
@@ -1014,8 +1044,28 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .sub.wide{max-width:72ch;line-height:1.7;margin:0 0 18px}
 .sub b{color:var(--dim)}
 
+/* language */
+.topbar{position:relative;z-index:40;max-width:1120px;margin:0 auto;padding-top:14px;
+  display:flex;direction:ltr;justify-content:flex-start}
+.lang{position:relative}
+.lang-btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
+  border:1px solid var(--rule);border-radius:999px;padding:6px 14px 6px 11px;
+  font-size:13px;font-weight:500;color:var(--dim);transition:.15s}
+.lang-btn:hover{border-color:#42598A;color:var(--text)}
+.lang-ic{width:17px;height:17px;display:block;color:var(--sky);flex:none}
+.lang-ic svg{width:100%;height:100%;display:block}
+.lang-menu{position:absolute;z-index:50;inset-inline-start:0;top:100%;margin:7px 0 0;padding:5px;
+  list-style:none;min-width:186px;background:var(--panel2);border:1px solid var(--rule);
+  border-radius:11px;box-shadow:0 16px 38px rgba(0,0,0,.5)}
+.lang-menu button{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  width:100%;background:none;border:0;padding:8px 11px;border-radius:7px;text-align:start}
+.lang-menu button:hover{background:#26385A}
+.lang-menu button.on{background:#1C3151;box-shadow:0 0 0 1px var(--sky) inset}
+.lm-native{font-size:14px;font-weight:500}
+.lm-en{font-size:11px;color:var(--muted);font-weight:300}
+
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
-  max-width:1120px;margin:0 auto;padding:42px 0 26px;border-bottom:1px solid var(--rule)}
+  max-width:1120px;margin:0 auto;padding:26px 0 26px;border-bottom:1px solid var(--rule)}
 .head-l{flex:1 1 400px;min-width:0}
 .eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--sky);margin-bottom:12px;font-weight:500}
 .head h1{font-size:clamp(30px,5.5vw,50px)}
@@ -1033,8 +1083,10 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .res button:hover{background:#26385A}
 .rn{display:block;font-size:14.5px;font-weight:500}
 .rr{display:block;font-size:12px;color:var(--muted);font-weight:300}
-.coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.geo{background:none;border:0;padding:0;font-size:12px;color:var(--sky);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.geo{background:none;border:0;padding:0;font-size:12px;color:var(--sky);font-weight:500;
+  text-decoration:underline;text-underline-offset:3px}
 .geo:disabled{color:var(--muted);text-decoration:none}
 
 .week{max-width:1120px;margin:26px auto 0}
@@ -1046,10 +1098,10 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   background:var(--panel);border:1px solid var(--rule2);border-radius:12px;padding:10px 3px 9px;transition:.15s;min-width:0}
 .wcell:hover{background:var(--panel2)}
 .wcell.on{border-color:var(--sky);background:#1C3151;box-shadow:0 0 0 1px var(--sky) inset}
-.w-dow{font-size:14px;font-weight:600;white-space:nowrap}
+.w-dow{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .w-dow .sm{display:none;font-style:normal}
 .w-dow .lg{font-style:normal}
-.w-date{font-size:11px;color:var(--muted);font-weight:300}
+.w-date{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
 .w-ic{width:40px;height:40px;margin:1px 0}
 .w-ic svg,.b-ic svg,.d-ic svg{width:100%;height:100%;display:block}
 .w-t{display:flex;gap:5px;align-items:baseline;font-size:12px;color:var(--muted)}
@@ -1109,7 +1161,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   border-radius:9px;padding:6px 2px;transition:.15s;min-width:0}
 .band:hover,.band.on{background:#22314D}
 .b-ic{width:28px;height:28px}
-.b-day{font-size:14px;font-weight:600;white-space:nowrap}
+.b-day{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .b-date{font-size:11px;color:var(--muted);font-weight:300}
 .pkey{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);font-weight:300;
   border-top:1px solid var(--rule2);margin-top:6px;padding:10px 4px 12px}
@@ -1117,7 +1169,6 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .veil{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
   background:rgba(14,23,40,.86);border-radius:14px;font-size:13.5px;color:var(--muted)}
 
-/* readout */
 .readout{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:38px;
   border-top:1px solid var(--rule2);margin-top:8px;padding:9px 2px 3px}
 .readout.empty{font-size:12.5px;color:var(--muted);font-weight:300}
@@ -1137,7 +1188,6 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .ro-chip em{font-style:normal;color:var(--text);font-weight:500}
 .ro-unit{font-size:11px;color:var(--muted);font-weight:300}
 
-/* hourly */
 .hourly{max-width:1120px;margin:40px auto 0}
 .hourly h2{font-size:24px}
 .hpanel{background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:14px 12px 12px}
@@ -1164,7 +1214,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .tip-r{display:flex;align-items:center;gap:8px;padding:2px 0}
 .tip-nib{width:9px;height:3px;border-radius:2px;flex:none}
 .tip-n{flex:1;font-weight:500}
-.tip-v{font-size:12.5px;color:var(--dim)}
+.tip-v{font-size:12.5px;color:var(--dim);white-space:nowrap}
 .tip-v em{font-style:normal;font-size:10.5px;color:var(--muted)}
 
 .score{max-width:1120px;margin:44px auto 0;background:var(--panel);border:1px solid var(--rule);border-radius:16px;padding:22px}
@@ -1219,7 +1269,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .mc-body{padding:0 14px 15px}
 .mc-body dl{margin:0 0 11px;display:flex;flex-direction:column;gap:4px}
 .mc-body dl>div{display:flex;gap:9px;font-size:12.5px}
-.mc-body dt{flex:0 0 70px;color:var(--muted);font-weight:300}
+.mc-body dt{flex:0 0 82px;color:var(--muted);font-weight:300}
 .mc-body dd{margin:0}
 .mc-body p{margin:0;font-size:13.5px;line-height:1.7;color:var(--dim);font-weight:300;
   border-top:1px solid var(--rule2);padding-top:11px}
@@ -1233,7 +1283,8 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 @media (max-width:760px){
   .wx{padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right))
       calc(48px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
-  .head{padding-top:28px;gap:20px}
+  .topbar{padding-top:10px}
+  .head{padding-top:20px;gap:20px}
   .head-r{flex:1 1 100%}
   .wrow{gap:3px}
   .wcell{padding:8px 1px 7px;border-radius:9px;gap:2px}
