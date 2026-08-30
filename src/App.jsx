@@ -134,8 +134,17 @@ function outliers(pairs) {
 
 /* ═══════════════════════ app ═══════════════════════ */
 
+const FALLBACK = { name: "תל אביב-יפו", region: "ישראל", lat: 32.0853, lon: 34.7818 };
+const loadSaved = () => {
+  try {
+    const s = JSON.parse(localStorage.getItem("wx-place"));
+    return s && typeof s.lat === "number" && typeof s.lon === "number" ? s : null;
+  } catch { return null; }
+};
+
 export default function App() {
-  const [place, setPlace] = useState({ name: "תל אביב-יפו", region: "ישראל", lat: 32.0853, lon: 34.7818 });
+  const [place, setPlace] = useState(() => loadSaved() || FALLBACK);
+  const [locating, setLocating] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -150,6 +159,36 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const boxRef = useRef(null);
+
+  /* לזכור את המקום האחרון */
+  useEffect(() => {
+    try { localStorage.setItem("wx-place", JSON.stringify(place)); } catch { /* מצב פרטי */ }
+  }, [place]);
+
+  /* לאתר את המיקום הנוכחי */
+  const locate = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude, lon = pos.coords.longitude;
+        let name = "המיקום שלי", region = "";
+        try {
+          const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=he`);
+          const j = await r.json();
+          name = j.city || j.locality || j.principalSubdivision || name;
+          region = [j.principalSubdivision, j.countryName].filter(Boolean).join(", ");
+        } catch { /* בלי שם, רק קואורדינטות */ }
+        setPlace({ name, region, lat, lon });
+        setDaySel(0); setScope("week"); setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 8000, maximumAge: 600000 }
+    );
+  }, []);
+
+  /* בכניסה ראשונה בלבד — לנסות לזהות איפה אנחנו */
+  useEffect(() => { if (!loadSaved()) locate(); }, [locate]);
 
   const load = useCallback(async () => {
     if (!active.length) { setData(null); setLoading(false); return; }
@@ -293,7 +332,12 @@ export default function App() {
               ))}
             </ul>
           )}
-          <div className="coords">{place.region && <>{place.region} · </>}{place.lat.toFixed(3)}°, {place.lon.toFixed(3)}°</div>
+          <div className="coords">
+            {place.region && <>{place.region} · </>}{place.lat.toFixed(3)}°, {place.lon.toFixed(3)}°
+            <button className="geo" onClick={locate} disabled={locating}>
+              {locating ? "מאתר…" : "המיקום שלי"}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -769,7 +813,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .res button:hover{background:#26385A}
 .rn{display:block;font-size:14.5px;font-weight:500}
 .rr{display:block;font-size:12px;color:var(--muted);font-weight:300}
-.coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300}
+.coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.geo{background:none;border:0;padding:0;font-size:12px;color:var(--sky);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.geo:disabled{color:var(--muted);text-decoration:none}
 
 .week{max-width:1120px;margin:26px auto 0}
 .wload,.werr{font-size:13.5px;color:var(--muted);padding:10px 0}
