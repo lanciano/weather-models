@@ -930,7 +930,7 @@ const CSS = `
   .w-ic{width:30px;height:30px}
   .w-t{gap:3px;font-size:10px} .w-t b{font-size:13px}
   .w-mm{font-size:9.5px}
-  .w-bar{height:18px;width:3px}
+  .w-bar{width:calc(100% - 8px);height:3px;margin-top:3px}
   .w-warn{width:6px;height:6px;top:4px;inset-inline-end:4px}
   .detail{padding:14px 13px}
   .d-ic{width:54px;height:54px}
