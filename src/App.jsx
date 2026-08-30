@@ -504,7 +504,14 @@ function Weather({ lang, setLang }) {
               </div>
               <div className={`d-verdict v-${sel.ag?.level || "dry"}`}>
                 <b>{sel.ag ? t(sel.ag.key) : "—"}</b>
-                <span>{t("modelsRain", { wet: sel.ag ? sel.ag.wet : 0, total: sel.ag ? sel.ag.total : 0 })}</span>
+                <span>
+                  {sel.ag && sel.ag.hi >= 0.1
+                    ? t("modelsRainSpread", {
+                        wet: sel.ag.wet, total: sel.ag.total,
+                        lo: fmt(sel.ag.lo), hi: fmt(sel.ag.hi),
+                      })
+                    : t("modelsRain", { wet: sel.ag ? sel.ag.wet : 0, total: sel.ag ? sel.ag.total : 0 })}
+                </span>
               </div>
             </div>
 
@@ -1165,9 +1172,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .d-temps{font-size:14px;color:var(--muted);margin-top:2px}
 .d-temps b{font-size:24px;color:var(--text)}
 .d-wind{margin-inline-start:4px;font-size:13px}
-.d-verdict{display:flex;flex-direction:column;gap:1px;text-align:end;min-width:180px}
+.d-verdict{display:flex;flex-direction:column;gap:2px;text-align:end;min-width:200px;max-width:320px}
 .d-verdict b{font-size:16px}
-.d-verdict span{font-size:12.5px;color:var(--muted);font-weight:300}
+.d-verdict span{font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.5}
 .v-high b{color:var(--mint)} .v-mid b{color:var(--warm)} .v-split b{color:var(--rose)} .v-dry b{color:#6E819F}
 .d-scale{margin-top:16px}
 .d-chips:first-child{margin-top:0}
@@ -1344,7 +1351,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .w-warn{width:6px;height:6px;top:4px;inset-inline-end:4px}
   .detail{padding:14px 13px}
   .d-ic{width:54px;height:54px}
-  .d-verdict{text-align:start;min-width:0;flex:1 1 100%;margin-top:4px}
+  .d-verdict{text-align:start;min-width:0;max-width:none;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
   .readout{gap:8px;padding-top:8px}
   .readout.top{gap:8px;padding:7px 9px;min-height:36px}
