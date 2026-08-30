@@ -83,7 +83,7 @@ he: {
   varTemp: "טמפרטורה",
   varWind: "רוח",
   scopeWeek: "כל השבוע",
-  scopeDay: "יום {day}",
+  scopeDay: "{day}",
   bandKey: "אזור אי־ההסכמה — הפער בין המודל הקיצוני ביותר לכל כיוון",
   unitMmH: "מ״מ/ש׳",
   unitC: "°C",

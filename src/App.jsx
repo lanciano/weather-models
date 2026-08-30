@@ -509,16 +509,20 @@ function Weather({ lang, setLang }) {
             </div>
 
             <div className="d-scale">
-              <div className="d-track">
-                {sel.pairs.map((p) => typeof p.v === "number" && (
-                  <span key={p.id} className="d-tick" title={`${M[p.id].short} · ${fmt(p.v)} ${mm}`}
-                    style={{ background: M[p.id].ink, insetInlineStart: `${Math.min(100, (p.v / Math.max(1, sel.ag?.hi || 1)) * 100)}%` }} />
-                ))}
-              </div>
-              <div className="d-nums">
-                <span>{t("scaleDry", { v: fmt(sel.ag?.lo) })}</span>
-                <span>{t("scaleWet", { v: fmt(sel.ag?.hi) })}</span>
-              </div>
+              {sel.ag && sel.ag.hi >= 0.1 && (
+                <>
+                  <div className="d-track">
+                    {sel.pairs.map((p) => typeof p.v === "number" && (
+                      <span key={p.id} className="d-tick" title={`${M[p.id].short} · ${fmt(p.v)} ${mm}`}
+                        style={{ background: M[p.id].ink, insetInlineStart: `${Math.min(100, (p.v / Math.max(1, sel.ag?.hi || 1)) * 100)}%` }} />
+                    ))}
+                  </div>
+                  <div className="d-nums">
+                    <span>{t("scaleDry", { v: fmt(sel.ag?.lo) })}</span>
+                    <span>{t("scaleWet", { v: fmt(sel.ag?.hi) })}</span>
+                  </div>
+                </>
+              )}
               <div className="d-chips">
                 {[...sel.pairs].filter((p) => typeof p.v === "number").sort((a, b) => a.v - b.v).map((p) => (
                   <span className="d-chip" key={p.id} style={{ borderColor: M[p.id].ink + "66" }}>
@@ -1165,7 +1169,8 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .d-verdict b{font-size:16px}
 .d-verdict span{font-size:12.5px;color:var(--muted);font-weight:300}
 .v-high b{color:var(--mint)} .v-mid b{color:var(--warm)} .v-split b{color:var(--rose)} .v-dry b{color:#6E819F}
-.d-scale{margin-top:20px}
+.d-scale{margin-top:16px}
+.d-chips:first-child{margin-top:0}
 .d-track{position:relative;height:16px;border-bottom:1px solid var(--rule)}
 .d-tick{position:absolute;bottom:0;width:3px;height:13px;border-radius:2px;transform:translateX(50%)}
 .d-nums{display:flex;justify-content:space-between;margin-top:6px;font-size:11.5px;color:var(--muted);font-weight:300}
