@@ -460,6 +460,64 @@ export default function App() {
         )}
       </section>
 
+      {/* ── שעה־שעה ── */}
+      {!!hourly24.length && (
+        <section className="hourly">
+          <div className="sec-head">
+            <h2>שעה־שעה</h2>
+            <span className="sub">יום {sel?.dow} · {sel?.date}</span>
+          </div>
+
+          <div className="hpanel">
+            <div className={`hlead ${hourlyDry ? "dry" : ""}`}>
+              {hourlyDry ? (
+                <>כל {active.length} המודלים חוזים <b>יום יבש</b> — אין שעה אחת שבה אפילו אחד מהם מצפה למשקעים.
+                  הקו הכתום הוא הטמפרטורה לאורך היום.</>
+              ) : peak && peak.med > 0.05 ? (
+                <>השיא הצפוי סביב <b>{peak.label}</b> — כ־<b>{fmt(peak.med)} מ״מ</b> לפי חציון המודלים,
+                  ועד <b>{fmt(peak.max)} מ״מ</b> בתרחיש הגשום.</>
+              ) : (
+                <>רוב המודלים חוזים יום יבש, אבל יש שעות שבהן חלקם מצפים למשקעים קלים.</>
+              )}
+            </div>
+
+            <div dir="ltr" style={{ width: "100%", height: narrow ? 200 : 240 }}>
+              <ResponsiveContainer>
+                <ComposedChart data={hourly24} margin={{ top: 10, right: 4, bottom: 0, left: 0 }} barCategoryGap="18%">
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#8FA1BC" }}
+                    axisLine={{ stroke: "#2E4166" }} tickLine={false} interval={narrow ? 3 : 2} />
+                  <YAxis yAxisId="l" domain={[0, maxYH]} width={38} tick={{ fontSize: 11, fill: "#8FA1BC" }}
+                    axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="r" orientation="right" domain={["auto", "auto"]} width={38}
+                    tick={{ fontSize: 11, fill: "#F5A24B" }} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }} content={<HourTip />} />
+                  <Bar yAxisId="l" dataKey="max" fill="#9BB6E8" fillOpacity={0.22} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                  <Bar yAxisId="l" dataKey="med" fill="#5AB3F0" radius={[4, 4, 0, 0]} animationDuration={700} />
+                  <Line yAxisId="r" dataKey="temp" stroke="#F5A24B" strokeWidth={2} dot={false}
+                    type="monotone" connectNulls animationDuration={800} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="hagree" dir="ltr">
+              {hourly24.map((r) => (
+                <span key={r.i} className="hcell" title={`${r.label} · ${r.wet}/${r.total}`}>
+                  <i style={{ opacity: r.total ? 0.1 + (r.wet / r.total) * 0.9 : 0.1 }} />
+                  {r.h % 6 === 0 && <em>{String(r.h).padStart(2, "0")}</em>}
+                </span>
+              ))}
+            </div>
+
+            <div className="hlegend">
+              <span><i className="sw solid" /> חציון המודלים — הכמות הסבירה</span>
+              <span><i className="sw ghost" /> התרחיש הגשום ביותר</span>
+              <span><i className="sw warm" /> טמפרטורה (ציר ימין)</span>
+              <span><i className="sw grad" /> כמה מודלים מסכימים שתרד טיפה</span>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── pens ── */}
       <section className="pens">
         <div className="sec-head"><h2>עטים על הנייר</h2><span className="sub">כבו והדליקו מודלים כדי לראות איך התמונה משתנה</span></div>
@@ -507,9 +565,7 @@ export default function App() {
 
           <div dir="ltr" style={{ width: "100%", height: narrow ? 230 : 290 }}>
             <ResponsiveContainer>
-              <ComposedChart data={shown} margin={{ top: 6, right: PAD_R, bottom: 4, left: 0 }}
-                onMouseMove={(st) => setHoverIdx(st?.activeTooltipIndex ?? null)}
-                onMouseLeave={() => setHoverIdx(null)}>
+              <ComposedChart data={shown} margin={{ top: 6, right: PAD_R, bottom: 4, left: 0 }}>
                 <XAxis dataKey="i" type="number" domain={["dataMin", "dataMax"]}
                   ticks={scope === "week" ? [] : shown.filter((r) => r.hour % 3 === 0).map((r) => r.i)}
                   tickFormatter={(i) => trace[i]?.label || ""} tick={{ fontSize: 12, fill: "#8FA1BC" }}
@@ -520,7 +576,7 @@ export default function App() {
                   <ReferenceArea key={d.i} x1={d.i * 24} x2={d.i * 24 + 23} fill="#FFFFFF" fillOpacity={0.028} strokeOpacity={0} />
                 ))}
                 {scope === "week" && days.slice(1).map((d) => <ReferenceLine key={d.i} x={d.i * 24} stroke="#2E4166" />)}
-                <Tooltip content={narrow ? () => null : <Ink variable={variable} trace={trace} />}
+                <Tooltip content={<ChartTip variable={variable} trace={trace} narrow={narrow} onHover={setHoverIdx} />}
                   cursor={{ stroke: "#7E93B8", strokeDasharray: "3 3" }} />
                 <Area dataKey="band" stroke="none" fill="#9BB6E8" fillOpacity={0.16} isAnimationActive={false} connectNulls />
                 {active.map((m) => (
@@ -531,71 +587,11 @@ export default function App() {
             </ResponsiveContainer>
           </div>
 
-          <Readout row={hoverIdx != null ? shown[hoverIdx] : null} models={active} variable={variable} />
+          <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} variable={variable} />
 
           <div className="pkey"><span className="kb" /> אזור אי־ההסכמה — הפער בין המודל הקיצוני ביותר לכל כיוון</div>
         </div>
       </section>
-
-      {/* ── שעה־שעה ── */}
-      {!!hourly24.length && (
-        <section className="hourly">
-          <div className="sec-head">
-            <h2>שעה־שעה</h2>
-            <span className="sub">יום {sel?.dow} · {sel?.date}</span>
-          </div>
-
-          {hourlyDry ? (
-            <div className="hdry">
-              <span className="hdry-ic">{React.createElement(ICONS[sel?.icon || "clear"])}</span>
-              <div>
-                <b>כל {active.length} המודלים חוזים יום יבש</b>
-                <span>אין שעה אחת ביום הזה שבה אפילו מודל אחד מצפה למשקעים.</span>
-              </div>
-            </div>
-          ) : (
-            <div className="hpanel">
-              <div className="hlead">
-                {peak && peak.med > 0.05 ? (
-                  <>השיא הצפוי סביב <b>{peak.label}</b> — כ־<b>{fmt(peak.med)} מ״מ</b> לפי חציון המודלים,
-                    ועד <b>{fmt(peak.max)} מ״מ</b> בתרחיש הגשום.</>
-                ) : (
-                  <>רוב המודלים חוזים יום יבש, אבל יש שעות שבהן חלקם מצפים למשקעים קלים.</>
-                )}
-              </div>
-
-              <div dir="ltr" style={{ width: "100%", height: narrow ? 190 : 230 }}>
-                <ResponsiveContainer>
-                  <ComposedChart data={hourly24} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap="18%">
-                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#8FA1BC" }}
-                      axisLine={{ stroke: "#2E4166" }} tickLine={false} interval={narrow ? 3 : 2} />
-                    <YAxis domain={[0, maxYH]} width={40} tick={{ fontSize: 11, fill: "#8FA1BC" }}
-                      axisLine={false} tickLine={false} />
-                    <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }} content={<HourTip />} />
-                    <Bar dataKey="max" fill="#9BB6E8" fillOpacity={0.22} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                    <Bar dataKey="med" fill="#5AB3F0" radius={[4, 4, 0, 0]} animationDuration={700} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="hagree" dir="ltr">
-                {hourly24.map((r) => (
-                  <span key={r.i} className="hcell" title={`${r.label} · ${r.wet}/${r.total}`}>
-                    <i style={{ opacity: r.total ? 0.12 + (r.wet / r.total) * 0.88 : 0.12 }} />
-                    {r.h % 6 === 0 && <em>{String(r.h).padStart(2, "0")}</em>}
-                  </span>
-                ))}
-              </div>
-
-              <div className="hlegend">
-                <span><i className="sw solid" /> חציון המודלים — הכמות הסבירה</span>
-                <span><i className="sw ghost" /> התרחיש הגשום ביותר</span>
-                <span><i className="sw grad" /> כמה מהמודלים מסכימים שתרד טיפה באותה שעה</span>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
 
       <Scorecard place={place} models={active} />
 
@@ -663,6 +659,14 @@ export default function App() {
 }
 
 /* ═══════════════════════ readout ═══════════════════════ */
+
+/** מגשר: מקבל את אירועי המגע של recharts ומדווח החוצה, ומצייר טולטיפ רק במסך רחב */
+function ChartTip({ active, payload, label, variable, trace, narrow, onHover }) {
+  const live = !!(active && payload && payload.length);
+  useEffect(() => { onHover(live ? label : null); }, [live, label, onHover]);
+  if (narrow || !live) return null;
+  return <Ink active={active} payload={payload} label={label} variable={variable} trace={trace} />;
+}
 
 function Readout({ row, models, variable }) {
   if (!row) {
@@ -1068,8 +1072,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .hpanel{background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:14px 12px 12px}
 .hlead{font-size:14px;color:var(--dim);font-weight:300;line-height:1.6;margin:0 4px 10px;
   border-inline-start:2px solid var(--sky);padding-inline-start:12px}
+.hlead.dry{border-inline-start-color:var(--warm)}
 .hlead b{color:var(--text)}
-.hagree{display:flex;gap:2px;margin:8px 0 0;padding:0 40px 0 8px}
+.hagree{display:flex;gap:2px;margin:8px 0 0;padding:0 38px}
 .hcell{flex:1;position:relative;min-width:0}
 .hcell i{display:block;height:8px;border-radius:2px;background:var(--sky)}
 .hcell em{position:absolute;top:11px;inset-inline-start:0;font-style:normal;font-size:10px;color:var(--muted)}
@@ -1079,13 +1084,8 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .sw{width:16px;height:9px;border-radius:3px;flex:none}
 .sw.solid{background:var(--sky)}
 .sw.ghost{background:#9BB6E8;opacity:.28}
+.sw.warm{background:var(--warm)}
 .sw.grad{background:linear-gradient(90deg,rgba(90,179,240,.15),var(--sky))}
-.hdry{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--rule2);
-  border-radius:14px;padding:18px}
-.hdry-ic{width:56px;height:56px;flex:none}
-.hdry-ic svg{width:100%;height:100%;display:block}
-.hdry b{display:block;font-size:16px}
-.hdry span{font-size:13.5px;color:var(--muted);font-weight:300}
 
 .tip{background:#1C2B47;border:1px solid #3A507A;border-radius:10px;padding:10px 12px;font-size:13px;min-width:158px;
   box-shadow:0 12px 30px rgba(0,0,0,.5)}
@@ -1183,10 +1183,8 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .ro-chip{font-size:11px;padding:2px 7px;gap:4px}
   .hpanel{padding:12px 8px 10px}
   .hlead{font-size:13px;margin-inline:0}
-  .hagree{padding:0 36px 0 6px}
+  .hagree{padding:0 34px}
   .hlegend{gap:5px 12px;font-size:11.5px;margin-top:24px}
-  .hdry{padding:14px;gap:12px}
-  .hdry-ic{width:44px;height:44px}
   .band .b-day{font-size:11px} .b-ic{width:20px;height:20px} .b-date{font-size:9.5px}
   .score{padding:16px 14px;border-radius:12px}
   .s-hrow{display:none}
