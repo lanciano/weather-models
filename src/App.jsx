@@ -136,6 +136,19 @@ function outliers(pairs) {
   return out;
 }
 
+/** °C ↔ °F. toT ממיר ערך, toDT ממיר הפרש (בלי היסט) */
+const toT = (c, u) => (typeof c === "number" ? (u === "f" ? c * 9 / 5 + 32 : c) : c);
+const toDT = (c, u) => (typeof c === "number" ? (u === "f" ? c * 9 / 5 : c) : c);
+
+function UnitToggle({ value, onChange }) {
+  return (
+    <span className="utog" dir="ltr">
+      <button className={value === "c" ? "on" : ""} onClick={() => onChange("c")}>°C</button>
+      <button className={value === "f" ? "on" : ""} onClick={() => onChange("f")}>°F</button>
+    </span>
+  );
+}
+
 /* ═══════════════════════ root ═══════════════════════ */
 
 const FALLBACK = { name: "Tel Aviv-Yafo", region: "Israel", lat: 32.0853, lon: 34.7818 };
@@ -190,7 +203,7 @@ function LangSwitch({ lang, setLang }) {
               <button className={l.code === lang ? "on" : ""} dir={l.dir}
                 onClick={() => { setLang(l.code); setOpen(false); }}>
                 <span className="lm-native">{l.native}</span>
-                <span className="lm-en">{l.english}</span>
+                <span className="lm-flag" role="img" aria-label={l.english}>{l.flag}</span>
               </button>
             </li>
           ))}
@@ -221,6 +234,14 @@ function Weather({ lang, setLang }) {
   const [narrow, setNarrow] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(max-width:760px)").matches
   );
+  const [unitT, setUnitT] = useState(() => {
+    try {
+      const s = localStorage.getItem("wx-unit");
+      if (s === "c" || s === "f") return s;
+    } catch { /* private */ }
+    return /^en-US|^en-us/.test(navigator.language || "") ? "f" : "c";
+  });
+  useEffect(() => { try { localStorage.setItem("wx-unit", unitT); } catch { /* private */ } }, [unitT]);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -306,19 +327,21 @@ function Weather({ lang, setLang }) {
 
   const trace = useMemo(() => {
     if (!data?.hourly?.time) return [];
+    const isTemp = variable === "temperature_2m";
     return data.hourly.time.map((iso, i) => {
       const d = new Date(iso);
       const row = { iso, i, hour: d.getHours(), dayIdx: Math.floor(i / 24), label: `${String(d.getHours()).padStart(2, "0")}:00` };
       const vals = [];
       active.forEach((m) => {
-        const v = pick(data.hourly, variable, m)?.[i];
+        let v = pick(data.hourly, variable, m)?.[i];
+        if (typeof v === "number" && isTemp) v = toT(v, unitT);
         row[m] = typeof v === "number" ? v : null;
         if (typeof v === "number") vals.push(v);
       });
       row.band = vals.length > 1 ? [Math.min(...vals), Math.max(...vals)] : null;
       return row;
     });
-  }, [data, active, variable]);
+  }, [data, active, variable, unitT]);
 
   const shown = useMemo(
     () => (scope === "week" ? trace : trace.filter((r) => r.dayIdx === daySel)),
@@ -343,13 +366,13 @@ function Weather({ lang, setLang }) {
       const tMax = tmax.length ? mean(tmax) : null;
       return {
         i, iso, dow: dates.weekday(d), dowS: dates.weekdayShort(d), date: dates.dayMonth(d),
-        rain, pairs, ag, tmax: tMax, tmin: tmin.length ? mean(tmin) : null,
+        rain, pairs, ag, tmax: toT(tMax, unitT), tmin: toT(tmin.length ? mean(tmin) : null, unitT),
         wind: wind.length ? Math.max(...wind) : null,
         icon: pickIcon(ag?.med ?? 0, cc.length ? mean(cc) : null, tMax),
         outs: outliers(pairs),
       };
     });
-  }, [data, active, dates]);
+  }, [data, active, dates, unitT]);
 
   const sel = days[daySel];
   const maxWeekRain = useMemo(() => Math.max(1, ...days.map((d) => d.ag?.hi || 0)), [days]);
@@ -367,11 +390,11 @@ function Weather({ lang, setLang }) {
         i, h: d.getHours(), label: `${String(d.getHours()).padStart(2, "0")}:00`,
         med, max, extra: Math.max(0, max - med),
         wet: vals.filter((v) => v >= 0.1).length, total: vals.length,
-        temp: temps.length ? median(temps) : null,
+        temp: temps.length ? toT(median(temps), unitT) : null,
       });
     }
     return out;
-  }, [data, active, daySel]);
+  }, [data, active, daySel, unitT]);
 
   const hourlyDry = hourly24.length > 0 && hourly24.every((r) => r.max < 0.05);
   const maxYH = useMemo(() => {
@@ -396,7 +419,8 @@ function Weather({ lang, setLang }) {
   }, [shown, active, variable]);
 
   const PAD_L = 44, PAD_R = 10;
-  const unit = t(VAR_UNITS[variable]);
+  const degLabel = unitT === "f" ? "°F" : "°C";
+  const unit = variable === "temperature_2m" ? degLabel : t(VAR_UNITS[variable]);
   const mm = t("unitMm");
 
   return (
@@ -525,6 +549,7 @@ function Weather({ lang, setLang }) {
           <div className="sec-head">
             <h2>{t("hourlyTitle")}</h2>
             <span className="sub">{t("scopeDay", { day: sel?.dow })} · {sel?.date}</span>
+            <span className="sh-end"><UnitToggle value={unitT} onChange={setUnitT} /></span>
           </div>
 
           <div className="hpanel">
@@ -612,7 +637,10 @@ function Weather({ lang, setLang }) {
 
         <div className="panel">
           {!active.length && <div className="veil">{t("pensEmpty")}</div>}
-          <div className="ptop"><span className="unit">{unit}</span></div>
+          <div className="ptop">
+            {variable === "temperature_2m" && <UnitToggle value={unitT} onChange={setUnitT} />}
+            <span className="unit">{unit}</span>
+          </div>
 
           {scope === "week" && (
             <div className="bands" dir="ltr" style={{ marginLeft: PAD_L, marginRight: PAD_R }}>
@@ -657,7 +685,7 @@ function Weather({ lang, setLang }) {
         </div>
       </section>
 
-      <Scorecard place={place} models={active} />
+      <Scorecard place={place} models={active} unitT={unitT} />
 
       {weekTotals.length > 1 && (
         <section className="totals">
@@ -874,7 +902,7 @@ function score(pred, obs) {
   return n >= 5 ? { n, mae: sae / n, hit, miss, fa, dry } : null;
 }
 
-function Scorecard({ place, models }) {
+function Scorecard({ place, models, unitT }) {
   const { t } = useI18n();
   const [win, setWin] = useState(90);
   const [lead, setLead] = useState(3);
@@ -989,7 +1017,7 @@ function Scorecard({ place, models }) {
                 </span>
                 <span className="s-n" data-l={t("thMiss")}>{r.rain.miss} {t("daysUnit")}</span>
                 <span className="s-n" data-l={t("thFa")}>{r.rain.fa} {t("daysUnit")}</span>
-                <span className="s-n" data-l={t("thTempErr")}>{r.temp ? `${fmt(r.temp.mae, 1)}°` : "–"}</span>
+                <span className="s-n" data-l={t("thTempErr")}>{r.temp ? `${fmt(toDT(r.temp.mae, unitT), 1)}${unitT === "f" ? "°F" : "°C"}` : "–"}</span>
               </div>
             ))}
           </div>
@@ -1040,6 +1068,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   background:radial-gradient(90% 90% at 80% -20%,rgba(90,179,240,.16),transparent 62%),
   radial-gradient(70% 80% at 12% -10%,rgba(197,139,240,.12),transparent 60%)}
 .sec-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.sh-end{margin-inline-start:auto;align-self:center}
 .sub{font-size:13.5px;color:var(--muted);font-weight:300}
 .sub.wide{max-width:72ch;line-height:1.7;margin:0 0 18px}
 .sub b{color:var(--dim)}
@@ -1062,7 +1091,15 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .lang-menu button:hover{background:#26385A}
 .lang-menu button.on{background:#1C3151;box-shadow:0 0 0 1px var(--sky) inset}
 .lm-native{font-size:14px;font-weight:500}
-.lm-en{font-size:11px;color:var(--muted);font-weight:300}
+.lm-flag{font-size:17px;line-height:1;flex:none}
+
+/* °C / °F */
+.utog{display:inline-flex;align-items:center;background:rgba(255,255,255,.04);
+  border:1px solid var(--rule2);border-radius:999px;padding:2px;flex:none}
+.utog button{background:none;border:0;padding:2px 9px;border-radius:999px;
+  font-size:11.5px;font-weight:500;color:var(--muted);line-height:1.5;transition:.15s}
+.utog button:hover{color:var(--dim)}
+.utog button.on{background:var(--rule);color:var(--text);font-weight:600}
 
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
   max-width:1120px;margin:0 auto;padding:26px 0 26px;border-bottom:1px solid var(--rule)}
@@ -1155,7 +1192,8 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .vtab{background:transparent;border:0;padding:8px 15px;font-size:13.5px;color:var(--muted);font-weight:500;white-space:nowrap}
 .vtab.on{background:var(--sky);color:#0E1728;font-weight:600}
 .panel{position:relative;background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:10px 12px 0}
-.ptop{display:flex;justify-content:flex-end;font-size:11.5px;color:var(--muted);font-weight:300;margin-bottom:4px}
+.ptop{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:11.5px;
+  color:var(--muted);font-weight:300;margin-bottom:4px;min-height:22px}
 .bands{display:flex;gap:5px;margin-bottom:6px}
 .band{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:transparent;border:0;
   border-radius:9px;padding:6px 2px;transition:.15s;min-width:0}

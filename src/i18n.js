@@ -3,12 +3,12 @@ import { createContext, useContext } from "react";
 /* ═══════════════════════ languages ═══════════════════════ */
 
 export const LANGS = [
-  { code: "he", native: "עברית",    english: "Hebrew",  dir: "rtl", locale: "he-IL", geo: "he" },
-  { code: "en", native: "English",  english: "English", dir: "ltr", locale: "en-US", geo: "en" },
-  { code: "ru", native: "Русский",  english: "Russian", dir: "ltr", locale: "ru-RU", geo: "ru" },
-  { code: "es", native: "Español",  english: "Spanish", dir: "ltr", locale: "es-ES", geo: "es" },
-  { code: "fr", native: "Français", english: "French",  dir: "ltr", locale: "fr-FR", geo: "fr" },
-  { code: "ar", native: "العربية",  english: "Arabic",  dir: "rtl", locale: "ar-u-nu-latn", geo: "ar" },
+  { code: "he", native: "עברית",    flag: "🇮🇱", english: "Hebrew",  dir: "rtl", locale: "he-IL", geo: "he" },
+  { code: "en", native: "English",  flag: "🇬🇧", english: "English", dir: "ltr", locale: "en-US", geo: "en" },
+  { code: "ru", native: "Русский",  flag: "🇷🇺", english: "Russian", dir: "ltr", locale: "ru-RU", geo: "ru" },
+  { code: "es", native: "Español",  flag: "🇪🇸", english: "Spanish", dir: "ltr", locale: "es-ES", geo: "es" },
+  { code: "fr", native: "Français", flag: "🇫🇷", english: "French",  dir: "ltr", locale: "fr-FR", geo: "fr" },
+  { code: "ar", native: "العربية",  flag: "🇸🇦", english: "Arabic",  dir: "rtl", locale: "ar-u-nu-latn", geo: "ar" },
 ];
 
 export const LANG_BY = Object.fromEntries(LANGS.map((l) => [l.code, l]));
