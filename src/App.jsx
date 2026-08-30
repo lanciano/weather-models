@@ -484,6 +484,8 @@ export default function App() {
               )}
             </div>
 
+            {narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} pos="top" />}
+
             <div dir="ltr" style={{ width: "100%", height: narrow ? 200 : 240 }}>
               <ResponsiveContainer>
                 <ComposedChart data={hourly24} margin={{ top: 10, right: 4, bottom: 0, left: 0 }} barCategoryGap="18%">
@@ -504,7 +506,7 @@ export default function App() {
               </ResponsiveContainer>
             </div>
 
-            <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} />
+            {!narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} />}
 
             <div className="hagree" dir="ltr">
               {hourly24.map((r) => (
@@ -570,6 +572,8 @@ export default function App() {
             </div>
           )}
 
+          {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} variable={variable} pos="top" />}
+
           <div dir="ltr" style={{ width: "100%", height: narrow ? 230 : 290 }}>
             <ResponsiveContainer>
               <ComposedChart data={shown} margin={{ top: 6, right: PAD_R, bottom: 4, left: 0 }}>
@@ -594,7 +598,7 @@ export default function App() {
             </ResponsiveContainer>
           </div>
 
-          <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} variable={variable} />
+          {!narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} variable={variable} />}
 
           <div className="pkey"><span className="kb" /> אזור אי־ההסכמה — הפער בין המודל הקיצוני ביותר לכל כיוון</div>
         </div>
@@ -675,9 +679,10 @@ function ChartTip({ active, payload, label, variable, trace, narrow, onHover }) 
   return <Ink active={active} payload={payload} label={label} variable={variable} trace={trace} />;
 }
 
-function Readout({ row, models, variable }) {
+function Readout({ row, models, variable, pos }) {
+  const cls = `readout${pos === "top" ? " top" : ""}`;
   if (!row) {
-    return <div className="readout empty">העבירו את האצבע או הסמן על הגרף כדי לראות מה כל מודל אומר</div>;
+    return <div className={`${cls} empty`}>העבירו את האצבע או הסמן על הגרף כדי לראות מה כל מודל אומר</div>;
   }
   const d = new Date(row.iso);
   const vals = models
@@ -685,7 +690,7 @@ function Readout({ row, models, variable }) {
     .filter((p) => typeof p.v === "number")
     .sort((a, b) => b.v - a.v);
   return (
-    <div className="readout">
+    <div className={cls}>
       <span className="ro-time">{DAYS_HE[d.getDay()]} · {String(d.getHours()).padStart(2, "0")}:00</span>
       <div className="ro-chips">
         {vals.map((p) => (
@@ -720,12 +725,13 @@ function HourTip({ active, payload, label, narrow, onHover }) {
   );
 }
 
-function HourReadout({ row }) {
+function HourReadout({ row, pos }) {
+  const cls = `readout${pos === "top" ? " top" : ""}`;
   if (!row) {
-    return <div className="readout empty">געו בגרף כדי לראות מה צפוי בכל שעה</div>;
+    return <div className={`${cls} empty`}>געו בגרף כדי לראות מה צפוי בכל שעה</div>;
   }
   return (
-    <div className="readout">
+    <div className={cls}>
       <span className="ro-time">{row.label}</span>
       <div className="ro-chips">
         <span className="ro-chip" style={{ borderColor: "#5AB3F055" }}>
@@ -1093,6 +1099,11 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .readout{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:38px;
   border-top:1px solid var(--rule2);margin-top:8px;padding:9px 2px 3px}
 .readout.empty{font-size:12.5px;color:var(--muted);font-weight:300}
+.readout.top{border-top:0;margin:0 0 10px;padding:9px 11px;min-height:44px;
+  background:var(--panel2);border:1px solid var(--rule);border-radius:11px}
+.readout.top .ro-time{color:var(--sky);font-size:13px}
+.readout.top .ro-chip{font-size:12.5px;padding:3px 10px}
+.readout.top .ro-chip em{font-size:13px;font-weight:600}
 .ro-time{font-size:12.5px;font-weight:600;color:var(--dim);white-space:nowrap}
 .ro-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ro-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:999px;
@@ -1215,8 +1226,10 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .d-verdict{text-align:start;min-width:0;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
   .readout{gap:8px;padding-top:8px}
+  .readout.top{gap:7px;padding:8px 10px}
   .ro-time{flex:1 1 100%;font-size:12px}
   .ro-chip{font-size:11px;padding:2px 7px;gap:4px}
+  .readout.top .ro-chip{font-size:11.5px;padding:3px 8px}
   .hpanel{padding:12px 8px 10px}
   .hlead{font-size:13px;margin-inline:0}
   .hagree{padding:0 34px}
