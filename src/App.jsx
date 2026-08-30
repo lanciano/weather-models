@@ -501,7 +501,7 @@ export default function App() {
                   <Bar yAxisId="l" dataKey="extra" stackId="p" fill="#9BB6E8" fillOpacity={0.28}
                     radius={[4, 4, 0, 0]} isAnimationActive={false} />
                   <Line yAxisId="r" dataKey="temp" stroke="#F5A24B" strokeWidth={2} dot={false}
-                    type="monotone" connectNulls animationDuration={800} />
+                    activeDot={<TempDot />} type="monotone" connectNulls animationDuration={800} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -691,7 +691,10 @@ function Readout({ row, models, variable, pos }) {
     .sort((a, b) => b.v - a.v);
   return (
     <div className={cls}>
-      <span className="ro-time">{DAYS_HE[d.getDay()]} · {String(d.getHours()).padStart(2, "0")}:00</span>
+      <span className="ro-time">
+        <b>{String(d.getHours()).padStart(2, "0")}:00</b>
+        <em>{DAYS_HE[d.getDay()]}</em>
+      </span>
       <div className="ro-chips">
         {vals.map((p) => (
           <span className="ro-chip" key={p.id} style={{ borderColor: M[p.id].ink + "55" }}>
@@ -725,6 +728,30 @@ function HourTip({ active, payload, label, narrow, onHover }) {
   );
 }
 
+/** בועה קטנה עם המעלות, צמודה לנקודה שהאצבע נמצאת עליה */
+function TempDot({ cx, cy, payload }) {
+  if (cx == null || cy == null || typeof payload?.temp !== "number") return null;
+  const w = 42, h = 22, gap = 11;
+  const above = cy > h + gap + 6;
+  const y = above ? cy - gap - h : cy + gap;
+  const ty = above ? cy - gap : cy + gap;
+  return (
+    <g style={{ pointerEvents: "none" }}>
+      <circle cx={cx} cy={cy} r={5.5} fill="#F5A24B" stroke="#0E1728" strokeWidth={2.5} />
+      <path d={above
+        ? `M${cx - 5} ${ty} L${cx} ${ty + 5} L${cx + 5} ${ty} Z`
+        : `M${cx - 5} ${ty} L${cx} ${ty - 5} L${cx + 5} ${ty} Z`}
+        fill="#F5A24B" />
+      <rect x={cx - w / 2} y={y} width={w} height={h} rx={8} fill="#F5A24B" />
+      <text x={cx} y={y + h / 2} textAnchor="middle" dominantBaseline="central"
+        fontSize="13.5" fontWeight="700" fill="#0E1728"
+        fontFamily="'IBM Plex Sans Hebrew',system-ui,sans-serif">
+        {Math.round(payload.temp)}°
+      </text>
+    </g>
+  );
+}
+
 function HourReadout({ row, pos }) {
   const cls = `readout${pos === "top" ? " top" : ""}`;
   if (!row) {
@@ -732,7 +759,7 @@ function HourReadout({ row, pos }) {
   }
   return (
     <div className={cls}>
-      <span className="ro-time">{row.label}</span>
+      <span className="ro-time"><b>{row.label}</b></span>
       <div className="ro-chips">
         <span className="ro-chip" style={{ borderColor: "#5AB3F055" }}>
           <i style={{ background: "#5AB3F0" }} /><b style={{ color: "#5AB3F0" }}>חציון</b><em>{fmt(row.med)} מ״מ</em>
@@ -1099,12 +1126,15 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .readout{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:38px;
   border-top:1px solid var(--rule2);margin-top:8px;padding:9px 2px 3px}
 .readout.empty{font-size:12.5px;color:var(--muted);font-weight:300}
-.readout.top{border-top:0;margin:0 0 10px;padding:9px 11px;min-height:44px;
-  background:var(--panel2);border:1px solid var(--rule);border-radius:11px}
-.readout.top .ro-time{color:var(--sky);font-size:13px}
+.readout.top{border-top:0;margin:0 0 10px;padding:10px 11px 11px;min-height:44px;
+  background:var(--panel2);border:1px solid var(--rule);border-radius:11px;
+  flex-direction:column;align-items:center;gap:9px}
+.readout.top .ro-chips{justify-content:center}
 .readout.top .ro-chip{font-size:12.5px;padding:3px 10px}
 .readout.top .ro-chip em{font-size:13px;font-weight:600}
-.ro-time{font-size:12.5px;font-weight:600;color:var(--dim);white-space:nowrap}
+.ro-time{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap}
+.ro-time b{font-size:22px;font-weight:700;color:var(--text);letter-spacing:.01em;line-height:1}
+.ro-time em{font-style:normal;font-size:12.5px;color:var(--muted);font-weight:400}
 .ro-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ro-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:999px;
   padding:3px 9px;font-size:12px;background:rgba(255,255,255,.02)}
@@ -1226,8 +1256,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .d-verdict{text-align:start;min-width:0;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
   .readout{gap:8px;padding-top:8px}
-  .readout.top{gap:7px;padding:8px 10px}
-  .ro-time{flex:1 1 100%;font-size:12px}
+  .readout.top{gap:8px;padding:10px}
+  .ro-time{flex:none}
+  .ro-time b{font-size:24px}
   .ro-chip{font-size:11px;padding:2px 7px;gap:4px}
   .readout.top .ro-chip{font-size:11.5px;padding:3px 8px}
   .hpanel{padding:12px 8px 10px}
