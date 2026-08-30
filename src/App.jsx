@@ -770,11 +770,6 @@ function HourReadout({ row, pos }) {
         <span className="ro-chip" style={{ borderColor: "#8FA1BC44" }}>
           <b style={{ color: "var(--muted)" }}>מסכימים</b><em>{row.wet}/{row.total}</em>
         </span>
-        {typeof row.temp === "number" && (
-          <span className="ro-chip" style={{ borderColor: "#F5A24B55" }}>
-            <i style={{ background: "#F5A24B" }} /><b style={{ color: "#F5A24B" }}>חום</b><em>{fmt(row.temp, 0)}°</em>
-          </span>
-        )}
       </div>
     </div>
   );
@@ -1126,15 +1121,14 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .readout{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:38px;
   border-top:1px solid var(--rule2);margin-top:8px;padding:9px 2px 3px}
 .readout.empty{font-size:12.5px;color:var(--muted);font-weight:300}
-.readout.top{border-top:0;margin:0 0 10px;padding:10px 11px 11px;min-height:44px;
+.readout.top{border-top:0;margin:0 0 10px;padding:8px 11px;min-height:40px;
   background:var(--panel2);border:1px solid var(--rule);border-radius:11px;
-  flex-direction:column;align-items:center;gap:9px}
+  justify-content:center;gap:10px}
 .readout.top .ro-chips{justify-content:center}
-.readout.top .ro-chip{font-size:12.5px;padding:3px 10px}
-.readout.top .ro-chip em{font-size:13px;font-weight:600}
-.ro-time{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap}
-.ro-time b{font-size:22px;font-weight:700;color:var(--text);letter-spacing:.01em;line-height:1}
-.ro-time em{font-style:normal;font-size:12.5px;color:var(--muted);font-weight:400}
+.readout.top .ro-chip em{font-weight:600}
+.ro-time{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
+.ro-time b{font-size:15px;font-weight:700;color:var(--text);line-height:1}
+.ro-time em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}
 .ro-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ro-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:999px;
   padding:3px 9px;font-size:12px;background:rgba(255,255,255,.02)}
@@ -1256,11 +1250,12 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .d-verdict{text-align:start;min-width:0;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
   .readout{gap:8px;padding-top:8px}
-  .readout.top{gap:8px;padding:10px}
+  .readout.top{gap:8px;padding:7px 9px;min-height:36px}
   .ro-time{flex:none}
-  .ro-time b{font-size:24px}
+  .ro-time b{font-size:15px}
+  .ro-time em{font-size:11px}
   .ro-chip{font-size:11px;padding:2px 7px;gap:4px}
-  .readout.top .ro-chip{font-size:11.5px;padding:3px 8px}
+  .readout.top .ro-chip{font-size:11px;padding:2px 8px}
   .hpanel{padding:12px 8px 10px}
   .hlead{font-size:13px;margin-inline:0}
   .hagree{padding:0 34px}
