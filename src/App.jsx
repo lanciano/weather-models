@@ -239,7 +239,7 @@ function Weather({ lang, setLang }) {
       const s = localStorage.getItem("wx-unit");
       if (s === "c" || s === "f") return s;
     } catch { /* private */ }
-    return /^en-US|^en-us/.test(navigator.language || "") ? "f" : "c";
+    return "c";
   });
   useEffect(() => { try { localStorage.setItem("wx-unit", unitT); } catch { /* private */ } }, [unitT]);
 
