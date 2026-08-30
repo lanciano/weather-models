@@ -155,6 +155,7 @@ export default function App() {
   const [scope, setScope] = useState("week");
   const [openModel, setOpenModel] = useState(null);
   const [hoverIdx, setHoverIdx] = useState(null);
+  const [hHover, setHHover] = useState(null);
   const [narrow, setNarrow] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(max-width:760px)").matches
   );
@@ -302,10 +303,11 @@ export default function App() {
       const vals = nums(active.map((m) => pick(data.hourly, "precipitation", m)?.[i]));
       const temps = nums(active.map((m) => pick(data.hourly, "temperature_2m", m)?.[i]));
       const t = new Date(data.hourly.time[i]);
+      const med = vals.length ? median(vals) : 0;
+      const max = vals.length ? Math.max(...vals) : 0;
       out.push({
         i, h: t.getHours(), label: `${String(t.getHours()).padStart(2, "0")}:00`,
-        med: vals.length ? median(vals) : 0,
-        max: vals.length ? Math.max(...vals) : 0,
+        med, max, extra: Math.max(0, max - med),
         wet: vals.filter((v) => v >= 0.1).length,
         total: vals.length,
         temp: temps.length ? median(temps) : null,
@@ -315,10 +317,11 @@ export default function App() {
   }, [data, active, daySel]);
 
   const hourlyDry = hourly24.length > 0 && hourly24.every((r) => r.max < 0.05);
-  const maxYH = useMemo(
-    () => Math.max(0.6, ...hourly24.map((r) => r.max)) * 1.15,
-    [hourly24]
-  );
+  const maxYH = useMemo(() => {
+    const v = Math.max(0.6, ...hourly24.map((r) => r.max)) * 1.15;
+    const step = v <= 1 ? 0.25 : v <= 3 ? 0.5 : v <= 10 ? 1 : v <= 30 ? 5 : 10;
+    return Math.ceil(v / step) * step;
+  }, [hourly24]);
   const peak = useMemo(
     () => hourly24.reduce((a, b) => (b.med > (a?.med ?? -1) ? b : a), null),
     [hourly24]
@@ -490,14 +493,18 @@ export default function App() {
                     axisLine={false} tickLine={false} />
                   <YAxis yAxisId="r" orientation="right" domain={["auto", "auto"]} width={38}
                     tick={{ fontSize: 11, fill: "#F5A24B" }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }} content={<HourTip />} />
-                  <Bar yAxisId="l" dataKey="max" fill="#9BB6E8" fillOpacity={0.22} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                  <Bar yAxisId="l" dataKey="med" fill="#5AB3F0" radius={[4, 4, 0, 0]} animationDuration={700} />
+                  <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }}
+                    content={<HourTip narrow={narrow} onHover={setHHover} />} />
+                  <Bar yAxisId="l" dataKey="med" stackId="p" fill="#5AB3F0" animationDuration={700} />
+                  <Bar yAxisId="l" dataKey="extra" stackId="p" fill="#9BB6E8" fillOpacity={0.28}
+                    radius={[4, 4, 0, 0]} isAnimationActive={false} />
                   <Line yAxisId="r" dataKey="temp" stroke="#F5A24B" strokeWidth={2} dot={false}
                     type="monotone" connectNulls animationDuration={800} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
+
+            <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} />
 
             <div className="hagree" dir="ltr">
               {hourly24.map((r) => (
@@ -509,8 +516,8 @@ export default function App() {
             </div>
 
             <div className="hlegend">
-              <span><i className="sw solid" /> חציון המודלים — הכמות הסבירה</span>
-              <span><i className="sw ghost" /> התרחיש הגשום ביותר</span>
+              <span><i className="sw solid" /> חלק כהה בעמודה — חציון המודלים</span>
+              <span><i className="sw ghost" /> ההמשך הבהיר — עד לתרחיש הגשום ביותר</span>
               <span><i className="sw warm" /> טמפרטורה (ציר ימין)</span>
               <span><i className="sw grad" /> כמה מודלים מסכימים שתרד טיפה</span>
             </div>
@@ -694,8 +701,10 @@ function Readout({ row, models, variable }) {
   );
 }
 
-function HourTip({ active, payload }) {
-  if (!active || !payload?.length) return null;
+function HourTip({ active, payload, label, narrow, onHover }) {
+  const live = !!(active && payload && payload.length);
+  useEffect(() => { onHover(live ? label : null); }, [live, label, onHover]);
+  if (narrow || !live) return null;
   const r = payload[0]?.payload;
   if (!r) return null;
   return (
@@ -703,10 +712,37 @@ function HourTip({ active, payload }) {
       <div className="tip-h">{r.label}</div>
       <div className="tip-r"><span className="tip-n">חציון המודלים</span><span className="tip-v">{fmt(r.med)} מ״מ</span></div>
       <div className="tip-r"><span className="tip-n">התרחיש הגשום</span><span className="tip-v">{fmt(r.max)} מ״מ</span></div>
-      <div className="tip-r"><span className="tip-n">מסכימים שתרד טיפה</span><span className="tip-v">{r.wet} מתוך {r.total}</span></div>
+      <div className="tip-r"><span className="tip-n">מסכימים על טיפה</span><span className="tip-v">{r.wet} מתוך {r.total}</span></div>
       {typeof r.temp === "number" && (
         <div className="tip-r"><span className="tip-n">טמפרטורה</span><span className="tip-v">{fmt(r.temp, 0)}°</span></div>
       )}
+    </div>
+  );
+}
+
+function HourReadout({ row }) {
+  if (!row) {
+    return <div className="readout empty">געו בגרף כדי לראות מה צפוי בכל שעה</div>;
+  }
+  return (
+    <div className="readout">
+      <span className="ro-time">{row.label}</span>
+      <div className="ro-chips">
+        <span className="ro-chip" style={{ borderColor: "#5AB3F055" }}>
+          <i style={{ background: "#5AB3F0" }} /><b style={{ color: "#5AB3F0" }}>חציון</b><em>{fmt(row.med)} מ״מ</em>
+        </span>
+        <span className="ro-chip" style={{ borderColor: "#9BB6E855" }}>
+          <i style={{ background: "#9BB6E8", opacity: 0.6 }} /><b style={{ color: "#9BB6E8" }}>גשום</b><em>{fmt(row.max)} מ״מ</em>
+        </span>
+        <span className="ro-chip" style={{ borderColor: "#8FA1BC44" }}>
+          <b style={{ color: "var(--muted)" }}>מסכימים</b><em>{row.wet}/{row.total}</em>
+        </span>
+        {typeof row.temp === "number" && (
+          <span className="ro-chip" style={{ borderColor: "#F5A24B55" }}>
+            <i style={{ background: "#F5A24B" }} /><b style={{ color: "#F5A24B" }}>חום</b><em>{fmt(row.temp, 0)}°</em>
+          </span>
+        )}
+      </div>
     </div>
   );
 }
