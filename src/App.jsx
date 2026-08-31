@@ -584,36 +584,38 @@ function Weather({ lang, setLang }) {
         </div>
         <div className="head-r" ref={boxRef}>
           <label className="lab" htmlFor="q">{t("searchLabel")}</label>
-          <input id="q" className="srch" value={query} autoComplete="off"
-            placeholder={t("searchPlaceholder")} onChange={(e) => setQuery(e.target.value)} />
-          {searching && <div className="hint">{t("searching")}</div>}
-          {!!results.length && (
-            <ul className="res">
-              {results.map((r) => {
-                const ic = wmoIcon(r.curCode);
-                const Ic = ic ? ICONS[ic] : null;
-                return (
-                  <li key={r.id}>
-                    <button onClick={() => {
-                      setPlace({ name: r.name, region: [r.admin1, r.country].filter(Boolean).join(", "), lat: r.latitude, lon: r.longitude });
-                      setQuery(""); setResults([]); setDaySel(0); setPage(0); setScope("week");
-                    }}>
-                      <span className="res-txt">
-                        <span className="rn">{r.name}</span>
-                        <span className="rr">{[r.admin1, r.country].filter(Boolean).join(", ")}</span>
-                      </span>
-                      {Ic && (
-                        <span className="res-wx">
-                          <span className="res-ic"><Ic /></span>
-                          {typeof r.curTemp === "number" && <span className="res-t">{fmt(toT(r.curTemp, unitT), 0)}°</span>}
+          <div className="srch-wrap">
+            <input id="q" className="srch" value={query} autoComplete="off"
+              placeholder={t("searchPlaceholder")} onChange={(e) => setQuery(e.target.value)} />
+            {!!results.length && (
+              <ul className="res">
+                {results.map((r) => {
+                  const ic = wmoIcon(r.curCode);
+                  const Ic = ic ? ICONS[ic] : null;
+                  return (
+                    <li key={r.id}>
+                      <button onClick={() => {
+                        setPlace({ name: r.name, region: [r.admin1, r.country].filter(Boolean).join(", "), lat: r.latitude, lon: r.longitude });
+                        setQuery(""); setResults([]); setDaySel(0); setPage(0); setScope("week");
+                      }}>
+                        <span className="res-txt">
+                          <span className="rn">{r.name}</span>
+                          <span className="rr">{[r.admin1, r.country].filter(Boolean).join(", ")}</span>
                         </span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                        {Ic && (
+                          <span className="res-wx">
+                            <span className="res-ic"><Ic /></span>
+                            {typeof r.curTemp === "number" && <span className="res-t">{fmt(toT(r.curTemp, unitT), 0)}°</span>}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          {searching && <div className="hint">{t("searching")}</div>}
           <div className="coords">
             {place.region && <>{place.region} · </>}{place.lat.toFixed(3)}°, {place.lon.toFixed(3)}°
             <button className="geo" onClick={locate} disabled={locating}>
@@ -1509,6 +1511,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
 .head-r{flex:0 1 300px;position:relative}
 .lab{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:500}
+.srch-wrap{position:relative}
 .srch{width:100%;background:var(--panel);border:1px solid var(--rule);border-radius:10px;
   padding:11px 13px;font-size:16px;font-family:inherit;color:var(--text)}
 .srch::placeholder{color:#6B7D9B;font-weight:300}
