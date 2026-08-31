@@ -870,14 +870,14 @@ function Weather({ lang, setLang }) {
 
           {scope === "day" && sel && (
             <div className="day-nav">
-              <button className="back-week" onClick={() => setScope("week")}>
-                <span className="bw-ic"><Chev flip={dir === "rtl"} /></span>
-                {t("scopeWeek")}
-              </button>
               <span className="dn-day">
                 <span className="dn-ic">{React.createElement(ICONS[sel.icon])}</span>
                 <b>{sel.dow}</b><em>{sel.date}</em>
               </span>
+              <button className="back-week" onClick={() => setScope("week")}>
+                <span className="bw-ic"><Chev flip={dir === "rtl"} /></span>
+                {t("scopeWeek")}
+              </button>
             </div>
           )}
 
@@ -1669,19 +1669,20 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .b-date{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
 
 /* חזרה לתצוגת שבוע */
-.day-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  margin-bottom:8px;padding:0 2px}
-.back-week{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);
-  border:1px solid var(--rule);border-radius:999px;padding:6px 14px;
-  font-size:13px;font-weight:500;color:var(--sky);transition:.15s}
-.back-week:active{background:#26385A}
-.bw-ic{width:14px;height:14px;display:block;flex:none}
-.bw-ic svg{width:100%;height:100%;display:block}
-.dn-day{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:var(--dim)}
-.dn-day b{font-weight:600;color:var(--text)}
-.dn-day em{font-style:normal;font-size:12px;color:var(--muted)}
-.dn-ic{width:24px;height:24px;flex:none}
+.day-nav{display:flex;flex-direction:column;align-items:stretch;gap:8px;
+  margin-bottom:10px;padding:0 2px}
+.dn-day{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-size:14px;color:var(--dim)}
+.dn-day b{font-weight:600;color:var(--text);font-size:15px}
+.dn-day em{font-style:normal;font-size:12.5px;color:var(--muted)}
+.dn-ic{width:26px;height:26px;flex:none}
 .dn-ic svg{width:100%;height:100%;display:block}
+.back-week{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  background:var(--panel2);border:1px solid var(--rule);border-radius:10px;padding:11px 16px;
+  font-size:14px;font-weight:600;color:var(--sky);transition:.15s}
+.back-week:active{background:#26385A;border-color:var(--sky)}
+.bw-ic{width:16px;height:16px;display:block;flex:none}
+.bw-ic svg{width:100%;height:100%;display:block}
 .pkey{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);font-weight:300;
   border-top:1px solid var(--rule2);margin-top:6px;padding:10px 4px 12px}
 .kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none}
@@ -1858,11 +1859,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .b-day .lg{display:none} .b-day .sm{display:inline}
   .b-ic{width:26px;height:26px}
   .b-date{font-size:9.5px}
-  .day-nav{gap:8px}
-  .back-week{font-size:12px;padding:5px 11px;gap:5px}
-  .dn-day{font-size:12.5px;gap:5px}
-  .dn-day em{font-size:11px}
-  .dn-ic{width:20px;height:20px}
+  .day-nav{gap:7px}
+  .back-week{font-size:13.5px;padding:10px 14px;gap:7px}
+  .dn-day{font-size:13px;gap:6px}
+  .dn-day b{font-size:14px}
+  .dn-day em{font-size:11.5px}
+  .dn-ic{width:22px;height:22px}
   .score{padding:16px 14px;border-radius:12px}
   .s-hrow{display:none}
   .s-row{grid-template-columns:1fr 1fr;gap:7px 10px;font-size:13px;padding:11px 12px}
