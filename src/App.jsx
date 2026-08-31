@@ -859,17 +859,14 @@ function Weather({ lang, setLang }) {
           )}
 
           {scope === "week" && (
-            <div className="bands-row">
-              <div className="bands" dir="ltr">
-                {view.map((d) => (
-                  <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
-                    <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
-                    <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
-                    <span className="b-date">{d.date}</span>
-                  </button>
-                ))}
-              </div>
-              <span className="bands-unit">{unit}</span>
+            <div className="bands" dir="ltr">
+              {view.map((d) => (
+                <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
+                  <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
+                  <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
+                  <span className="b-date">{d.date}</span>
+                </button>
+              ))}
             </div>
           )}
 
@@ -882,7 +879,6 @@ function Weather({ lang, setLang }) {
               <span className="dn-day">
                 <span className="dn-ic">{React.createElement(ICONS[sel.icon])}</span>
                 <b>{sel.dow}</b><em>{sel.date}</em>
-                <em className="dn-unit">{unit}</em>
               </span>
             </div>
           )}
@@ -921,7 +917,11 @@ function Weather({ lang, setLang }) {
 
           {!narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} dates={dates} />}
 
-          <div className="pkey"><span className="kb" /> {t("bandKey")}</div>
+          <div className="pkey">
+            <span className="kb" />
+            <span className="pkey-txt">{t("bandKey")}</span>
+            <span className="pkey-unit">{unit}</span>
+          </div>
         </div>
       </section>
 
@@ -1663,11 +1663,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .panel{position:relative;background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:10px 12px 0}
 .ptop{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:11.5px;
   color:var(--muted);font-weight:300;margin-bottom:4px;min-height:22px}
-.bands-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
-.bands-row .bands{flex:1;min-width:0;margin-bottom:0}
-.bands-unit{flex:none;font-size:11px;color:var(--muted);font-weight:300;padding-top:4px;white-space:nowrap}
 .bands{display:flex;gap:5px;margin-bottom:6px}
-.dn-unit{margin-inline-start:2px;opacity:.8}
 .band{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;
   border-radius:9px;padding:7px 2px;transition:.15s;min-width:0}
 .band.on{background:#22314D}
@@ -1693,6 +1689,8 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .dn-ic svg{width:100%;height:100%;display:block}
 .pkey{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);font-weight:300;
   border-top:1px solid var(--rule2);margin-top:6px;padding:10px 4px 12px}
+.pkey-txt{flex:1;min-width:0}
+.pkey-unit{flex:none;font-size:11.5px;color:#6E819F;white-space:nowrap}
 .kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none}
 .veil{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
   background:rgba(14,23,40,.86);border-radius:14px;font-size:13.5px;color:var(--muted)}
