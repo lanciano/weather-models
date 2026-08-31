@@ -893,7 +893,10 @@ function Weather({ lang, setLang }) {
         </div>
       </section>
 
-      <footer className="foot">{t("foot")}</footer>
+      <footer className="foot">
+        <p className="foot-data">{t("foot")}</p>
+        <p className="foot-credit">{t("credit")}</p>
+      </footer>
     </div>
   );
 }
@@ -1684,6 +1687,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .primer b{color:var(--text);font-weight:600}
 .foot{max-width:1120px;margin:44px auto 0;padding-top:16px;border-top:1px solid var(--rule2);
   font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.75}
+.foot p{margin:0}
+.foot-credit{margin-top:10px!important;padding-top:10px;border-top:1px solid var(--rule2);
+  font-size:12px;color:#6E819F;letter-spacing:.01em}
 
 @media (max-width:760px){
   .wx{padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right))
