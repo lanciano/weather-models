@@ -861,9 +861,23 @@ function Weather({ lang, setLang }) {
               {view.map((d) => (
                 <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
                   <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
-                  <span className="b-day">{d.dow}</span><span className="b-date">{d.date}</span>
+                  <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
+                  <span className="b-date">{d.date}</span>
                 </button>
               ))}
+            </div>
+          )}
+
+          {scope === "day" && sel && (
+            <div className="day-nav">
+              <button className="back-week" onClick={() => setScope("week")}>
+                <span className="bw-ic"><Chev flip={dir === "rtl"} /></span>
+                {t("scopeWeek")}
+              </button>
+              <span className="dn-day">
+                <span className="dn-ic">{React.createElement(ICONS[sel.icon])}</span>
+                <b>{sel.dow}</b><em>{sel.date}</em>
+              </span>
             </div>
           )}
 
@@ -1645,12 +1659,29 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .ptop{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:11.5px;
   color:var(--muted);font-weight:300;margin-bottom:4px;min-height:22px}
 .bands{display:flex;gap:5px;margin-bottom:6px}
-.band{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:transparent;border:0;
-  border-radius:9px;padding:6px 2px;transition:.15s;min-width:0}
+.band{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;
+  border-radius:9px;padding:7px 2px;transition:.15s;min-width:0}
 .band.on{background:#22314D}
-.b-ic{width:28px;height:28px}
-.b-day{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.b-date{font-size:11px;color:var(--muted);font-weight:300}
+.b-ic{width:30px;height:30px}
+.b-day{font-size:13.5px;font-weight:600;white-space:nowrap;line-height:1.2}
+.b-day .sm{display:none;font-style:normal}
+.b-day .lg{font-style:normal}
+.b-date{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
+
+/* חזרה לתצוגת שבוע */
+.day-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:8px;padding:0 2px}
+.back-week{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);
+  border:1px solid var(--rule);border-radius:999px;padding:6px 14px;
+  font-size:13px;font-weight:500;color:var(--sky);transition:.15s}
+.back-week:active{background:#26385A}
+.bw-ic{width:14px;height:14px;display:block;flex:none}
+.bw-ic svg{width:100%;height:100%;display:block}
+.dn-day{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:var(--dim)}
+.dn-day b{font-weight:600;color:var(--text)}
+.dn-day em{font-style:normal;font-size:12px;color:var(--muted)}
+.dn-ic{width:24px;height:24px;flex:none}
+.dn-ic svg{width:100%;height:100%;display:block}
 .pkey{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);font-weight:300;
   border-top:1px solid var(--rule2);margin-top:6px;padding:10px 4px 12px}
 .kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none}
@@ -1822,7 +1853,16 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .hlead{font-size:13px;margin-inline:0}
   .hagree{padding:0 34px}
   .hlegend{gap:5px 12px;font-size:11.5px;margin-top:24px}
-  .band .b-day{font-size:11px} .b-ic{width:20px;height:20px} .b-date{font-size:9.5px}
+  .band{padding:6px 1px}
+  .b-day{font-size:12.5px}
+  .b-day .lg{display:none} .b-day .sm{display:inline}
+  .b-ic{width:26px;height:26px}
+  .b-date{font-size:9.5px}
+  .day-nav{gap:8px}
+  .back-week{font-size:12px;padding:5px 11px;gap:5px}
+  .dn-day{font-size:12.5px;gap:5px}
+  .dn-day em{font-size:11px}
+  .dn-ic{width:20px;height:20px}
   .score{padding:16px 14px;border-radius:12px}
   .s-hrow{display:none}
   .s-row{grid-template-columns:1fr 1fr;gap:7px 10px;font-size:13px;padding:11px 12px}
