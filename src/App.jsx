@@ -765,7 +765,7 @@ function Weather({ lang, setLang }) {
               <span className="chart-unit right" style={{ width: 38, color: "#F5A24B" }}>{degLabel}</span>
               <ResponsiveContainer>
                 <ComposedChart data={hourly24} margin={{ top: 10, right: 4, bottom: 0, left: 0 }} barCategoryGap="18%">
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#8FA1BC" }}
+                  <XAxis dataKey="label" reversed={dir === "rtl"} tick={{ fontSize: 11, fill: "#8FA1BC" }}
                     axisLine={{ stroke: "#2E4166" }} tickLine={false} interval={narrow ? 3 : 2} />
                   <YAxis yAxisId="l" domain={[0, maxYH]} width={38} tick={{ fontSize: 11, fill: "#8FA1BC" }}
                     axisLine={false} tickLine={false} />
@@ -784,7 +784,7 @@ function Weather({ lang, setLang }) {
 
             {!narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} />}
 
-            <div className="hagree" dir="ltr">
+            <div className="hagree" dir={dir}>
               {hourly24.map((r) => (
                 <span key={r.i} className="hcell" title={`${r.label} · ${r.wet}/${r.total}`}>
                   <i style={{ opacity: r.total ? 0.1 + (r.wet / r.total) * 0.9 : 0.1 }} />
@@ -856,7 +856,7 @@ function Weather({ lang, setLang }) {
           )}
 
           {scope === "week" && (
-            <div className="bands" dir="ltr">
+            <div className="bands" dir={dir}>
               {view.map((d) => (
                 <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
                   <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
@@ -886,7 +886,7 @@ function Weather({ lang, setLang }) {
             <span className="chart-unit" style={{ width: PAD_L }}>{unit}</span>
             <ResponsiveContainer>
               <ComposedChart data={shown} margin={{ top: 6, right: PAD_R, bottom: 4, left: 0 }}>
-                <XAxis dataKey="i" type="number" domain={["dataMin", "dataMax"]}
+                <XAxis dataKey="i" type="number" domain={["dataMin", "dataMax"]} reversed={dir === "rtl"}
                   ticks={scope === "week" ? [] : shown.filter((r) => r.hour % 3 === 0).map((r) => r.i)}
                   tickFormatter={(i) => trace[i]?.label || ""} tick={{ fontSize: 12, fill: "#8FA1BC" }}
                   axisLine={{ stroke: "#2E4166" }} tickLine={false} interval={0} height={scope === "week" ? 6 : 24} />
