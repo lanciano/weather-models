@@ -642,7 +642,7 @@ function Weather({ lang, setLang }) {
               const Ic = ICONS[d.icon];
               return (
                 <button key={d.i} className={`wcell ${daySel === d.i ? "on" : ""}`}
-                  onClick={() => { setDaySel(d.i); setScope("day"); }}>
+                  onClick={() => setDaySel(d.i)}>
                   <span className="w-dow"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
                   <span className="w-date">{d.date}</span>
                   <span className="w-ic"><Ic /></span>
@@ -857,7 +857,7 @@ function Weather({ lang, setLang }) {
           </div>
 
           {scope === "week" && (
-            <div className="bands" dir="ltr" style={{ marginLeft: PAD_L, marginRight: PAD_R }}>
+            <div className="bands" dir="ltr">
               {view.map((d) => (
                 <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
                   <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
