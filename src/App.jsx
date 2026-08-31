@@ -1689,12 +1689,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .dn-day em{font-style:normal;font-size:12.5px;color:var(--muted)}
 .dn-ic{width:26px;height:26px;flex:none}
 .dn-ic svg{width:100%;height:100%;display:block}
-.pkey{display:flex;flex-direction:column;align-items:flex-start;gap:5px;
+.pkey{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;
   font-size:12px;color:var(--muted);font-weight:300;line-height:1.5;
   border-top:1px solid var(--rule2);margin-top:6px;padding:10px 4px 12px}
-.pkey-row{display:flex;align-items:flex-start;gap:9px}
+.pkey-row{display:flex;align-items:flex-start;gap:9px;flex:1;min-width:0}
 .pkey-txt{min-width:0}
-.pkey-unit{font-size:11.5px;color:#6E819F;white-space:nowrap}
+.pkey-unit{flex:none;font-size:11.5px;color:#6E819F;white-space:nowrap}
 .kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none;margin-top:4px}
 .veil{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
   background:rgba(14,23,40,.86);border-radius:14px;font-size:13.5px;color:var(--muted)}
