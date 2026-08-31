@@ -761,8 +761,8 @@ function Weather({ lang, setLang }) {
             {narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} pos="top" />}
 
             <div className="chart-box" dir="ltr" style={{ width: "100%", height: narrow ? 200 : 240 }}>
-              <span className="chart-unit">{mm}</span>
-              <span className="chart-unit right" style={{ color: "#F5A24B" }}>{degLabel}</span>
+              <span className="chart-unit" style={{ width: 38 }}>{mm}</span>
+              <span className="chart-unit right" style={{ width: 38, color: "#F5A24B" }}>{degLabel}</span>
               <ResponsiveContainer>
                 <ComposedChart data={hourly24} margin={{ top: 10, right: 4, bottom: 0, left: 0 }} barCategoryGap="18%">
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#8FA1BC" }}
@@ -887,7 +887,7 @@ function Weather({ lang, setLang }) {
           {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} dates={dates} pos="top" />}
 
           <div className="chart-box" dir="ltr" style={{ width: "100%", height: narrow ? 230 : 290 }}>
-            <span className="chart-unit">{unit}</span>
+            <span className="chart-unit" style={{ width: PAD_L }}>{unit}</span>
             <ResponsiveContainer>
               <ComposedChart data={shown} margin={{ top: 6, right: PAD_R, bottom: 4, left: 0 }}>
                 <XAxis dataKey="i" type="number" domain={["dataMin", "dataMax"]}
@@ -1700,11 +1700,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .pkey-txt{min-width:0;display:flex;flex-direction:column;gap:1px}
 .pkey-txt b{font-weight:500;color:var(--dim);font-size:12.5px}
 .pkey-txt em{font-style:normal;font-size:11.5px;color:var(--muted)}
-/* היחידה שייכת לציר, אז היא נצמדת אליו פיזית — תמיד משמאל, בכל שפה */
-.chart-box{position:relative;margin-top:14px}
-.chart-unit{position:absolute;top:-14px;left:2px;z-index:2;pointer-events:none;
-  font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
-.chart-unit.right{left:auto;right:2px}
+/* היחידה שייכת לציר — מיושרת לאותו קצה כמו המספרים, ופיזית קבועה בכל שפה */
+.chart-box{position:relative;margin-top:20px}
+.chart-unit{position:absolute;top:-17px;left:0;z-index:2;pointer-events:none;
+  font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap;
+  text-align:right;padding-right:5px;direction:ltr}
+.chart-unit.right{left:auto;right:0;text-align:left;padding-right:0;padding-left:5px}
 .kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none;margin-top:3px}
 .veil{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
   background:rgba(14,23,40,.86);border-radius:14px;font-size:13.5px;color:var(--muted)}
