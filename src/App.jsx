@@ -858,9 +858,12 @@ function Conditions({ day, unitT, elevation }) {
   const { t } = useI18n();
   if (!day) return null;
   const deg = unitT === "f" ? "°F" : "°C";
+  const hasWave = typeof day.wave === "number";
   const tiles = [];
 
-  if (typeof day.feels === "number")
+  /* "מרגיש כמו" כבר מופיע בשורת הטמפרטורות מעל, אז כשיש גלים
+     הוא מפנה את מקומו — שש קוביות בדיוק, בלי שורה יתומה */
+  if (typeof day.feels === "number" && !hasWave)
     tiles.push(<Tile key="f" label={t("feelsLike")} value={fmt(day.feels, 0)} unit={deg} />);
 
   if (typeof day.gust === "number")
@@ -890,7 +893,7 @@ function Conditions({ day, unitT, elevation }) {
     tiles.push(<Tile key="u" label={t("uv")} value={fmt(day.uv, 0)} note={t(k)} color={UV_COLOR[k]} />);
   }
 
-  if (typeof day.wave === "number")
+  if (hasWave)
     tiles.push(<Tile key="w" label={t("waves")} value={fmt(day.wave, 1)} unit={t("unitM")}
       color={day.wave >= 2 ? "#F5A24B" : undefined} />);
 
@@ -1547,14 +1550,16 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .d-verdict{text-align:start;min-width:0;max-width:none;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
   .d-feels{display:block;margin:2px 0 0}
-  .tiles{grid-template-columns:repeat(3,1fr);gap:6px}
-  .tile{padding:8px 8px;border-radius:9px}
-  .ti-lab{font-size:10px}
-  .ti-val{font-size:16px;gap:4px}
-  .ti-val em{font-size:10.5px}
-  .ti-note{font-size:10px}
-  .ti-arrow{width:16px;height:16px}
+  .tiles{grid-template-columns:repeat(3,1fr);gap:5px}
+  .tile{padding:7px 7px 6px;border-radius:9px;gap:0}
+  .ti-lab{font-size:9.5px}
+  .ti-val{font-size:15px;gap:3px;line-height:1.35}
+  .ti-val em{font-size:9.5px}
+  .ti-note{font-size:9.5px;line-height:1.3}
+  .ti-arrow{width:14px;height:14px}
   .cond-wrap{margin-top:14px;padding-top:12px}
+  .cond-head{gap:8px;margin-bottom:8px}
+  .cond-elev{font-size:10.5px}
   .obs-row{font-size:12.5px}
   .readout{gap:8px;padding-top:8px}
   .readout.top{gap:8px;padding:7px 9px;min-height:36px}
