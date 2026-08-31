@@ -34,7 +34,7 @@ const S = {
 he: {
   langLabel: "שפה",
   eyebrow: "תחזית רב־מודלית",
-  title: "חיזוי מזג אוויר חכם",
+  title: "השוואת מודלים לחיזוי מזג אוויר",
   dek: "שבעה מכונים לאומיים מריצים סופר־מחשבים על אותה אטמוספירה ומגיעים לתשובות שונות. זה מה שהם אומרים על **{place}** — ומי מהם צדק כאן בעבר.",
   searchLabel: "חיפוש מקום",
   searchPlaceholder: "תל אביב, ירושלים, רייקיאוויק…",
@@ -186,7 +186,7 @@ he: {
 en: {
   langLabel: "Language",
   eyebrow: "Multi-model forecast",
-  title: "Weather forecasting, made transparent",
+  title: "Weather Model Comparison",
   dek: "Seven national institutes run supercomputers on the same atmosphere and arrive at different answers. Here is what they say about **{place}** — and which of them has been right here before.",
   searchLabel: "Search a place",
   searchPlaceholder: "Tel Aviv, London, Reykjavík…",
@@ -338,7 +338,7 @@ en: {
 ru: {
   langLabel: "Язык",
   eyebrow: "Мультимодельный прогноз",
-  title: "Прозрачный прогноз погоды",
+  title: "Сравнение моделей прогноза погоды",
   dek: "Семь национальных институтов запускают суперкомпьютеры на одной и той же атмосфере и приходят к разным ответам. Вот что они говорят о **{place}** — и кто из них оказывался прав здесь раньше.",
   searchLabel: "Поиск места",
   searchPlaceholder: "Москва, Лондон, Рейкьявик…",
@@ -490,7 +490,7 @@ ru: {
 es: {
   langLabel: "Idioma",
   eyebrow: "Pronóstico multimodelo",
-  title: "Pronóstico del tiempo, con transparencia",
+  title: "Comparación de modelos meteorológicos",
   dek: "Siete institutos nacionales ejecutan supercomputadores sobre la misma atmósfera y llegan a respuestas distintas. Esto es lo que dicen sobre **{place}** — y cuál de ellos ha acertado aquí antes.",
   searchLabel: "Buscar un lugar",
   searchPlaceholder: "Madrid, Buenos Aires, Reikiavik…",
@@ -642,7 +642,7 @@ es: {
 fr: {
   langLabel: "Langue",
   eyebrow: "Prévision multimodèle",
-  title: "La prévision météo, en toute transparence",
+  title: "Comparaison des modèles météo",
   dek: "Sept instituts nationaux font tourner des superordinateurs sur la même atmosphère et aboutissent à des réponses différentes. Voici ce qu'ils disent de **{place}** — et lequel d'entre eux a eu raison ici par le passé.",
   searchLabel: "Rechercher un lieu",
   searchPlaceholder: "Paris, Montréal, Reykjavik…",
@@ -794,7 +794,7 @@ fr: {
 ar: {
   langLabel: "اللغة",
   eyebrow: "تنبؤ متعدّد النماذج",
-  title: "تنبؤ جوّي شفّاف",
+  title: "مقارنة نماذج التنبؤ الجوّي",
   dek: "سبعة معاهد وطنية تُشغّل حواسيب عملاقة على الغلاف الجوي نفسه فتصل إلى إجابات مختلفة. هذا ما تقوله عن **{place}** — ومن منها أصاب هنا في الماضي.",
   searchLabel: "البحث عن مكان",
   searchPlaceholder: "القاهرة، بيروت، ريكيافيك…",

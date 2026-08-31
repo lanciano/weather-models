@@ -156,7 +156,16 @@ function UnitToggle({ value, onChange }) {
 
 /* ═══════════════════════ root ═══════════════════════ */
 
-const FALLBACK = { name: "Tel Aviv-Yafo", region: "Israel", lat: 32.0853, lon: 34.7818 };
+const FALLBACK_NAMES = {
+  he: { name: "תל אביב-יפו", region: "ישראל" },
+  en: { name: "Tel Aviv-Yafo", region: "Israel" },
+  ru: { name: "Тель-Авив-Яффа", region: "Израиль" },
+  es: { name: "Tel Aviv-Yafo", region: "Israel" },
+  fr: { name: "Tel-Aviv-Jaffa", region: "Israël" },
+  ar: { name: "تل أبيب - يافا", region: "إسرائيل" },
+};
+const FALLBACK_COORDS = { lat: 32.0853, lon: 34.7818 };
+const fallbackFor = (lang) => ({ ...(FALLBACK_NAMES[lang] || FALLBACK_NAMES.en), ...FALLBACK_COORDS });
 const loadSaved = () => {
   try {
     const s = JSON.parse(localStorage.getItem("wx-place"));
@@ -223,7 +232,7 @@ function LangSwitch({ lang, setLang }) {
 function Weather({ lang, setLang }) {
   const { t, dir, dates } = useI18n();
 
-  const [place, setPlace] = useState(() => loadSaved() || FALLBACK);
+  const [place, setPlace] = useState(() => loadSaved() || fallbackFor(lang));
   const [locating, setLocating] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -263,6 +272,15 @@ function Weather({ lang, setLang }) {
     mq.addEventListener("change", h);
     return () => mq.removeEventListener("change", h);
   }, []);
+
+  useEffect(() => {
+    setPlace((cur) => {
+      const wasFallback = FALLBACK_COORDS.lat === cur.lat && FALLBACK_COORDS.lon === cur.lon
+        && Object.values(FALLBACK_NAMES).some((f) => f.name === cur.name);
+      return wasFallback ? fallbackFor(lang) : cur;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   useEffect(() => {
     try { localStorage.setItem("wx-place", JSON.stringify(place)); } catch { /* private */ }
