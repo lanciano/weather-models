@@ -23,6 +23,8 @@ const DEFAULT_ON = ["ecmwf_ifs025", "gfs_seamless", "icon_seamless", "ukmo_seaml
 
 /* 14 יום. מעבר לזה נשאר בעיקר GFS לבדו, וקו יחיד הוא לא השוואה. */
 const DAYS_N = 14, PAGE = 7;
+
+const SITE_NAME = "modelspread.app";
 const VAR_KEYS = { precipitation: "varPrecip", temperature_2m: "varTemp", wind_speed_10m: "varWind" };
 const VAR_UNITS = { precipitation: "unitMmH", temperature_2m: "unitC", wind_speed_10m: "unitKmh" };
 
@@ -895,7 +897,11 @@ function Weather({ lang, setLang }) {
 
       <footer className="foot">
         <p className="foot-data">{t("foot")}</p>
-        <p className="foot-credit">{t("credit")}</p>
+        <p className="foot-credit">
+          <span className="foot-name">{SITE_NAME}</span>
+          <span className="foot-dot">·</span>
+          <span>{t("credit")}</span>
+        </p>
       </footer>
     </div>
   );
@@ -1689,7 +1695,10 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.75}
 .foot p{margin:0}
 .foot-credit{margin-top:10px!important;padding-top:10px;border-top:1px solid var(--rule2);
-  font-size:12px;color:#6E819F;letter-spacing:.01em}
+  font-size:12px;color:#6E819F;letter-spacing:.01em;
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:7px}
+.foot-name{font-size:13px;font-weight:600;color:var(--dim);letter-spacing:.01em;direction:ltr}
+.foot-dot{color:var(--rule)}
 
 @media (max-width:760px){
   .wx{padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right))
