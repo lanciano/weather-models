@@ -851,20 +851,25 @@ function Weather({ lang, setLang }) {
 
         <div className="panel">
           {!active.length && <div className="veil">{t("pensEmpty")}</div>}
-          <div className="ptop">
-            {variable === "temperature_2m" && <UnitToggle value={unitT} onChange={setUnitT} />}
-            <span className="unit">{unit}</span>
-          </div>
+          {variable === "temperature_2m" && (
+            <div className="ptop">
+              <UnitToggle value={unitT} onChange={setUnitT} />
+              <span className="unit">{unit}</span>
+            </div>
+          )}
 
           {scope === "week" && (
-            <div className="bands" dir="ltr">
-              {view.map((d) => (
-                <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
-                  <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
-                  <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
-                  <span className="b-date">{d.date}</span>
-                </button>
-              ))}
+            <div className="bands-row">
+              <div className="bands" dir="ltr">
+                {view.map((d) => (
+                  <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
+                    <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
+                    <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
+                    <span className="b-date">{d.date}</span>
+                  </button>
+                ))}
+              </div>
+              <span className="bands-unit">{unit}</span>
             </div>
           )}
 
@@ -877,6 +882,7 @@ function Weather({ lang, setLang }) {
               <span className="dn-day">
                 <span className="dn-ic">{React.createElement(ICONS[sel.icon])}</span>
                 <b>{sel.dow}</b><em>{sel.date}</em>
+                <em className="dn-unit">{unit}</em>
               </span>
             </div>
           )}
@@ -1657,7 +1663,11 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .panel{position:relative;background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:10px 12px 0}
 .ptop{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:11.5px;
   color:var(--muted);font-weight:300;margin-bottom:4px;min-height:22px}
+.bands-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.bands-row .bands{flex:1;min-width:0;margin-bottom:0}
+.bands-unit{flex:none;font-size:11px;color:var(--muted);font-weight:300;padding-top:4px;white-space:nowrap}
 .bands{display:flex;gap:5px;margin-bottom:6px}
+.dn-unit{margin-inline-start:2px;opacity:.8}
 .band{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;
   border-radius:9px;padding:7px 2px;transition:.15s;min-width:0}
 .band.on{background:#22314D}
