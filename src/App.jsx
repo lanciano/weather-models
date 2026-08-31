@@ -1701,8 +1701,8 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .pkey-txt b{font-weight:500;color:var(--dim);font-size:12.5px}
 .pkey-txt em{font-style:normal;font-size:11.5px;color:var(--muted)}
 /* היחידה שייכת לציר, אז היא נצמדת אליו פיזית — תמיד משמאל, בכל שפה */
-.chart-box{position:relative}
-.chart-unit{position:absolute;top:0;left:2px;z-index:2;pointer-events:none;
+.chart-box{position:relative;margin-top:14px}
+.chart-unit{position:absolute;top:-14px;left:2px;z-index:2;pointer-events:none;
   font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
 .chart-unit.right{left:auto;right:2px}
 .kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none;margin-top:3px}
