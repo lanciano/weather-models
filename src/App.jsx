@@ -244,6 +244,8 @@ function Weather({ lang, setLang }) {
   useEffect(() => { try { localStorage.setItem("wx-unit", unitT); } catch { /* private */ } }, [unitT]);
 
   const [data, setData] = useState(null);
+  const [amb, setAmb] = useState(null);
+  const [marine, setMarine] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const boxRef = useRef(null);
@@ -287,8 +289,8 @@ function Weather({ lang, setLang }) {
     setLoading(true); setError(null);
     const url = "https://api.open-meteo.com/v1/forecast" +
       `?latitude=${place.lat}&longitude=${place.lon}` +
-      "&hourly=precipitation,temperature_2m,wind_speed_10m,cloud_cover" +
-      "&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max" +
+      "&hourly=precipitation,temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,cloud_cover" +
+      "&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,wind_gusts_10m_max" +
       `&models=${active.join(",")}&timezone=auto&forecast_days=7`;
     try {
       const r = await fetch(url);
@@ -301,6 +303,35 @@ function Weather({ lang, setLang }) {
   }, [place, active]);
 
   useEffect(() => { load(); }, [load]);
+
+  /* קריאות משנה: מדדי סביבה ממקור יחיד, וים אם יש ים.
+     שתיהן נכשלות בשקט — הן מוסיפות מידע, לא נושאות את האתר. */
+  useEffect(() => {
+    let dead = false;
+    const geo = `latitude=${place.lat}&longitude=${place.lon}&timezone=auto&forecast_days=7`;
+
+    (async () => {
+      try {
+        const r = await fetch("https://api.open-meteo.com/v1/forecast?" + geo +
+          "&hourly=relative_humidity_2m,surface_pressure,wind_direction_10m,uv_index&daily=uv_index_max");
+        const j = await r.json();
+        if (!dead) setAmb(j.error ? null : j);
+      } catch { if (!dead) setAmb(null); }
+    })();
+
+    (async () => {
+      try {
+        const r = await fetch("https://marine-api.open-meteo.com/v1/marine?" + geo +
+          "&daily=wave_height_max,wave_period_max");
+        const j = await r.json();
+        const ok = !j.error && Array.isArray(j.daily?.wave_height_max) &&
+          j.daily.wave_height_max.some((v) => typeof v === "number");
+        if (!dead) setMarine(ok ? j : null);
+      } catch { if (!dead) setMarine(null); }
+    })();
+
+    return () => { dead = true; };
+  }, [place]);
 
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return; }
@@ -364,15 +395,39 @@ function Weather({ lang, setLang }) {
         if (per.length) cc.push(mean(per));
       }
       const tMax = tmax.length ? mean(tmax) : null;
+
+      /* מדדים נוספים */
+      const feels = nums(active.map((m) => pick(data.daily, "apparent_temperature_max", m)?.[i]));
+      const feelsLo = nums(active.map((m) => pick(data.daily, "apparent_temperature_min", m)?.[i]));
+      const gust = nums(active.map((m) => pick(data.daily, "wind_gusts_10m_max", m)?.[i]));
+
+      const h0 = i * 24, h1 = h0 + 24;
+      const slice = (arr) => (Array.isArray(arr) ? nums(arr.slice(h0, h1)) : []);
+      const rh = slice(amb?.hourly?.relative_humidity_2m);
+      const pr = slice(amb?.hourly?.surface_pressure);
+      const wd = amb?.hourly?.wind_direction_10m?.[h0 + 12];
+      const uv = amb?.daily?.uv_index_max?.[i];
+      const wave = marine?.daily?.wave_height_max?.[i];
+
       return {
         i, iso, dow: dates.weekday(d), dowS: dates.weekdayShort(d), date: dates.dayMonth(d),
         rain, pairs, ag, tmax: toT(tMax, unitT), tmin: toT(tmin.length ? mean(tmin) : null, unitT),
         wind: wind.length ? Math.max(...wind) : null,
+        feels: toT(feels.length ? median(feels) : null, unitT),
+        feelsMinC: feelsLo.length ? median(feelsLo) : null,
+        feelsMaxC: feels.length ? median(feels) : null,
+        gust: gust.length ? Math.max(...gust) : null,
+        rh: rh.length ? Math.round(mean(rh)) : null,
+        pressure: pr.length ? Math.round(mean(pr)) : null,
+        pTrend: pr.length > 6 ? pr[pr.length - 1] - pr[0] : null,
+        windDir: typeof wd === "number" ? wd : null,
+        uv: typeof uv === "number" ? uv : null,
+        wave: typeof wave === "number" ? wave : null,
         icon: pickIcon(ag?.med ?? 0, cc.length ? mean(cc) : null, tMax),
         outs: outliers(pairs),
       };
     });
-  }, [data, active, dates, unitT]);
+  }, [data, amb, marine, active, dates, unitT]);
 
   const sel = days[daySel];
   const maxWeekRain = useMemo(() => Math.max(1, ...days.map((d) => d.ag?.hi || 0)), [days]);
@@ -500,6 +555,9 @@ function Weather({ lang, setLang }) {
                 <div className="d-day">{t("scopeDay", { day: sel.dow })} · {sel.date}</div>
                 <div className="d-cond">{t(`cond.${sel.icon}`)}</div>
                 <div className="d-temps"><b>{fmt(sel.tmax, 0)}°</b> <span>/ {fmt(sel.tmin, 0)}°</span>
+                  {typeof sel.feels === "number" && (
+                    <span className="d-feels">· {t("feelsLike")} {fmt(sel.feels, 0)}°</span>
+                  )}
                   {typeof sel.wind === "number" && <span className="d-wind">{t("windTo", { v: fmt(sel.wind, 0) })}</span>}</div>
               </div>
               <div className={`d-verdict v-${sel.ag?.level || "dry"}`}>
@@ -540,6 +598,9 @@ function Weather({ lang, setLang }) {
                 ))}
               </div>
             </div>
+
+            <Conditions day={sel} unitT={unitT} elevation={data?.elevation} />
+            <Observations day={sel} />
 
             {!!sel.outs.length && (
               <div className="d-outs">
@@ -755,6 +816,113 @@ function Weather({ lang, setLang }) {
       </section>
 
       <footer className="foot">{t("foot")}</footer>
+    </div>
+  );
+}
+
+/* ═══════════════════════ conditions ═══════════════════════ */
+
+const DIR_KEYS = ["dirN", "dirNE", "dirE", "dirSE", "dirS", "dirSW", "dirW", "dirNW"];
+const dirKey = (deg) => DIR_KEYS[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+
+function uvKey(v) {
+  if (v < 3) return "uvLow";
+  if (v < 6) return "uvMod";
+  if (v < 8) return "uvHigh";
+  if (v < 11) return "uvVHigh";
+  return "uvExtreme";
+}
+const UV_COLOR = { uvLow: "#6FD99A", uvMod: "#F0D45E", uvHigh: "#F5A24B", uvVHigh: "#F27878", uvExtreme: "#C58BF0" };
+
+/** חץ שמצביע לאן הרוח הולכת */
+const Arrow = ({ deg }) => (
+  <svg viewBox="0 0 24 24" style={{ transform: `rotate(${deg + 180}deg)` }}>
+    <path d="M12 3.5 L12 20.5 M12 3.5 L7.5 9 M12 3.5 L16.5 9"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+function Tile({ label, value, unit, note, color, children }) {
+  return (
+    <div className="tile">
+      <span className="ti-lab">{label}</span>
+      <span className="ti-val" style={color ? { color } : undefined}>
+        {children}{value}{unit && <em>{unit}</em>}
+      </span>
+      {note && <span className="ti-note">{note}</span>}
+    </div>
+  );
+}
+
+function Conditions({ day, unitT, elevation }) {
+  const { t } = useI18n();
+  if (!day) return null;
+  const deg = unitT === "f" ? "°F" : "°C";
+  const tiles = [];
+
+  if (typeof day.feels === "number")
+    tiles.push(<Tile key="f" label={t("feelsLike")} value={fmt(day.feels, 0)} unit={deg} />);
+
+  if (typeof day.gust === "number")
+    tiles.push(<Tile key="g" label={t("gusts")} value={fmt(day.gust, 0)} unit={t("unitKmh")}
+      color={day.gust >= 60 ? "#F5A24B" : undefined} />);
+
+  if (typeof day.windDir === "number")
+    tiles.push(
+      <Tile key="d" label={t("windDir")} value="" note={t(dirKey(day.windDir))}>
+        <span className="ti-arrow"><Arrow deg={day.windDir} /></span>
+      </Tile>
+    );
+
+  if (typeof day.rh === "number")
+    tiles.push(<Tile key="h" label={t("humidity")} value={day.rh} unit={t("unitPct")} />);
+
+  if (typeof day.pressure === "number") {
+    const tr = day.pTrend;
+    const word = tr == null ? null : tr <= -1.5 ? t("pFalling") : tr >= 1.5 ? t("pRising") : t("pSteady");
+    tiles.push(<Tile key="p" label={t("pressure")} value={day.pressure} unit={t("unitHpa")}
+      note={word && (tr <= -1.5 ? `↓ ${word}` : tr >= 1.5 ? `↑ ${word}` : `→ ${word}`)}
+      color={tr != null && tr <= -6 ? "#F5A24B" : undefined} />);
+  }
+
+  if (typeof day.uv === "number") {
+    const k = uvKey(day.uv);
+    tiles.push(<Tile key="u" label={t("uv")} value={fmt(day.uv, 0)} note={t(k)} color={UV_COLOR[k]} />);
+  }
+
+  if (typeof day.wave === "number")
+    tiles.push(<Tile key="w" label={t("waves")} value={fmt(day.wave, 1)} unit={t("unitM")}
+      color={day.wave >= 2 ? "#F5A24B" : undefined} />);
+
+  if (!tiles.length) return null;
+  return (
+    <div className="cond-wrap">
+      <div className="cond-head">
+        <span className="cond-title">{t("condTitle")}</span>
+        {typeof elevation === "number" && (
+          <span className="cond-elev">{t("elevNote", { v: Math.round(elevation) })}</span>
+        )}
+      </div>
+      <div className="tiles">{tiles}</div>
+    </div>
+  );
+}
+
+function Observations({ day }) {
+  const { t } = useI18n();
+  if (!day) return null;
+  const out = [];
+  if (typeof day.gust === "number" && day.gust >= 60) out.push(t("obsGust", { v: fmt(day.gust, 0) }));
+  if (typeof day.feelsMaxC === "number" && day.feelsMaxC >= 38) out.push(t("obsHeat", { v: fmt(toT(day.feelsMaxC, "c"), 0) }));
+  if (typeof day.feelsMinC === "number" && day.feelsMinC <= 0) out.push(t("obsCold", { v: fmt(day.feelsMinC, 0) }));
+  if (typeof day.uv === "number" && day.uv >= 8) out.push(t("obsUv", { v: fmt(day.uv, 0) }));
+  if (typeof day.wave === "number" && day.wave >= 2) out.push(t("obsWave", { v: fmt(day.wave, 1) }));
+  if (typeof day.pTrend === "number" && day.pTrend <= -6) out.push(t("obsPressure", { v: fmt(Math.abs(day.pTrend), 0) }));
+  if (!out.length) return null;
+  return (
+    <div className="obs">
+      <span className="obs-title">{t("obsTitle")}</span>
+      {out.map((o, k) => <div className="obs-row" key={k}>{o}</div>)}
     </div>
   );
 }
@@ -1172,6 +1340,31 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .d-temps{font-size:14px;color:var(--muted);margin-top:2px}
 .d-temps b{font-size:24px;color:var(--text)}
 .d-wind{margin-inline-start:4px;font-size:13px}
+.d-feels{margin-inline-start:4px;font-size:13px}
+
+/* tiles */
+.cond-wrap{margin-top:18px;border-top:1px solid var(--rule2);padding-top:14px}
+.cond-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.cond-title{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
+.cond-elev{font-size:11.5px;color:#6E819F;font-weight:300}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.tile{background:var(--panel2);border:1px solid var(--rule2);border-radius:11px;
+  padding:10px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ti-lab{font-size:11px;color:var(--muted);font-weight:400;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.ti-val{font-size:19px;font-weight:600;line-height:1.25;display:flex;align-items:center;gap:5px}
+.ti-val em{font-style:normal;font-size:11.5px;color:var(--muted);font-weight:400}
+.ti-note{font-size:11px;color:var(--dim);font-weight:300;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.ti-arrow{width:19px;height:19px;color:var(--sky);flex:none}
+.ti-arrow svg{width:100%;height:100%;display:block;transform-origin:50% 50%}
+
+/* observations */
+.obs{margin-top:14px;background:rgba(245,162,75,.07);border:1px solid rgba(245,162,75,.25);
+  border-radius:11px;padding:11px 13px}
+.obs-title{display:block;font-size:11.5px;color:var(--warm);font-weight:600;
+  letter-spacing:.04em;margin-bottom:6px}
+.obs-row{font-size:13px;color:var(--dim);font-weight:300;line-height:1.6;padding:1px 0}
 .d-verdict{display:flex;flex-direction:column;gap:2px;text-align:end;min-width:200px;max-width:320px}
 .d-verdict b{font-size:16px}
 .d-verdict span{font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.5}
@@ -1353,6 +1546,16 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .d-ic{width:54px;height:54px}
   .d-verdict{text-align:start;min-width:0;max-width:none;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
+  .d-feels{display:block;margin:2px 0 0}
+  .tiles{grid-template-columns:repeat(3,1fr);gap:6px}
+  .tile{padding:8px 8px;border-radius:9px}
+  .ti-lab{font-size:10px}
+  .ti-val{font-size:16px;gap:4px}
+  .ti-val em{font-size:10.5px}
+  .ti-note{font-size:10px}
+  .ti-arrow{width:16px;height:16px}
+  .cond-wrap{margin-top:14px;padding-top:12px}
+  .obs-row{font-size:12.5px}
   .readout{gap:8px;padding-top:8px}
   .readout.top{gap:8px;padding:7px 9px;min-height:36px}
   .ro-time{flex:none}
