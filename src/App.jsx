@@ -478,6 +478,14 @@ function Weather({ lang, setLang }) {
   const unit = variable === "temperature_2m" ? degLabel : t(VAR_UNITS[variable]);
   const mm = t("unitMm");
 
+  /* המודל שהיה הכי מדויק כאן — רק אם המדגם מספיק גדול, ורק מבין הפעילים */
+  const skill = useSkill(place, t);
+  const leader = useMemo(() => {
+    if (!skill || skill.wetDays < MIN_WET) return null;
+    const best = skill.order.find((r) => active.includes(r.id));
+    return best ? best.id : null;
+  }, [skill, active]);
+
   return (
     <div dir={dir} className="wx">
       <style>{CSS}</style>
@@ -590,9 +598,10 @@ function Weather({ lang, setLang }) {
               )}
               <div className="d-chips">
                 {[...sel.pairs].filter((p) => typeof p.v === "number").sort((a, b) => a.v - b.v).map((p) => (
-                  <span className="d-chip" key={p.id} style={{ borderColor: M[p.id].ink + "66" }}>
+                  <span className={`d-chip ${p.id === leader ? "lead" : ""}`} key={p.id} style={{ borderColor: M[p.id].ink + "66" }}>
                     <i style={{ background: M[p.id].ink }} />
                     <b style={{ color: M[p.id].ink }}>{M[p.id].short}</b>
+                    {p.id === leader && <span className="chip-star" style={{ color: M[p.id].ink }}><Star /></span>}
                     <em>{fmt(p.v)} {mm}</em>
                   </span>
                 ))}
@@ -685,14 +694,32 @@ function Weather({ lang, setLang }) {
         <div className="pen-row">
           {MODELS.map((m) => {
             const on = active.includes(m.id);
+            const win = m.id === leader;
             return (
               <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on} className={`pen ${on ? "on" : ""}`}
                 style={on ? { borderColor: m.ink, color: m.ink, background: m.ink + "1A" } : undefined}>
-                <span className="nib" style={{ background: on ? m.ink : "transparent", borderColor: on ? m.ink : "#4A5A78" }} />{m.short}
+                <span className="nib" style={{ background: on ? m.ink : "transparent", borderColor: on ? m.ink : "#4A5A78" }} />
+                {m.short}
+                {win && <span className="pen-star" title={t("skillTag")}><Star /></span>}
               </button>
             );
           })}
         </div>
+        {skill && (
+          <div className={`skill ${leader ? "" : "thin"}`}>
+            {leader ? (
+              <>
+                <span className="sk-star" style={{ color: M[leader].ink }}><Star /></span>
+                <span>
+                  <Rich text={t("skillLead", { model: M[leader].short, days: skill.days, wet: skill.wetDays })} />
+                  <em className="sk-caveat">{t("skillCaveat")}</em>
+                </span>
+              </>
+            ) : (
+              <span>{t("skillThin", { days: skill.days })}</span>
+            )}
+          </div>
+        )}
       </section>
 
       {/* ── chart ── */}
@@ -745,10 +772,16 @@ function Weather({ lang, setLang }) {
                 <Tooltip content={<ChartTip unit={unit} trace={trace} dates={dates} narrow={narrow} onHover={setHoverIdx} />}
                   cursor={{ stroke: "#7E93B8", strokeDasharray: "3 3" }} />
                 <Area dataKey="band" stroke="none" fill="#9BB6E8" fillOpacity={0.16} isAnimationActive={false} connectNulls />
-                {active.map((m) => (
-                  <Line key={m} dataKey={m} stroke={M[m].ink} strokeWidth={2} dot={false}
-                    type={variable === "precipitation" ? "step" : "monotone"} connectNulls animationDuration={800} />
-                ))}
+                {active.map((m) => {
+                  const win = m === leader;
+                  return (
+                    <Line key={m} dataKey={m} stroke={M[m].ink}
+                      strokeWidth={leader ? (win ? 3.2 : 1.6) : 2}
+                      strokeOpacity={leader && !win ? 0.7 : 1} dot={false}
+                      type={variable === "precipitation" ? "step" : "monotone"}
+                      connectNulls animationDuration={800} />
+                  );
+                })}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -819,6 +852,53 @@ function Weather({ lang, setLang }) {
     </div>
   );
 }
+
+/* ═══════════════════════ background skill ═══════════════════════ */
+
+const SKILL_LEAD = 3, SKILL_PAST = 90, MIN_WET = 8;
+
+/** רץ פעם ביום לכל מיקום, ברקע, ונשמר מקומית. אף פעם לא חוסם את התחזית. */
+function useSkill(place, t) {
+  const [skill, setSkill] = useState(null);
+  const key = `wx-skill:${place.lat.toFixed(2)},${place.lon.toFixed(2)}:${isoDate(new Date())}`;
+
+  useEffect(() => {
+    let dead = false;
+    setSkill(null);
+
+    try {
+      const c = JSON.parse(localStorage.getItem(key));
+      if (c && typeof c.wetDays === "number") { setSkill(c); return; }
+    } catch { /* private mode */ }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await computeSkill({
+          lat: place.lat, lon: place.lon, models: MODELS.map((m) => m.id),
+          lead: SKILL_LEAD, past: SKILL_PAST,
+          msg: { noTruth: "", noSeries: "", noScores: "", noScoresWhy: () => "" },
+        });
+        const slim = {
+          order: res.rows.map((r) => ({ id: r.id, mae: r.rain.mae })),
+          days: res.days, wetDays: res.wetDays,
+        };
+        if (dead) return;
+        setSkill(slim);
+        try { localStorage.setItem(key, JSON.stringify(slim)); } catch { /* private */ }
+      } catch { /* לא קריטי — פשוט לא תהיה הבלטה */ }
+    }, 2500);
+
+    return () => { dead = true; clearTimeout(timer); };
+  }, [key, place.lat, place.lon]);
+
+  return skill;
+}
+
+const Star = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" />
+  </svg>
+);
 
 /* ═══════════════════════ conditions ═══════════════════════ */
 
@@ -1086,6 +1166,55 @@ function score(pred, obs) {
   return n >= 5 ? { n, mae: sae / n, hit, miss, fa, dry } : null;
 }
 
+/** מריץ את כל ההשוואה מול העבר. משמש גם את כרטיס הציונים וגם את החישוב ברקע. */
+async function computeSkill({ lat, lon, models, lead, past, msg }) {
+  const geo = `latitude=${lat}&longitude=${lon}&timezone=auto`;
+  const end = new Date(); end.setDate(end.getDate() - 1);
+  const start = new Date(end); start.setDate(start.getDate() - past);
+
+  const tRes = await fetch(`https://historical-forecast-api.open-meteo.com/v1/forecast?${geo}` +
+    `&start_date=${isoDate(start)}&end_date=${isoDate(end)}&daily=precipitation_sum,temperature_2m_max`);
+  const truth = await tRes.json();
+  if (truth.error) throw new Error(truth.reason);
+
+  const oRain = new Map(), oTemp = new Map();
+  (truth.daily?.time || []).forEach((d, i) => {
+    const r = truth.daily.precipitation_sum?.[i], tp = truth.daily.temperature_2m_max?.[i];
+    if (typeof r === "number") oRain.set(d, r);
+    if (typeof tp === "number") oTemp.set(d, tp);
+  });
+  if (!oRain.size) throw new Error(msg.noTruth);
+
+  const rows = await Promise.all(models.map(async (m) => {
+    try {
+      const r = await fetch(`https://previous-runs-api.open-meteo.com/v1/forecast?${geo}` +
+        `&hourly=precipitation_previous_day${lead},temperature_2m_previous_day${lead}` +
+        `&models=${m}&past_days=${past}&forecast_days=1`);
+      const j = await r.json();
+      if (j.error) return { id: m, err: j.reason };
+      const pr = findSeries(j.hourly, "precipitation", lead, m);
+      const pt = findSeries(j.hourly, "temperature_2m", lead, m);
+      if (!pr) return { id: m, err: msg.noSeries };
+      return {
+        id: m,
+        rain: score(bucketDaily(j.hourly.time, pr, "sum"), oRain),
+        temp: score(bucketDaily(j.hourly.time, pt, "max"), oTemp),
+      };
+    } catch (e) { return { id: m, err: e.message }; }
+  }));
+
+  const ok = rows.filter((r) => r.rain);
+  if (!ok.length) {
+    const why = rows.find((r) => r.err)?.err;
+    throw new Error(why ? msg.noScoresWhy(why) : msg.noScores);
+  }
+  ok.sort((a, b) => a.rain.mae - b.rain.mae);
+  return {
+    rows: ok, failed: rows.filter((r) => !r.rain),
+    days: ok[0].rain.n, wetDays: ok[0].rain.hit + ok[0].rain.miss,
+  };
+}
+
 function Scorecard({ place, models, unitT }) {
   const { t } = useI18n();
   const [win, setWin] = useState(90);
@@ -1097,53 +1226,15 @@ function Scorecard({ place, models, unitT }) {
   const run = useCallback(async () => {
     if (!models.length) return;
     setState({ status: "loading" });
-    const past = Math.min(win, 92);
-    const end = new Date(); end.setDate(end.getDate() - 1);
-    const start = new Date(end); start.setDate(start.getDate() - past);
-    const geo = `latitude=${place.lat}&longitude=${place.lon}&timezone=auto`;
-
     try {
-      const tRes = await fetch(`https://historical-forecast-api.open-meteo.com/v1/forecast?${geo}` +
-        `&start_date=${isoDate(start)}&end_date=${isoDate(end)}&daily=precipitation_sum,temperature_2m_max`);
-      const truth = await tRes.json();
-      if (truth.error) throw new Error(truth.reason);
-      const oRain = new Map(), oTemp = new Map();
-      (truth.daily?.time || []).forEach((d, i) => {
-        const r = truth.daily.precipitation_sum?.[i], tp = truth.daily.temperature_2m_max?.[i];
-        if (typeof r === "number") oRain.set(d, r);
-        if (typeof tp === "number") oTemp.set(d, tp);
+      const res = await computeSkill({
+        lat: place.lat, lon: place.lon, models, lead, past: Math.min(win, 92),
+        msg: {
+          noTruth: t("errNoTruth"), noSeries: t("errNoSeries"), noScores: t("errNoScores"),
+          noScoresWhy: (why) => t("errNoScoresWhy", { why }),
+        },
       });
-      if (!oRain.size) throw new Error(t("errNoTruth"));
-
-      const rows = await Promise.all(models.map(async (m) => {
-        try {
-          const url = `https://previous-runs-api.open-meteo.com/v1/forecast?${geo}` +
-            `&hourly=precipitation_previous_day${lead},temperature_2m_previous_day${lead}` +
-            `&models=${m}&past_days=${past}&forecast_days=1`;
-          const r = await fetch(url);
-          const j = await r.json();
-          if (j.error) return { id: m, err: j.reason };
-          const pr = findSeries(j.hourly, "precipitation", lead, m);
-          const pt = findSeries(j.hourly, "temperature_2m", lead, m);
-          if (!pr) return { id: m, err: t("errNoSeries") };
-          return {
-            id: m,
-            rain: score(bucketDaily(j.hourly.time, pr, "sum"), oRain),
-            temp: score(bucketDaily(j.hourly.time, pt, "max"), oTemp),
-          };
-        } catch (e) { return { id: m, err: e.message }; }
-      }));
-
-      const ok = rows.filter((r) => r.rain);
-      if (!ok.length) {
-        const why = rows.find((r) => r.err)?.err;
-        throw new Error(why ? t("errNoScoresWhy", { why }) : t("errNoScores"));
-      }
-      ok.sort((a, b) => a.rain.mae - b.rain.mae);
-      setState({
-        status: "done", rows: ok, failed: rows.filter((r) => !r.rain),
-        days: ok[0].rain.n, wetDays: ok[0].rain.hit + ok[0].rain.miss,
-      });
+      setState({ status: "done", ...res });
     } catch (e) { setState({ status: "error", msg: e.message || t("errGeneric") }); }
   }, [place, models, win, lead, t]);
 
@@ -1395,6 +1486,16 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   color:#6E819F;padding:7px 15px;border-radius:999px;font-size:13.5px;font-weight:500;transition:.15s}
 .pen:hover{border-color:#42598A}
 .nib{width:9px;height:9px;border-radius:999px;border:1.5px solid;display:inline-block}
+.pen-star{width:11px;height:11px;display:block;flex:none;margin-inline-start:-2px}
+.pen-star svg,.sk-star svg,.chip-star svg{width:100%;height:100%;display:block}
+.chip-star{width:9px;height:9px;display:block;flex:none;margin-inline-start:-2px}
+.d-chip.lead{background:rgba(255,255,255,.05)}
+.skill{display:flex;align-items:flex-start;gap:9px;margin-top:12px;
+  font-size:13px;color:var(--dim);font-weight:300;line-height:1.6;max-width:74ch}
+.skill.thin{color:var(--muted);font-size:12.5px}
+.skill b{color:var(--text)}
+.sk-star{width:14px;height:14px;flex:none;margin-top:3px}
+.sk-caveat{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}
 
 .graph{max-width:1120px;margin:22px auto 0}
 .gbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
