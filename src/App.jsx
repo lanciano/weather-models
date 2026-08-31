@@ -563,9 +563,8 @@ function Weather({ lang, setLang }) {
         {error && <div className="werr">{error} <button onClick={load}>{t("retry")}</button></div>}
 
         <div className="week-nav">
-          {pages > 1 && (
-            <button className="nav-arrow" onClick={() => goPage(page - 1)}
-              disabled={page === 0} aria-label={t("pagePrev")}>
+          {page > 0 && (
+            <button className="nav-arrow" onClick={() => goPage(page - 1)} aria-label={t("pagePrev")}>
               <Chev flip={dir === "rtl"} />
             </button>
           )}
@@ -590,9 +589,8 @@ function Weather({ lang, setLang }) {
             })}
           </div>
 
-          {pages > 1 && (
-            <button className="nav-arrow" onClick={() => goPage(page + 1)}
-              disabled={page >= pages - 1} aria-label={t("pageNext")}>
+          {page < pages - 1 && (
+            <button className="nav-arrow" onClick={() => goPage(page + 1)} aria-label={t("pageNext")}>
               <Chev flip={dir !== "rtl"} />
             </button>
           )}
@@ -1392,7 +1390,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .wx h1,.wx h2,.wx h3{margin:0;letter-spacing:-.02em;line-height:1.15}
 .wx h1{font-weight:700} .wx h2{font-weight:600} .wx h3{font-weight:600}
 .wx b{font-weight:600}
-.wx button{font-family:inherit;cursor:pointer;color:inherit}
+.wx button{font-family:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
 .wx button:focus-visible,.wx input:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
 .sky{position:absolute;inset:0 0 auto;height:420px;pointer-events:none;
   background:radial-gradient(90% 90% at 80% -20%,rgba(90,179,240,.16),transparent 62%),
@@ -1410,7 +1408,6 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .lang-btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
   border:1px solid var(--rule);border-radius:999px;padding:6px 14px 6px 11px;
   font-size:13px;font-weight:500;color:var(--dim);transition:.15s}
-.lang-btn:hover{border-color:#42598A;color:var(--text)}
 .lang-ic{width:17px;height:17px;display:block;color:var(--sky);flex:none}
 .lang-ic svg{width:100%;height:100%;display:block}
 .lang-menu{position:absolute;z-index:50;inset-inline-end:0;top:100%;margin:7px 0 0;padding:5px;
@@ -1418,7 +1415,6 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   border-radius:11px;box-shadow:0 16px 38px rgba(0,0,0,.5)}
 .lang-menu button{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   width:100%;background:none;border:0;padding:8px 11px;border-radius:7px;text-align:start}
-.lang-menu button:hover{background:#26385A}
 .lang-menu button.on{background:#1C3151;box-shadow:0 0 0 1px var(--sky) inset}
 .lm-native{font-size:14px;font-weight:500}
 .lm-flag{font-size:17px;line-height:1;flex:none}
@@ -1428,7 +1424,6 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   border:1px solid var(--rule2);border-radius:999px;padding:2px;flex:none}
 .utog button{background:none;border:0;padding:2px 9px;border-radius:999px;
   font-size:11.5px;font-weight:500;color:var(--muted);line-height:1.5;transition:.15s}
-.utog button:hover{color:var(--dim)}
 .utog button.on{background:var(--rule);color:var(--text);font-weight:600}
 
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
@@ -1447,7 +1442,6 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   background:var(--panel2);border:1px solid var(--rule);border-radius:10px;max-height:290px;overflow:auto;
   box-shadow:0 14px 34px rgba(0,0,0,.42)}
 .res button{display:block;width:100%;text-align:start;background:none;border:0;padding:9px 11px;border-radius:7px}
-.res button:hover{background:#26385A}
 .rn{display:block;font-size:14.5px;font-weight:500}
 .rr{display:block;font-size:12px;color:var(--muted);font-weight:300}
 .coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;
@@ -1466,14 +1460,12 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .nav-arrow{width:26px;flex:none;display:flex;align-items:center;justify-content:center;
   background:var(--panel);border:1px solid var(--rule2);border-radius:12px;
   color:var(--muted);padding:0;transition:.15s}
-.nav-arrow:hover:not(:disabled){background:var(--panel2);border-color:var(--sky);color:var(--sky)}
-.nav-arrow:disabled{opacity:.26;cursor:default}
+.nav-arrow:active{background:var(--panel2);color:var(--sky)}
 .nav-arrow svg{width:15px;height:15px;display:block}
 .reach{margin-top:12px;font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.55;
   border-inline-start:2px solid var(--rule);padding-inline-start:11px}
 .wcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
   background:var(--panel);border:1px solid var(--rule2);border-radius:12px;padding:10px 3px 9px;transition:.15s;min-width:0}
-.wcell:hover{background:var(--panel2)}
 .wcell.on{border-color:var(--sky);background:#1C3151;box-shadow:0 0 0 1px var(--sky) inset}
 .w-dow{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .w-dow .sm{display:none;font-style:normal}
@@ -1549,7 +1541,6 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .pen-row{display:flex;flex-wrap:wrap;gap:8px}
 .pen{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--rule);
   color:#6E819F;padding:7px 15px;border-radius:999px;font-size:13.5px;font-weight:500;transition:.15s}
-.pen:hover{border-color:#42598A}
 .nib{width:9px;height:9px;border-radius:999px;border:1.5px solid;display:inline-block}
 .pen-star{width:11px;height:11px;display:block;flex:none;margin-inline-start:-2px}
 .pen-star svg,.sk-star svg,.chip-star svg{width:100%;height:100%;display:block}
@@ -1573,7 +1564,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .bands{display:flex;gap:5px;margin-bottom:6px}
 .band{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:transparent;border:0;
   border-radius:9px;padding:6px 2px;transition:.15s;min-width:0}
-.band:hover,.band.on{background:#22314D}
+.band.on{background:#22314D}
 .b-ic{width:28px;height:28px}
 .b-day{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .b-date{font-size:11px;color:var(--muted);font-weight:300}
@@ -1750,6 +1741,18 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .s-name{order:1;grid-column:1 / -1}
   .s-n{order:3;font-size:12px}
   .s-n::before{content:attr(data-l) ": ";color:var(--muted)}
+}
+/* ריחוף רק במכשירים עם מצביע אמיתי.
+   ב-iOS כלל :hover גורם ללחיצה הראשונה "להדליק" ריחוף ורק לשנייה להפעיל. */
+@media (hover:hover) and (pointer:fine){
+  .lang-btn:hover{border-color:#42598A;color:var(--text)}
+  .lang-menu button:hover{background:#26385A}
+  .utog button:hover{color:var(--dim)}
+  .res button:hover{background:#26385A}
+  .nav-arrow:hover:not(:disabled){background:var(--panel2);border-color:var(--sky);color:var(--sky)}
+  .wcell:hover{background:var(--panel2)}
+  .pen:hover{border-color:#42598A}
+  .band:hover{background:#22314D}
 }
 @media (prefers-reduced-motion:reduce){.wx *{transition:none!important;animation:none!important}}
 `;
