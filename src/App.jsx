@@ -20,6 +20,9 @@ const MODELS = [
 
 const M = Object.fromEntries(MODELS.map((m) => [m.id, m]));
 const DEFAULT_ON = ["ecmwf_ifs025", "gfs_seamless", "icon_seamless", "ukmo_seamless", "gem_seamless"];
+
+/* 14 יום. מעבר לזה נשאר בעיקר GFS לבדו, וקו יחיד הוא לא השוואה. */
+const DAYS_N = 14, PAGE = 7;
 const VAR_KEYS = { precipitation: "varPrecip", temperature_2m: "varTemp", wind_speed_10m: "varWind" };
 const VAR_UNITS = { precipitation: "unitMmH", temperature_2m: "unitC", wind_speed_10m: "unitKmh" };
 
@@ -227,6 +230,8 @@ function Weather({ lang, setLang }) {
   const [active, setActive] = useState(DEFAULT_ON);
   const [variable, setVariable] = useState("precipitation");
   const [daySel, setDaySel] = useState(0);
+  const [page, setPage] = useState(0);
+  const swipe = useRef(null);
   const [scope, setScope] = useState("week");
   const [openModel, setOpenModel] = useState(null);
   const [hoverIdx, setHoverIdx] = useState(null);
@@ -275,7 +280,7 @@ function Weather({ lang, setLang }) {
           region = [j.principalSubdivision, j.countryName].filter(Boolean).join(", ");
         } catch { /* coords only */ }
         setPlace({ name, region, lat, lon });
-        setDaySel(0); setScope("week"); setLocating(false);
+        setDaySel(0); setPage(0); setScope("week"); setLocating(false);
       },
       () => setLocating(false),
       { timeout: 8000, maximumAge: 600000 }
@@ -291,7 +296,7 @@ function Weather({ lang, setLang }) {
       `?latitude=${place.lat}&longitude=${place.lon}` +
       "&hourly=precipitation,temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,cloud_cover" +
       "&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,wind_gusts_10m_max" +
-      `&models=${active.join(",")}&timezone=auto&forecast_days=7`;
+      `&models=${active.join(",")}&timezone=auto&forecast_days=${DAYS_N}`;
     try {
       const r = await fetch(url);
       if (!r.ok) throw new Error(`${r.status}`);
@@ -308,7 +313,7 @@ function Weather({ lang, setLang }) {
      שתיהן נכשלות בשקט — הן מוסיפות מידע, לא נושאות את האתר. */
   useEffect(() => {
     let dead = false;
-    const geo = `latitude=${place.lat}&longitude=${place.lon}&timezone=auto&forecast_days=7`;
+    const geo = `latitude=${place.lat}&longitude=${place.lon}&timezone=auto&forecast_days=${DAYS_N}`;
 
     (async () => {
       try {
@@ -375,8 +380,10 @@ function Weather({ lang, setLang }) {
   }, [data, active, variable, unitT]);
 
   const shown = useMemo(
-    () => (scope === "week" ? trace : trace.filter((r) => r.dayIdx === daySel)),
-    [trace, scope, daySel]
+    () => (scope === "week"
+      ? trace.filter((r) => r.dayIdx >= page * PAGE && r.dayIdx < (page + 1) * PAGE)
+      : trace.filter((r) => r.dayIdx === daySel)),
+    [trace, scope, daySel, page]
   );
 
   const days = useMemo(() => {
@@ -430,7 +437,24 @@ function Weather({ lang, setLang }) {
   }, [data, amb, marine, active, dates, unitT]);
 
   const sel = days[daySel];
+  const pages = Math.max(1, Math.ceil(days.length / PAGE));
+  const view = useMemo(() => days.slice(page * PAGE, page * PAGE + PAGE), [days, page]);
   const maxWeekRain = useMemo(() => Math.max(1, ...days.map((d) => d.ag?.hi || 0)), [days]);
+
+  const goPage = useCallback((n) => {
+    const p = Math.min(pages - 1, Math.max(0, n));
+    setPage(p);
+    setDaySel((cur) => (cur >= p * PAGE && cur < (p + 1) * PAGE ? cur : p * PAGE));
+  }, [pages]);
+
+  const onTouchStart = (e) => { swipe.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => {
+    if (swipe.current == null) return;
+    const dx = e.changedTouches[0].clientX - swipe.current;
+    swipe.current = null;
+    if (dx < -55) goPage(page + 1);
+    else if (dx > 55) goPage(page - 1);
+  };
 
   const hourly24 = useMemo(() => {
     if (!data?.hourly?.time) return [];
@@ -463,9 +487,12 @@ function Weather({ lang, setLang }) {
 
   const weekTotals = useMemo(() => {
     if (!data?.daily?.time) return [];
-    return active.map((m) => ({ id: m, total: nums(pick(data.daily, "precipitation_sum", m) || []).reduce((a, b) => a + b, 0) }))
-      .sort((a, b) => b.total - a.total);
-  }, [data, active]);
+    const from = page * PAGE, to = from + PAGE;
+    return active.map((m) => ({
+      id: m,
+      total: nums((pick(data.daily, "precipitation_sum", m) || []).slice(from, to)).reduce((a, b) => a + b, 0),
+    })).sort((a, b) => b.total - a.total);
+  }, [data, active, page]);
 
   const maxY = useMemo(() => {
     if (variable !== "precipitation") return undefined;
@@ -512,7 +539,7 @@ function Weather({ lang, setLang }) {
                 <li key={r.id}>
                   <button onClick={() => {
                     setPlace({ name: r.name, region: [r.admin1, r.country].filter(Boolean).join(", "), lat: r.latitude, lon: r.longitude });
-                    setQuery(""); setResults([]); setDaySel(0); setScope("week");
+                    setQuery(""); setResults([]); setDaySel(0); setPage(0); setScope("week");
                   }}>
                     <span className="rn">{r.name}</span>
                     <span className="rr">{[r.admin1, r.country].filter(Boolean).join(", ")}</span>
@@ -535,8 +562,22 @@ function Weather({ lang, setLang }) {
         {loading && <div className="wload">{t("loading")}</div>}
         {error && <div className="werr">{error} <button onClick={load}>{t("retry")}</button></div>}
 
-        <div className="wrow">
-          {days.map((d) => {
+        {pages > 1 && (
+          <div className="pager">
+            <button className="pg-btn" onClick={() => goPage(page - 1)} disabled={page === 0} aria-label={t("pagePrev")}>
+              <Chev flip={dir === "rtl"} />
+            </button>
+            <span className="pg-lab">
+              {view.length ? `${view[0].date} – ${view[view.length - 1].date}` : ""}
+            </span>
+            <button className="pg-btn" onClick={() => goPage(page + 1)} disabled={page >= pages - 1} aria-label={t("pageNext")}>
+              <Chev flip={dir !== "rtl"} />
+            </button>
+          </div>
+        )}
+
+        <div className="wrow" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          {view.map((d) => {
             const Ic = ICONS[d.icon];
             return (
               <button key={d.i} className={`wcell ${daySel === d.i ? "on" : ""}`}
@@ -607,6 +648,10 @@ function Weather({ lang, setLang }) {
                 ))}
               </div>
             </div>
+
+            {sel.ag && sel.ag.total < active.length && (
+              <div className="reach">{t("modelsReach", { n: sel.ag.total, total: active.length })}</div>
+            )}
 
             <Conditions day={sel} unitT={unitT} elevation={data?.elevation} />
             <Observations day={sel} />
@@ -745,7 +790,7 @@ function Weather({ lang, setLang }) {
 
           {scope === "week" && (
             <div className="bands" dir="ltr" style={{ marginLeft: PAD_L, marginRight: PAD_R }}>
-              {days.map((d) => (
+              {view.map((d) => (
                 <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
                   <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
                   <span className="b-day">{d.dow}</span><span className="b-date">{d.date}</span>
@@ -765,10 +810,10 @@ function Weather({ lang, setLang }) {
                   axisLine={{ stroke: "#2E4166" }} tickLine={false} interval={0} height={scope === "week" ? 6 : 24} />
                 <YAxis domain={variable === "precipitation" ? [0, maxY] : ["auto", "auto"]} width={PAD_L}
                   tick={{ fontSize: 12, fill: "#8FA1BC" }} axisLine={false} tickLine={false} />
-                {scope === "week" && days.filter((d) => d.i % 2 === 1).map((d) => (
+                {scope === "week" && view.filter((d) => d.i % 2 === 1).map((d) => (
                   <ReferenceArea key={d.i} x1={d.i * 24} x2={d.i * 24 + 23} fill="#FFFFFF" fillOpacity={0.028} strokeOpacity={0} />
                 ))}
-                {scope === "week" && days.slice(1).map((d) => <ReferenceLine key={d.i} x={d.i * 24} stroke="#2E4166" />)}
+                {scope === "week" && view.slice(1).map((d) => <ReferenceLine key={d.i} x={d.i * 24} stroke="#2E4166" />)}
                 <Tooltip content={<ChartTip unit={unit} trace={trace} dates={dates} narrow={narrow} onHover={setHoverIdx} />}
                   cursor={{ stroke: "#7E93B8", strokeDasharray: "3 3" }} />
                 <Area dataKey="band" stroke="none" fill="#9BB6E8" fillOpacity={0.16} isAnimationActive={false} connectNulls />
@@ -893,6 +938,14 @@ function useSkill(place, t) {
 
   return skill;
 }
+
+const Chev = ({ flip }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+    strokeLinecap="round" strokeLinejoin="round"
+    style={flip ? { transform: "scaleX(-1)" } : undefined}>
+    <path d="M15 5 L8 12 L15 19" />
+  </svg>
+);
 
 const Star = () => (
   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -1405,7 +1458,17 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .wload,.werr{font-size:13.5px;color:var(--muted);padding:10px 0}
 .werr{color:var(--rose)}
 .werr button{background:var(--sky);color:#0E1728;border:0;border-radius:7px;padding:5px 12px;font-weight:600;font-size:12.5px;margin-inline-start:8px}
-.wrow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.wrow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;touch-action:pan-y}
+.pager{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 10px}
+.pg-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  background:var(--panel);border:1px solid var(--rule);border-radius:999px;color:var(--dim);
+  padding:0;transition:.15s;flex:none}
+.pg-btn:hover:not(:disabled){border-color:var(--sky);color:var(--sky)}
+.pg-btn:disabled{opacity:.32;cursor:default}
+.pg-btn svg{width:16px;height:16px;display:block}
+.pg-lab{font-size:12.5px;color:var(--muted);font-weight:500;min-width:104px;text-align:center}
+.reach{margin-top:12px;font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.55;
+  border-inline-start:2px solid var(--rule);padding-inline-start:11px}
 .wcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
   background:var(--panel);border:1px solid var(--rule2);border-radius:12px;padding:10px 3px 9px;transition:.15s;min-width:0}
 .wcell:hover{background:var(--panel2)}
@@ -1637,6 +1700,10 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .head{padding-top:12px;gap:20px}
   .head-r{flex:1 1 100%}
   .wrow{gap:3px}
+  .pager{gap:10px;margin-bottom:8px}
+  .pg-btn{width:27px;height:27px}
+  .pg-lab{font-size:11.5px;min-width:88px}
+  .reach{font-size:11.5px;margin-top:10px}
   .wcell{padding:8px 1px 7px;border-radius:9px;gap:2px}
   .w-dow{font-size:13px}
   .w-dow .lg{display:none} .w-dow .sm{display:inline}

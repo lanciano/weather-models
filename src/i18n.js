@@ -159,6 +159,9 @@ he: {
   skillLead: "**{model}** היה המדויק ביותר כאן ב־{days} הימים האחרונים, מתוכם {wet} ימים גשומים. הקו שלו מודגש בגרפים.",
   skillThin: "ב־{days} הימים האחרונים לא היו כאן מספיק ימי גשם כדי להכריע מי מדויק יותר.",
   skillCaveat: "מדד לביצועים בעבר בנקודה הזו — לא הבטחה להיום.",
+  modelsReach: "רק {n} מתוך {total} המודלים מגיעים עד לתאריך הזה — ככל שמתרחקים, פחות מהם עוד רצים.",
+  pagePrev: "שבעת הימים הקודמים",
+  pageNext: "שבעת הימים הבאים",
   cond: { clear: "בהיר", partly: "מעונן חלקית", cloudy: "מעונן", drizzle: "טפטוף", rain: "גשם", storm: "גשם כבד", snow: "שלג" },
   models: {
     ecmwf_ifs025: { agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "9 ק״מ · מוגש בגריד 25 ק״מ",
@@ -307,6 +310,9 @@ en: {
   skillLead: "**{model}** has been the most accurate here over the last {days} days, {wet} of them wet. Its line is emphasised in the charts.",
   skillThin: "There haven't been enough wet days here in the last {days} days to tell which model is more accurate.",
   skillCaveat: "A record of past performance at this point — not a promise about today.",
+  modelsReach: "Only {n} of {total} models reach this far out — the further ahead, the fewer are still running.",
+  pagePrev: "Previous seven days",
+  pageNext: "Next seven days",
   cond: { clear: "Clear", partly: "Partly cloudy", cloudy: "Cloudy", drizzle: "Drizzle", rain: "Rain", storm: "Heavy rain", snow: "Snow" },
   models: {
     ecmwf_ifs025: { agency: "European Centre for Medium-Range Weather Forecasts", home: "Reading, England · Bologna, Italy", grid: "9 km · served on a 25 km grid",
@@ -455,6 +461,9 @@ ru: {
   skillLead: "**{model}** оказалась самой точной здесь за последние {days} дней, из них {wet} дождливых. Её линия выделена на графиках.",
   skillThin: "За последние {days} дней здесь было слишком мало дождливых дней, чтобы определить более точную модель.",
   skillCaveat: "Показатель прошлой точности в этой точке — не обещание на сегодня.",
+  modelsReach: "Так далеко достают лишь {n} из {total} моделей — чем дальше горизонт, тем меньше их остаётся.",
+  pagePrev: "Предыдущие семь дней",
+  pageNext: "Следующие семь дней",
   cond: { clear: "Ясно", partly: "Переменная облачность", cloudy: "Облачно", drizzle: "Морось", rain: "Дождь", storm: "Сильный дождь", snow: "Снег" },
   models: {
     ecmwf_ifs025: { agency: "Европейский центр среднесрочных прогнозов погоды", home: "Рединг, Англия · Болонья, Италия", grid: "9 км · выдаётся на сетке 25 км",
@@ -603,6 +612,9 @@ es: {
   skillLead: "**{model}** ha sido el más preciso aquí en los últimos {days} días, {wet} de ellos lluviosos. Su línea aparece destacada en los gráficos.",
   skillThin: "En los últimos {days} días no ha habido aquí suficientes días de lluvia para decidir qué modelo es más preciso.",
   skillCaveat: "Un registro del acierto pasado en este punto, no una promesa sobre hoy.",
+  modelsReach: "Solo {n} de {total} modelos llegan tan lejos — cuanto más adelante, menos siguen en marcha.",
+  pagePrev: "Siete días anteriores",
+  pageNext: "Siete días siguientes",
   cond: { clear: "Despejado", partly: "Parcialmente nuboso", cloudy: "Nuboso", drizzle: "Llovizna", rain: "Lluvia", storm: "Lluvia fuerte", snow: "Nieve" },
   models: {
     ecmwf_ifs025: { agency: "Centro Europeo de Predicción Meteorológica a Plazo Medio", home: "Reading, Inglaterra · Bolonia, Italia", grid: "9 km · servido en malla de 25 km",
@@ -751,6 +763,9 @@ fr: {
   skillLead: "**{model}** a été le plus précis ici sur les {days} derniers jours, dont {wet} pluvieux. Sa courbe est mise en avant sur les graphiques.",
   skillThin: "Il n'y a pas eu assez de jours de pluie ici sur les {days} derniers jours pour départager les modèles.",
   skillCaveat: "Un relevé des performances passées en ce point — pas une promesse pour aujourd'hui.",
+  modelsReach: "Seuls {n} modèles sur {total} vont aussi loin — plus l'échéance s'éloigne, moins il en reste.",
+  pagePrev: "Sept jours précédents",
+  pageNext: "Sept jours suivants",
   cond: { clear: "Dégagé", partly: "Partiellement nuageux", cloudy: "Nuageux", drizzle: "Bruine", rain: "Pluie", storm: "Fortes pluies", snow: "Neige" },
   models: {
     ecmwf_ifs025: { agency: "Centre européen pour les prévisions météorologiques à moyen terme", home: "Reading, Angleterre · Bologne, Italie", grid: "9 km · fourni sur une grille de 25 km",
@@ -899,6 +914,9 @@ ar: {
   skillLead: "**{model}** كان الأدقّ هنا خلال الـ{days} يومًا الأخيرة، منها {wet} يومًا ممطرًا. خطّه مُبرز في الرسوم.",
   skillThin: "لم تكن هناك أيام ممطرة كافية هنا خلال الـ{days} يومًا الأخيرة لتحديد النموذج الأدقّ.",
   skillCaveat: "سجلّ أداء سابق في هذه النقطة — لا وعد بشأن اليوم.",
+  modelsReach: "يصل إلى هذا المدى {n} من {total} نماذج فقط — كلما ابتعد الأفق قلّ عدد ما يزال يعمل.",
+  pagePrev: "الأيام السبعة السابقة",
+  pageNext: "الأيام السبعة التالية",
   cond: { clear: "صحو", partly: "غائم جزئيًا", cloudy: "غائم", drizzle: "رذاذ", rain: "مطر", storm: "مطر غزير", snow: "ثلج" },
   models: {
     ecmwf_ifs025: { agency: "المركز الأوروبي للتنبؤات الجوية متوسطة المدى", home: "ريدينغ، إنجلترا · بولونيا، إيطاليا", grid: "9 كم · يُقدَّم على شبكة 25 كم",
