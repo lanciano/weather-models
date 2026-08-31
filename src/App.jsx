@@ -1492,6 +1492,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .wx b{font-weight:600}
 .wx button{font-family:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
 .wx button:focus-visible,.wx input:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+/* recharts מקבל מיקוד בלחיצה וספארי מצייר סביבו מסגרת — לא רלוונטי בגרף */
+.chart-box *:focus,.chart-box *:focus-visible,
+.chart-box .recharts-wrapper,.chart-box .recharts-surface{outline:none!important}
 .sky{position:absolute;inset:0 0 auto;height:420px;pointer-events:none;
   background:radial-gradient(90% 90% at 80% -20%,rgba(90,179,240,.16),transparent 62%),
   radial-gradient(70% 80% at 12% -10%,rgba(197,139,240,.12),transparent 60%)}
