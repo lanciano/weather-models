@@ -562,38 +562,40 @@ function Weather({ lang, setLang }) {
         {loading && <div className="wload">{t("loading")}</div>}
         {error && <div className="werr">{error} <button onClick={load}>{t("retry")}</button></div>}
 
-        {pages > 1 && (
-          <div className="pager">
-            <button className="pg-btn" onClick={() => goPage(page - 1)} disabled={page === 0} aria-label={t("pagePrev")}>
+        <div className="week-nav">
+          {pages > 1 && (
+            <button className="nav-arrow" onClick={() => goPage(page - 1)}
+              disabled={page === 0} aria-label={t("pagePrev")}>
               <Chev flip={dir === "rtl"} />
             </button>
-            <span className="pg-lab">
-              {view.length ? `${view[0].date} – ${view[view.length - 1].date}` : ""}
-            </span>
-            <button className="pg-btn" onClick={() => goPage(page + 1)} disabled={page >= pages - 1} aria-label={t("pageNext")}>
+          )}
+
+          <div className="wrow" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+            {view.map((d) => {
+              const Ic = ICONS[d.icon];
+              return (
+                <button key={d.i} className={`wcell ${daySel === d.i ? "on" : ""}`}
+                  onClick={() => { setDaySel(d.i); setScope("day"); }}>
+                  <span className="w-dow"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
+                  <span className="w-date">{d.date}</span>
+                  <span className="w-ic"><Ic /></span>
+                  <span className="w-t"><b>{fmt(d.tmax, 0)}°</b><em>{fmt(d.tmin, 0)}°</em></span>
+                  <span className={`w-mm ${d.ag && d.ag.med >= 0.1 ? "wet" : ""}`}>
+                    {d.ag && d.ag.med >= 0.1 ? `${fmt(d.ag.med)} ${mm}` : t("dryWord")}
+                  </span>
+                  <span className="w-bar"><i style={{ width: `${Math.min(100, ((d.ag?.med || 0) / maxWeekRain) * 100)}%` }} /></span>
+                  {!!d.outs.length && <span className="w-warn" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {pages > 1 && (
+            <button className="nav-arrow" onClick={() => goPage(page + 1)}
+              disabled={page >= pages - 1} aria-label={t("pageNext")}>
               <Chev flip={dir !== "rtl"} />
             </button>
-          </div>
-        )}
-
-        <div className="wrow" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          {view.map((d) => {
-            const Ic = ICONS[d.icon];
-            return (
-              <button key={d.i} className={`wcell ${daySel === d.i ? "on" : ""}`}
-                onClick={() => { setDaySel(d.i); setScope("day"); }}>
-                <span className="w-dow"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
-                <span className="w-date">{d.date}</span>
-                <span className="w-ic"><Ic /></span>
-                <span className="w-t"><b>{fmt(d.tmax, 0)}°</b><em>{fmt(d.tmin, 0)}°</em></span>
-                <span className={`w-mm ${d.ag && d.ag.med >= 0.1 ? "wet" : ""}`}>
-                  {d.ag && d.ag.med >= 0.1 ? `${fmt(d.ag.med)} ${mm}` : t("dryWord")}
-                </span>
-                <span className="w-bar"><i style={{ width: `${Math.min(100, ((d.ag?.med || 0) / maxWeekRain) * 100)}%` }} /></span>
-                {!!d.outs.length && <span className="w-warn" />}
-              </button>
-            );
-          })}
+          )}
         </div>
 
         {sel && (
@@ -1458,15 +1460,15 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .wload,.werr{font-size:13.5px;color:var(--muted);padding:10px 0}
 .werr{color:var(--rose)}
 .werr button{background:var(--sky);color:#0E1728;border:0;border-radius:7px;padding:5px 12px;font-weight:600;font-size:12.5px;margin-inline-start:8px}
+.week-nav{display:flex;align-items:stretch;gap:6px}
+.week-nav .wrow{flex:1;min-width:0}
 .wrow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;touch-action:pan-y}
-.pager{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 0 10px}
-.pg-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;
-  background:var(--panel);border:1px solid var(--rule);border-radius:999px;color:var(--dim);
-  padding:0;transition:.15s;flex:none}
-.pg-btn:hover:not(:disabled){border-color:var(--sky);color:var(--sky)}
-.pg-btn:disabled{opacity:.32;cursor:default}
-.pg-btn svg{width:16px;height:16px;display:block}
-.pg-lab{font-size:12.5px;color:var(--muted);font-weight:500;min-width:104px;text-align:center}
+.nav-arrow{width:26px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:var(--panel);border:1px solid var(--rule2);border-radius:12px;
+  color:var(--muted);padding:0;transition:.15s}
+.nav-arrow:hover:not(:disabled){background:var(--panel2);border-color:var(--sky);color:var(--sky)}
+.nav-arrow:disabled{opacity:.26;cursor:default}
+.nav-arrow svg{width:15px;height:15px;display:block}
 .reach{margin-top:12px;font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.55;
   border-inline-start:2px solid var(--rule);padding-inline-start:11px}
 .wcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
@@ -1700,9 +1702,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   .head{padding-top:12px;gap:20px}
   .head-r{flex:1 1 100%}
   .wrow{gap:3px}
-  .pager{gap:10px;margin-bottom:8px}
-  .pg-btn{width:27px;height:27px}
-  .pg-lab{font-size:11.5px;min-width:88px}
+  .week-nav{gap:4px}
+  .nav-arrow{width:19px;border-radius:9px}
+  .nav-arrow svg{width:12px;height:12px}
   .reach{font-size:11.5px;margin-top:10px}
   .wcell{padding:8px 1px 7px;border-radius:9px;gap:2px}
   .w-dow{font-size:13px}
