@@ -760,7 +760,9 @@ function Weather({ lang, setLang }) {
 
             {narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} pos="top" />}
 
-            <div dir="ltr" style={{ width: "100%", height: narrow ? 200 : 240 }}>
+            <div className="chart-box" dir="ltr" style={{ width: "100%", height: narrow ? 200 : 240 }}>
+              <span className="chart-unit">{mm}</span>
+              <span className="chart-unit right" style={{ color: "#F5A24B" }}>{degLabel}</span>
               <ResponsiveContainer>
                 <ComposedChart data={hourly24} margin={{ top: 10, right: 4, bottom: 0, left: 0 }} barCategoryGap="18%">
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#8FA1BC" }}
@@ -854,7 +856,6 @@ function Weather({ lang, setLang }) {
           {variable === "temperature_2m" && (
             <div className="ptop">
               <UnitToggle value={unitT} onChange={setUnitT} />
-              <span className="unit">{unit}</span>
             </div>
           )}
 
@@ -885,7 +886,8 @@ function Weather({ lang, setLang }) {
 
           {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} dates={dates} pos="top" />}
 
-          <div dir="ltr" style={{ width: "100%", height: narrow ? 230 : 290 }}>
+          <div className="chart-box" dir="ltr" style={{ width: "100%", height: narrow ? 230 : 290 }}>
+            <span className="chart-unit">{unit}</span>
             <ResponsiveContainer>
               <ComposedChart data={shown} margin={{ top: 6, right: PAD_R, bottom: 4, left: 0 }}>
                 <XAxis dataKey="i" type="number" domain={["dataMin", "dataMax"]}
@@ -925,7 +927,6 @@ function Weather({ lang, setLang }) {
                 <em>{t("bandKeySub")}</em>
               </span>
             </span>
-            <span className="pkey-unit">{unit}</span>
           </div>
         </div>
       </section>
@@ -1692,14 +1693,18 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .dn-day em{font-style:normal;font-size:12.5px;color:var(--muted)}
 .dn-ic{width:26px;height:26px;flex:none}
 .dn-ic svg{width:100%;height:100%;display:block}
-.pkey{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+.pkey{display:flex;align-items:flex-start;gap:14px;
   font-size:12px;color:var(--muted);font-weight:300;line-height:1.5;
   border-top:1px solid var(--rule2);margin-top:6px;padding:10px 4px 12px}
 .pkey-row{display:flex;align-items:flex-start;gap:9px;flex:1;min-width:0}
 .pkey-txt{min-width:0;display:flex;flex-direction:column;gap:1px}
 .pkey-txt b{font-weight:500;color:var(--dim);font-size:12.5px}
 .pkey-txt em{font-style:normal;font-size:11.5px;color:var(--muted)}
-.pkey-unit{flex:none;font-size:11.5px;color:#6E819F;white-space:nowrap}
+/* היחידה שייכת לציר, אז היא נצמדת אליו פיזית — תמיד משמאל, בכל שפה */
+.chart-box{position:relative}
+.chart-unit{position:absolute;top:0;left:2px;z-index:2;pointer-events:none;
+  font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
+.chart-unit.right{left:auto;right:2px}
 .kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none;margin-top:3px}
 .veil{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
   background:rgba(14,23,40,.86);border-radius:14px;font-size:13.5px;color:var(--muted)}
