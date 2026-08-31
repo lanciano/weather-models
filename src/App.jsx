@@ -881,7 +881,7 @@ function Weather({ lang, setLang }) {
             </div>
           )}
 
-          {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} unit={unit} dates={dates} pos="top" />}
+          {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} dates={dates} pos="top" />}
 
           <div dir="ltr" style={{ width: "100%", height: narrow ? 230 : 290 }}>
             <ResponsiveContainer>
@@ -913,7 +913,7 @@ function Weather({ lang, setLang }) {
             </ResponsiveContainer>
           </div>
 
-          {!narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} unit={unit} dates={dates} />}
+          {!narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} dates={dates} />}
 
           <div className="pkey"><span className="kb" /> {t("bandKey")}</div>
         </div>
@@ -1176,7 +1176,7 @@ function ChartTip({ active, payload, label, unit, trace, dates, narrow, onHover 
   );
 }
 
-function Readout({ row, models, unit, dates, pos }) {
+function Readout({ row, models, dates, pos }) {
   const { t } = useI18n();
   const cls = `readout${pos === "top" ? " top" : ""}`;
   if (!row) return <div className={`${cls} empty`}>{t("chartHint")}</div>;
@@ -1197,7 +1197,6 @@ function Readout({ row, models, unit, dates, pos }) {
             <em>{p.v.toFixed(1)}</em>
           </span>
         ))}
-        <span className="ro-unit">{unit}</span>
       </div>
     </div>
   );
@@ -1705,7 +1704,6 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .ro-chip i{width:6px;height:6px;border-radius:50%;flex:none}
 .ro-chip b{font-weight:600}
 .ro-chip em{font-style:normal;color:var(--text);font-weight:500}
-.ro-unit{font-size:11px;color:var(--muted);font-weight:300}
 
 .hourly{max-width:1120px;margin:40px auto 0}
 .hourly h2{font-size:24px}
