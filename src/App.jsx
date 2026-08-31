@@ -95,6 +95,22 @@ function pickIcon(med, cloud, tmax) {
   return "clear";
 }
 
+/** קוד WMO (מ-Open-Meteo current) → אחד מהאייקונים הקיימים שלנו */
+function wmoIcon(code) {
+  if (code == null) return null;
+  if (code === 0) return "clear";
+  if (code === 1) return "clear";
+  if (code === 2) return "partly";
+  if (code === 3) return "cloudy";
+  if (code === 45 || code === 48) return "cloudy";
+  if ([51, 53, 55, 56, 57].includes(code)) return "drizzle";
+  if ([61, 63, 66, 80].includes(code)) return "rain";
+  if ([65, 67, 81, 82].includes(code)) return "storm";
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return "snow";
+  if (code === 95 || code === 96 || code === 99) return "storm";
+  return "cloudy";
+}
+
 /* ═══════════════════════ helpers ═══════════════════════ */
 
 const pick = (o, base, m) => { if (!o) return null; const v = o[`${base}_${m}`]; return v !== undefined ? v : o[base]; };
@@ -366,9 +382,27 @@ function Weather({ lang, setLang }) {
       try {
         const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=${LANG_BY[lang].geo}&format=json`);
         const j = await r.json();
-        if (!dead) setResults(j.results || []);
-      } catch { if (!dead) setResults([]); }
-      finally { if (!dead) setSearching(false); }
+        const list = j.results || [];
+        if (dead) return;
+        setResults(list);
+        setSearching(false);
+
+        /* מזג אוויר נוכחי לכל התוצאות בבקשה אחת — לא שש בקשות נפרדות */
+        if (list.length) {
+          try {
+            const lats = list.map((p) => p.latitude).join(",");
+            const lons = list.map((p) => p.longitude).join(",");
+            const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weather_code&forecast_days=1`);
+            const wj = await wr.json();
+            if (dead) return;
+            const arr = Array.isArray(wj) ? wj : [wj];
+            setResults((cur) => cur.map((p, i) => {
+              const c = arr[i]?.current;
+              return c ? { ...p, curTemp: c.temperature_2m, curCode: c.weather_code } : p;
+            }));
+          } catch { /* לא קריטי — התוצאות כבר מוצגות בלי אייקון */ }
+        }
+      } catch { if (!dead) { setResults([]); setSearching(false); } }
     }, 350);
     return () => { dead = true; clearTimeout(tm); };
   }, [query, lang]);
@@ -555,17 +589,29 @@ function Weather({ lang, setLang }) {
           {searching && <div className="hint">{t("searching")}</div>}
           {!!results.length && (
             <ul className="res">
-              {results.map((r) => (
-                <li key={r.id}>
-                  <button onClick={() => {
-                    setPlace({ name: r.name, region: [r.admin1, r.country].filter(Boolean).join(", "), lat: r.latitude, lon: r.longitude });
-                    setQuery(""); setResults([]); setDaySel(0); setPage(0); setScope("week");
-                  }}>
-                    <span className="rn">{r.name}</span>
-                    <span className="rr">{[r.admin1, r.country].filter(Boolean).join(", ")}</span>
-                  </button>
-                </li>
-              ))}
+              {results.map((r) => {
+                const ic = wmoIcon(r.curCode);
+                const Ic = ic ? ICONS[ic] : null;
+                return (
+                  <li key={r.id}>
+                    <button onClick={() => {
+                      setPlace({ name: r.name, region: [r.admin1, r.country].filter(Boolean).join(", "), lat: r.latitude, lon: r.longitude });
+                      setQuery(""); setResults([]); setDaySel(0); setPage(0); setScope("week");
+                    }}>
+                      <span className="res-txt">
+                        <span className="rn">{r.name}</span>
+                        <span className="rr">{[r.admin1, r.country].filter(Boolean).join(", ")}</span>
+                      </span>
+                      {Ic && (
+                        <span className="res-wx">
+                          <span className="res-ic"><Ic /></span>
+                          {typeof r.curTemp === "number" && <span className="res-t">{fmt(toT(r.curTemp, unitT), 0)}°</span>}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
           <div className="coords">
@@ -1470,7 +1516,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .res{position:absolute;z-index:30;inset-inline:0;top:100%;margin:6px 0 0;padding:5px;list-style:none;
   background:var(--panel2);border:1px solid var(--rule);border-radius:10px;max-height:290px;overflow:auto;
   box-shadow:0 14px 34px rgba(0,0,0,.42)}
-.res button{display:block;width:100%;text-align:start;background:none;border:0;padding:9px 11px;border-radius:7px}
+.res button{display:flex;align-items:center;gap:10px;width:100%;text-align:start;background:none;border:0;padding:8px 11px;border-radius:7px}
+.res-txt{flex:1;min-width:0}
+.res-wx{display:flex;align-items:center;gap:5px;flex:none;color:var(--dim)}
+.res-ic{width:26px;height:26px;flex:none}
+.res-ic svg{width:100%;height:100%;display:block}
+.res-t{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .rn{display:block;font-size:14.5px;font-weight:500}
 .rr{display:block;font-size:12px;color:var(--muted);font-weight:300}
 .coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;
