@@ -845,10 +845,6 @@ function Weather({ lang, setLang }) {
               <button key={k} className={`vtab ${variable === k ? "on" : ""}`} onClick={() => setVariable(k)}>{t(key)}</button>
             ))}
           </div>
-          <div className="vars">
-            <button className={`vtab ${scope === "week" ? "on" : ""}`} onClick={() => setScope("week")}>{t("scopeWeek")}</button>
-            <button className={`vtab ${scope === "day" ? "on" : ""}`} onClick={() => setScope("day")}>{t("scopeDay", { day: sel?.dow || "" })}</button>
-          </div>
         </div>
 
         <div className="panel">
@@ -1672,7 +1668,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .panel{position:relative;background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:10px 12px 0}
 .ptop{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:11.5px;
   color:var(--muted);font-weight:300;margin-bottom:4px;min-height:22px}
-.bands{display:flex;gap:5px;margin-bottom:6px}
+.bands{display:flex;gap:5px;margin-bottom:6px;min-height:76px;align-items:stretch}
 .band{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;
   border-radius:9px;padding:7px 2px;transition:.15s;min-width:0}
 .band.on{background:#22314D}
@@ -1684,7 +1680,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 
 /* חזרה לתצוגת שבוע */
 .day-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  margin-bottom:10px;padding:0 2px}
+  margin-bottom:6px;padding:0 2px;min-height:76px}
 .back-week{display:inline-flex;align-items:center;gap:8px;flex:none;
   background:var(--panel2);border:1px solid var(--rule);border-radius:999px;padding:9px 18px;
   font-size:14px;font-weight:600;color:var(--sky);transition:.15s}
@@ -1882,7 +1878,8 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .b-day .lg{display:none} .b-day .sm{display:inline}
   .b-ic{width:26px;height:26px}
   .b-date{font-size:9.5px}
-  .day-nav{gap:10px}
+  .bands{min-height:70px}
+  .day-nav{gap:10px;min-height:70px}
   .back-week{font-size:13px;padding:8px 15px;gap:6px}
   .bw-ic{width:14px;height:14px}
   .dn-day{font-size:13px;gap:6px}
