@@ -330,8 +330,8 @@ function Weather({ lang, setLang }) {
     setLoading(true); setError(null);
     const url = "https://api.open-meteo.com/v1/forecast" +
       `?latitude=${place.lat}&longitude=${place.lon}` +
-      "&hourly=precipitation,temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,cloud_cover" +
-      "&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,wind_gusts_10m_max" +
+      "&hourly=precipitation,snowfall,temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,cloud_cover" +
+      "&daily=precipitation_sum,snowfall_sum,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,wind_gusts_10m_max" +
       `&models=${active.join(",")}&timezone=auto&forecast_days=${DAYS_N}`;
     try {
       const r = await fetch(url);
@@ -457,6 +457,13 @@ function Weather({ lang, setLang }) {
       }
       const tMax = tmax.length ? mean(tmax) : null;
 
+      /* שלג: ה-API מדווח ס״מ של שלג, בעוד precipitation נותן מים שקולים.
+         היחס בערך 1:7, אז משווים על אותה סקאלה כדי לדעת אם השלג הוא הרוב. */
+      const snowCm = nums(active.map((m) => pick(data.daily, "snowfall_sum", m)?.[i]));
+      const snow = snowCm.length ? median(snowCm) : null;
+      const medRain = ag?.med ?? 0;
+      const snowy = typeof snow === "number" && snow > 0.2 && snow / 7 >= medRain * 0.5;
+
       /* מדדים נוספים */
       const feels = nums(active.map((m) => pick(data.daily, "apparent_temperature_max", m)?.[i]));
       const feelsLo = nums(active.map((m) => pick(data.daily, "apparent_temperature_min", m)?.[i]));
@@ -484,7 +491,8 @@ function Weather({ lang, setLang }) {
         windDir: typeof wd === "number" ? wd : null,
         uv: typeof uv === "number" ? uv : null,
         wave: typeof wave === "number" ? wave : null,
-        icon: pickIcon(ag?.med ?? 0, cc.length ? mean(cc) : null, tMax),
+        snow, snowy,
+        icon: snowy ? "snow" : pickIcon(ag?.med ?? 0, cc.length ? mean(cc) : null, tMax),
         outs: outliers(pairs),
       };
     });
@@ -532,6 +540,7 @@ function Weather({ lang, setLang }) {
     const out = [];
     for (let i = daySel * 24; i < (daySel + 1) * 24 && i < data.hourly.time.length; i++) {
       const vals = nums(active.map((m) => pick(data.hourly, "precipitation", m)?.[i]));
+      const snows = nums(active.map((m) => pick(data.hourly, "snowfall", m)?.[i]));
       const temps = nums(active.map((m) => pick(data.hourly, "temperature_2m", m)?.[i]));
       const d = new Date(data.hourly.time[i]);
       const med = vals.length ? median(vals) : 0;
@@ -540,6 +549,7 @@ function Weather({ lang, setLang }) {
         i, h: d.getHours(), label: `${String(d.getHours()).padStart(2, "0")}:00`,
         med, max, extra: Math.max(0, max - med),
         wet: vals.filter((v) => v >= 0.1).length, total: vals.length,
+        snow: snows.length ? median(snows) : null,
         temp: temps.length ? toT(median(temps), unitT) : null,
       });
     }
@@ -664,8 +674,9 @@ function Weather({ lang, setLang }) {
                   <span className="w-date">{d.date}</span>
                   <span className="w-ic"><Ic /></span>
                   <span className="w-t"><b>{fmt(d.tmax, 0)}°</b><em>{fmt(d.tmin, 0)}°</em></span>
-                  <span className={`w-mm ${d.ag && d.ag.med >= 0.1 ? "wet" : ""}`}>
-                    {d.ag && d.ag.med >= 0.1 ? `${fmt(d.ag.med)} ${mm}` : t("dryWord")}
+                  <span className={`w-mm ${(d.snowy || (d.ag && d.ag.med >= 0.1)) ? "wet" : ""}`}>
+                    {d.snowy ? `${fmt(d.snow)} ${t("unitCm")}`
+                      : d.ag && d.ag.med >= 0.1 ? `${fmt(d.ag.med)} ${mm}` : t("dryWord")}
                   </span>
                   <span className="w-bar"><i style={{ width: `${Math.min(100, ((d.ag?.med || 0) / maxWeekRain) * 100)}%` }} /></span>
                   {!!d.outs.length && <span className="w-warn" />}
@@ -733,6 +744,12 @@ function Weather({ lang, setLang }) {
                 ))}
               </div>
             </div>
+
+            {sel.snowy && (
+              <div className="snownote">
+                <Rich text={t("snowNote", { v: fmt(sel.snow) })} />
+              </div>
+            )}
 
             {sel.ag && sel.ag.total < active.length && (
               <div className="reach">{t("modelsReach", { n: sel.ag.total, total: active.length })}</div>
@@ -1263,6 +1280,9 @@ function HourTip({ active, payload, label, narrow, onHover }) {
       <div className="tip-r"><span className="tip-n">{t("tipMedian")}</span><span className="tip-v">{fmt(r.med)} {mm}</span></div>
       <div className="tip-r"><span className="tip-n">{t("tipWettest")}</span><span className="tip-v">{fmt(r.max)} {mm}</span></div>
       <div className="tip-r"><span className="tip-n">{t("tipAgree")}</span><span className="tip-v">{t("ofTotal", { a: r.wet, b: r.total })}</span></div>
+      {typeof r.snow === "number" && r.snow > 0.05 && (
+        <div className="tip-r"><span className="tip-n">{t("snow")}</span><span className="tip-v">{fmt(r.snow)} {t("unitCm")}</span></div>
+      )}
       {typeof r.temp === "number" && (
         <div className="tip-r"><span className="tip-n">{t("tipTemp")}</span><span className="tip-v">{fmt(r.temp, 0)}°</span></div>
       )}
@@ -1288,6 +1308,12 @@ function HourReadout({ row, pos }) {
         <span className="ro-chip" style={{ borderColor: "#8FA1BC44" }}>
           <b style={{ color: "var(--muted)" }}>{t("roAgree")}</b><em>{row.wet}/{row.total}</em>
         </span>
+        {typeof row.snow === "number" && row.snow > 0.05 && (
+          <span className="ro-chip" style={{ borderColor: "#BFE3FF55" }}>
+            <i style={{ background: "#BFE3FF" }} />
+            <b style={{ color: "#BFE3FF" }}>{t("snow")}</b><em>{fmt(row.snow)} {t("unitCm")}</em>
+          </span>
+        )}
       </div>
     </div>
   );
@@ -1600,6 +1626,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   color:var(--muted);padding:0;transition:.15s}
 .nav-arrow:active{background:var(--panel2);color:var(--sky)}
 .nav-arrow svg{width:15px;height:15px;display:block}
+.snownote{margin-top:14px;background:rgba(191,227,255,.07);border:1px solid rgba(191,227,255,.22);
+  border-radius:11px;padding:10px 13px;font-size:13px;color:var(--dim);font-weight:300;line-height:1.6}
+.snownote b{color:#BFE3FF;font-weight:600}
 .reach{margin-top:12px;font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.55;
   border-inline-start:2px solid var(--rule);padding-inline-start:11px}
 .wcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;

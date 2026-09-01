@@ -165,6 +165,9 @@ he: {
   pageNext: "שבעת הימים הבאים",
   credit: "רעיון ופיתוח: רמי לנציאנו · נבנה בעזרת Claude",
   dayHint: "לחצו על יום כדי לראות את הגרף שלו בלבד",
+  snow: "שלג",
+  unitCm: "ס״מ",
+  snowNote: "המשקעים ביום הזה יורדים ברובם כשלג — **{v} ס״מ** לפי חציון המודלים. המספרים במ״מ הם המים השקולים, לא עומק השלג.",
   cond: { clear: "בהיר", partly: "מעונן חלקית", cloudy: "מעונן", drizzle: "טפטוף", rain: "גשם", storm: "גשם כבד", snow: "שלג" },
   models: {
     ecmwf_ifs025: { agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "9 ק״מ · מוגש בגריד 25 ק״מ",
@@ -191,7 +194,7 @@ en: {
   title: "Weather Model Comparison",
   dek: "Seven national institutes run supercomputers on the same atmosphere and arrive at different answers. Here is what they say about **{place}** — and which of them has been right here before.",
   searchLabel: "Search a place",
-  searchPlaceholder: "Tel Aviv, London, Reykjavík…",
+  searchPlaceholder: "London, New York, Reykjavík…",
   searching: "Searching…",
   myLocation: "Use my location",
   locating: "Locating…",
@@ -251,7 +254,7 @@ en: {
   totalsStable: "The models are relatively close this week. A stable forecast.",
 
   scoreTitle: "Who was right here",
-  scoreIntro: "Every model keeps an archive of what it **predicted** in the past. Compare that against what actually happened and you get a real ranking — **for this point alone**. The model that wins in Tel Aviv is not necessarily the one that wins in the Golan Heights.",
+  scoreIntro: "Every model keeps an archive of what it **predicted** in the past. Compare that against what actually happened and you get a real ranking — **for this point alone**. The model that wins in Miami is not necessarily the one that wins in Denver.",
   scoreLeadLabel: "Lead time tested",
   scoreWinLabel: "Period tested",
   scoreDaysOpt: "{n} days",
@@ -319,6 +322,9 @@ en: {
   pageNext: "Next seven days",
   credit: "Conceived and built by Rami Lanciano · Developed with Claude",
   dayHint: "Tap a day to see its chart on its own",
+  snow: "Snow",
+  unitCm: "cm",
+  snowNote: "Precipitation on this day falls mostly as snow — **{v} cm** by the median of the models. The millimetre figures are water equivalent, not snow depth.",
   cond: { clear: "Clear", partly: "Partly cloudy", cloudy: "Cloudy", drizzle: "Drizzle", rain: "Rain", storm: "Heavy rain", snow: "Snow" },
   models: {
     ecmwf_ifs025: { agency: "European Centre for Medium-Range Weather Forecasts", home: "Reading, England · Bologna, Italy", grid: "9 km · served on a 25 km grid",
@@ -405,7 +411,7 @@ ru: {
   totalsStable: "На этой неделе модели относительно близки. Прогноз устойчивый.",
 
   scoreTitle: "Кто оказывался прав здесь",
-  scoreIntro: "У каждой модели есть архив того, что она **предсказывала** раньше. Сравнив его с тем, что произошло на самом деле, получаем настоящий рейтинг — **только для этой точки**. Модель, побеждающая в Москве, не обязательно побеждает на Кавказе.",
+  scoreIntro: "У каждой модели есть архив того, что она **предсказывала** раньше. Сравнив его с тем, что произошло на самом деле, получаем настоящий рейтинг — **только для этой точки**. Модель, побеждающая в Сочи, не обязательно побеждает в Новосибирске.",
   scoreLeadLabel: "Заблаговременность",
   scoreWinLabel: "Проверяемый период",
   scoreDaysOpt: "{n} дней",
@@ -473,6 +479,9 @@ ru: {
   pageNext: "Следующие семь дней",
   credit: "Идея и разработка: Rami Lanciano · Создано с помощью Claude",
   dayHint: "Нажмите на день, чтобы увидеть его график отдельно",
+  snow: "Снег",
+  unitCm: "см",
+  snowNote: "Осадки в этот день выпадают в основном снегом — **{v} см** по медиане моделей. Значения в миллиметрах — водный эквивалент, а не глубина снега.",
   cond: { clear: "Ясно", partly: "Переменная облачность", cloudy: "Облачно", drizzle: "Морось", rain: "Дождь", storm: "Сильный дождь", snow: "Снег" },
   models: {
     ecmwf_ifs025: { agency: "Европейский центр среднесрочных прогнозов погоды", home: "Рединг, Англия · Болонья, Италия", grid: "9 км · выдаётся на сетке 25 км",
@@ -559,7 +568,7 @@ es: {
   totalsStable: "Los modelos están relativamente próximos esta semana. Pronóstico estable.",
 
   scoreTitle: "Quién acertó aquí",
-  scoreIntro: "Cada modelo guarda un archivo de lo que **predijo** en el pasado. Al compararlo con lo que realmente ocurrió se obtiene una clasificación real — **solo para este punto**. El modelo que gana en Madrid no es necesariamente el que gana en los Pirineos.",
+  scoreIntro: "Cada modelo guarda un archivo de lo que **predijo** en el pasado. Al compararlo con lo que realmente ocurrió se obtiene una clasificación real — **solo para este punto**. El modelo que gana en Valencia no es necesariamente el que gana en los Pirineos.",
   scoreLeadLabel: "Antelación evaluada",
   scoreWinLabel: "Periodo evaluado",
   scoreDaysOpt: "{n} días",
@@ -627,6 +636,9 @@ es: {
   pageNext: "Siete días siguientes",
   credit: "Idea y desarrollo: Rami Lanciano · Creado con Claude",
   dayHint: "Toca un día para ver su gráfico por separado",
+  snow: "Nieve",
+  unitCm: "cm",
+  snowNote: "La precipitación de este día cae mayormente como nieve — **{v} cm** según la mediana de los modelos. Las cifras en milímetros son equivalente en agua, no espesor de nieve.",
   cond: { clear: "Despejado", partly: "Parcialmente nuboso", cloudy: "Nuboso", drizzle: "Llovizna", rain: "Lluvia", storm: "Lluvia fuerte", snow: "Nieve" },
   models: {
     ecmwf_ifs025: { agency: "Centro Europeo de Predicción Meteorológica a Plazo Medio", home: "Reading, Inglaterra · Bolonia, Italia", grid: "9 km · servido en malla de 25 km",
@@ -713,7 +725,7 @@ fr: {
   totalsStable: "Les modèles sont relativement proches cette semaine. Prévision stable.",
 
   scoreTitle: "Qui a eu raison ici",
-  scoreIntro: "Chaque modèle conserve une archive de ce qu'il a **prédit** par le passé. En la comparant à ce qui s'est réellement produit, on obtient un classement réel — **pour ce point seulement**. Le modèle qui l'emporte à Paris n'est pas nécessairement celui qui l'emporte dans les Alpes.",
+  scoreIntro: "Chaque modèle conserve une archive de ce qu'il a **prédit** par le passé. En la comparant à ce qui s'est réellement produit, on obtient un classement réel — **pour ce point seulement**. Le modèle qui l'emporte à Nice n'est pas nécessairement celui qui l'emporte à Chamonix.",
   scoreLeadLabel: "Échéance testée",
   scoreWinLabel: "Période testée",
   scoreDaysOpt: "{n} jours",
@@ -781,6 +793,9 @@ fr: {
   pageNext: "Sept jours suivants",
   credit: "Conception et développement : Rami Lanciano · Réalisé avec Claude",
   dayHint: "Touchez un jour pour voir son graphique seul",
+  snow: "Neige",
+  unitCm: "cm",
+  snowNote: "Les précipitations de cette journée tombent surtout sous forme de neige — **{v} cm** selon la médiane des modèles. Les valeurs en millimètres sont l'équivalent en eau, pas l'épaisseur de neige.",
   cond: { clear: "Dégagé", partly: "Partiellement nuageux", cloudy: "Nuageux", drizzle: "Bruine", rain: "Pluie", storm: "Fortes pluies", snow: "Neige" },
   models: {
     ecmwf_ifs025: { agency: "Centre européen pour les prévisions météorologiques à moyen terme", home: "Reading, Angleterre · Bologne, Italie", grid: "9 km · fourni sur une grille de 25 km",
@@ -867,7 +882,7 @@ ar: {
   totalsStable: "النماذج متقاربة نسبيًا هذا الأسبوع. تنبؤ مستقرّ.",
 
   scoreTitle: "من أصاب هنا",
-  scoreIntro: "لكل نموذج أرشيف لما **تنبّأ** به سابقًا. بمقارنته بما حدث فعلًا نحصل على ترتيب حقيقي — **لهذه النقطة وحدها**. النموذج الفائز في القاهرة ليس بالضرورة الفائز في جبال لبنان.",
+  scoreIntro: "لكل نموذج أرشيف لما **تنبّأ** به سابقًا. بمقارنته بما حدث فعلًا نحصل على ترتيب حقيقي — **لهذه النقطة وحدها**. النموذج الفائز في بيروت ليس بالضرورة الفائز في جبال لبنان.",
   scoreLeadLabel: "مدى التنبؤ المُختبَر",
   scoreWinLabel: "فترة الاختبار",
   scoreDaysOpt: "{n} يومًا",
@@ -935,6 +950,9 @@ ar: {
   pageNext: "الأيام السبعة التالية",
   credit: "فكرة وتطوير: Rami Lanciano · بُني بمساعدة Claude",
   dayHint: "اضغط على يوم لعرض رسمه البياني وحده",
+  snow: "ثلج",
+  unitCm: "سم",
+  snowNote: "الهطول في هذا اليوم يسقط في معظمه ثلجًا — **{v} سم** بحسب وسيط النماذج. الأرقام بالمليمتر هي المكافئ المائي، لا سُمك الثلج.",
   cond: { clear: "صحو", partly: "غائم جزئيًا", cloudy: "غائم", drizzle: "رذاذ", rain: "مطر", storm: "مطر غزير", snow: "ثلج" },
   models: {
     ecmwf_ifs025: { agency: "المركز الأوروبي للتنبؤات الجوية متوسطة المدى", home: "ريدينغ، إنجلترا · بولونيا، إيطاليا", grid: "9 كم · يُقدَّم على شبكة 25 كم",
