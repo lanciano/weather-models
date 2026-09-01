@@ -1910,12 +1910,17 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .b-ic{width:26px;height:26px}
   .b-date{font-size:9.5px}
   .bands{gap:4px}
-  .ds-foot{margin-top:8px;padding-top:9px;min-height:40px;gap:8px}
-  .ds-hint{font-size:11.5px}
-  .back-week{font-size:13px;padding:7px 14px;gap:6px}
+  /* במרכוז אין מספיק רוחב לשמות ארוכים — במובייל הכפתור בצד אחד והיום בנגדי */
+  .ds-foot{display:flex;align-items:center;justify-content:space-between;
+    margin-top:8px;padding-top:9px;min-height:40px;gap:8px}
+  .ds-side:last-child{display:none}
+  .ds-hint{flex:1;text-align:center;font-size:11.5px}
+  .dn-day{min-width:0;justify-content:flex-end;gap:5px;font-size:13px}
+  .dn-day b{font-size:13.5px;overflow:hidden;text-overflow:ellipsis}
+  .dn-day em{font-size:11.5px;flex:none}
+  .dn-ic{width:20px;height:20px}
+  .back-week{font-size:12.5px;padding:7px 13px;gap:6px;flex:none}
   .bw-ic{width:14px;height:14px}
-  .dn-day{font-size:13px;gap:6px}
-  .dn-day b{font-size:14px}
   .dn-day em{font-size:11.5px}
   .dn-ic{width:22px;height:22px}
   .score{padding:16px 14px;border-radius:12px}
