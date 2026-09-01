@@ -1914,6 +1914,10 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .b-ic{width:26px;height:26px}
   .b-date{font-size:9.5px}
   .bands{gap:4px}
+  /* התוויות באנגלית ובצרפתית ארוכות — ריפוד צר יותר שומר הכל בשורה אחת */
+  .gbar{gap:8px}
+  .vtab{padding:8px 10px;font-size:13px}
+  .utog.lg button{padding:8px 11px;font-size:13px}
   /* במרכוז אין מספיק רוחב לשמות ארוכים — במובייל הכפתור בצד אחד והיום בנגדי */
   .ds-foot{display:flex;align-items:center;justify-content:space-between;
     margin-top:8px;padding-top:9px;min-height:40px;gap:8px}
