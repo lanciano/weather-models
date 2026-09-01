@@ -864,8 +864,7 @@ function Weather({ lang, setLang }) {
                     axisLine={false} tickLine={false} />
                   <YAxis yAxisId="r" orientation="right" domain={["auto", "auto"]} width={38}
                     tick={{ fontSize: 11, fill: "#F5A24B" }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }}
-                    offset={26} allowEscapeViewBox={{ x: false, y: true }}
+                  <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }} offset={54}
                     content={<HourTip narrow={narrow} onHover={setHHover} />} />
                   <Bar yAxisId="l" dataKey="med" stackId="p" fill="#5AB3F0" animationDuration={700} />
                   <Bar yAxisId="l" dataKey="extra" stackId="p" fill="#9BB6E8" fillOpacity={0.28}
