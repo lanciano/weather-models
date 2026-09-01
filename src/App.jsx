@@ -1309,7 +1309,13 @@ function Readout({ row, models, dates, pos }) {
 
 function TempDot({ cx, cy, payload }) {
   if (cx == null || cy == null || typeof payload?.temp !== "number") return null;
-  const w = 42, h = 22, gap = 11;
+  /* שתי בועות נפרדות היו מתנגשות כשהערכים קרובים — שניהם באותה בועה */
+  const feels = typeof payload.feels === "number"
+    && Math.round(payload.feels) !== Math.round(payload.temp)
+    ? Math.round(payload.feels) : null;
+  const w = feels != null ? 62 : 42;
+  const h = feels != null ? 34 : 22;
+  const gap = 11;
   const above = cy > h + gap + 6;
   const y = above ? cy - gap - h : cy + gap;
   const ty = above ? cy - gap : cy + gap;
@@ -1319,8 +1325,12 @@ function TempDot({ cx, cy, payload }) {
       <path d={above ? `M${cx - 5} ${ty} L${cx} ${ty + 5} L${cx + 5} ${ty} Z`
         : `M${cx - 5} ${ty} L${cx} ${ty - 5} L${cx + 5} ${ty} Z`} fill="#F5A24B" />
       <rect x={cx - w / 2} y={y} width={w} height={h} rx={8} fill="#F5A24B" />
-      <text x={cx} y={y + h / 2} textAnchor="middle" dominantBaseline="central"
+      <text x={cx} y={feels != null ? y + 12 : y + h / 2} textAnchor="middle" dominantBaseline="central"
         fontSize="13.5" fontWeight="700" fill="#0E1728">{Math.round(payload.temp)}°</text>
+      {feels != null && (
+        <text x={cx} y={y + 25} textAnchor="middle" dominantBaseline="central"
+          fontSize="10.5" fontWeight="600" fill="#0E1728" opacity="0.72">≈{feels}°</text>
+      )}
     </g>
   );
 }
@@ -1995,8 +2005,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .w-mm{font-size:9.5px}
   .w-bar{width:calc(100% - 8px);height:3px;margin-top:3px}
   .w-warn{width:6px;height:6px;top:4px;inset-inline-end:4px}
-  .nowbar{padding:10px 12px;gap:10px;border-radius:12px}
-  .now-ic{width:38px;height:38px}
+  .nowbar{justify-content:center;padding:10px 12px;gap:11px;border-radius:12px}
+  .now-ic{width:36px;height:36px}
+  .now-txt{justify-content:center;gap:8px}
   .now-txt b{font-size:26px}
   .now-txt em{font-size:12px}
   .soon{padding:9px 11px;gap:9px;font-size:12.5px}
@@ -2005,7 +2016,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .d-ic{width:54px;height:54px}
   .d-verdict{text-align:start;min-width:0;max-width:none;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
-  .d-feels{display:block;margin:2px 0 0}
+  .d-feels{margin-inline-start:4px}
   .tiles{grid-template-columns:repeat(3,1fr);gap:5px}
   .tile{padding:7px 7px 6px;border-radius:9px;gap:0}
   .ti-lab{font-size:9.5px}
