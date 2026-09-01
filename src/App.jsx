@@ -855,30 +855,38 @@ function Weather({ lang, setLang }) {
             </div>
           )}
 
-          {scope === "week" && (
+          <div className="daystrip">
             <div className="bands" dir={dir}>
               {view.map((d) => (
-                <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`} onClick={() => { setDaySel(d.i); setScope("day"); }}>
+                <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`}
+                  onClick={() => { setDaySel(d.i); setScope("day"); }}>
                   <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
                   <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
                   <span className="b-date">{d.date}</span>
                 </button>
               ))}
             </div>
-          )}
 
-          {scope === "day" && sel && (
-            <div className="day-nav">
-              <button className="back-week" onClick={() => setScope("week")}>
-                <span className="bw-ic"><Chev flip={dir === "rtl"} /></span>
-                {t("scopeWeek")}
-              </button>
-              <span className="dn-day">
-                <span className="dn-ic">{React.createElement(ICONS[sel.icon])}</span>
-                <b>{sel.dow}</b><em>{sel.date}</em>
-              </span>
+            <div className="ds-foot">
+              {scope === "day" && sel ? (
+                <>
+                  <span className="ds-side">
+                    <button className="back-week" onClick={() => setScope("week")}>
+                      <span className="bw-ic"><Chev flip={dir === "rtl"} /></span>
+                      {t("scopeWeek")}
+                    </button>
+                  </span>
+                  <span className="dn-day">
+                    <span className="dn-ic">{React.createElement(ICONS[sel.icon])}</span>
+                    <b>{sel.dow}</b><em>{sel.date}</em>
+                  </span>
+                  <span className="ds-side" />
+                </>
+              ) : (
+                <span className="ds-hint">{t("dayHint")}</span>
+              )}
             </div>
-          )}
+          </div>
 
           {narrow && <Readout row={hoverIdx != null ? trace[hoverIdx] : null} models={active} dates={dates} pos="top" />}
 
@@ -1644,7 +1652,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .d-out b{color:var(--text)}
 
 .pens{max-width:1120px;margin:30px auto 0}
-.pens h2{font-size:19px}
+.pens h2{font-size:24px}
 .pen-row{display:flex;flex-wrap:wrap;gap:8px}
 .pen{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--rule);
   color:#6E819F;padding:7px 15px;border-radius:999px;font-size:13.5px;font-weight:500;transition:.15s}
@@ -1668,26 +1676,32 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .panel{position:relative;background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:10px 12px 0}
 .ptop{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:11.5px;
   color:var(--muted);font-weight:300;margin-bottom:4px;min-height:22px}
-.bands{display:flex;gap:5px;margin-bottom:6px;min-height:76px;align-items:stretch}
-.band{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;
-  border-radius:9px;padding:7px 2px;transition:.15s;min-width:0}
-.band.on{background:#22314D}
+/* שורת הימים תמיד מוצגת — הימים נראים כמו כפתורים, ומתחת שורה שלעולם לא ריקה */
+.daystrip{margin-bottom:8px}
+.bands{display:flex;gap:5px}
+.band{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:rgba(255,255,255,.025);border:1px solid var(--rule2);
+  border-radius:10px;padding:8px 2px;transition:.15s;min-width:0;cursor:pointer}
+.band.on{background:#22314D;border-color:var(--sky);box-shadow:0 0 0 1px var(--sky) inset}
 .b-ic{width:30px;height:30px}
 .b-day{font-size:13.5px;font-weight:600;white-space:nowrap;line-height:1.2}
 .b-day .sm{display:none;font-style:normal}
 .b-day .lg{font-style:normal}
 .b-date{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
 
-/* חזרה לתצוגת שבוע */
-.day-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  margin-bottom:6px;padding:0 2px;min-height:76px}
+.ds-foot{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;
+  border-top:1px solid var(--rule2);margin-top:9px;padding-top:10px;min-height:44px}
+.ds-side{display:flex;align-items:center}
+.ds-side:last-child{justify-content:flex-end}
+.ds-hint{grid-column:1 / -1;text-align:center;font-size:12.5px;color:var(--muted);font-weight:300}
 .back-week{display:inline-flex;align-items:center;gap:8px;flex:none;
-  background:var(--panel2);border:1px solid var(--rule);border-radius:999px;padding:9px 18px;
-  font-size:14px;font-weight:600;color:var(--sky);transition:.15s}
+  background:var(--panel2);border:1px solid var(--rule);border-radius:999px;padding:8px 16px;
+  font-size:13.5px;font-weight:600;color:var(--sky);transition:.15s;cursor:pointer}
 .back-week:active{background:#26385A;border-color:var(--sky)}
 .bw-ic{width:15px;height:15px;display:block;flex:none}
 .bw-ic svg{width:100%;height:100%;display:block}
-.dn-day{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--dim)}
+.dn-day{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-size:14px;color:var(--dim);white-space:nowrap}
 .dn-day b{font-weight:600;color:var(--text);font-size:15px}
 .dn-day em{font-style:normal;font-size:12.5px;color:var(--muted)}
 .dn-ic{width:26px;height:26px;flex:none}
@@ -1873,14 +1887,15 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .hlead{font-size:13px;margin-inline:0}
   .hagree{padding:0 34px}
   .hlegend{gap:5px 12px;font-size:11.5px;margin-top:24px}
-  .band{padding:6px 1px}
+  .band{padding:7px 1px;border-radius:8px;gap:1px}
   .b-day{font-size:12.5px}
   .b-day .lg{display:none} .b-day .sm{display:inline}
   .b-ic{width:26px;height:26px}
   .b-date{font-size:9.5px}
-  .bands{min-height:70px}
-  .day-nav{gap:10px;min-height:70px}
-  .back-week{font-size:13px;padding:8px 15px;gap:6px}
+  .bands{gap:4px}
+  .ds-foot{margin-top:8px;padding-top:9px;min-height:40px;gap:8px}
+  .ds-hint{font-size:11.5px}
+  .back-week{font-size:13px;padding:7px 14px;gap:6px}
   .bw-ic{width:14px;height:14px}
   .dn-day{font-size:13px;gap:6px}
   .dn-day b{font-size:14px}
@@ -1904,7 +1919,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .nav-arrow:hover:not(:disabled){background:var(--panel2);border-color:var(--sky);color:var(--sky)}
   .wcell:hover{background:var(--panel2)}
   .pen:hover{border-color:#42598A}
-  .band:hover{background:#22314D}
+  .band:hover{background:#22314D;border-color:#42598A}
+  .band.on:hover{border-color:var(--sky)}
+  .back-week:hover{background:#26385A;border-color:var(--sky)}
 }
 @media (prefers-reduced-motion:reduce){.wx *{transition:none!important;animation:none!important}}
 `;

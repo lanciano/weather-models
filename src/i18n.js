@@ -164,6 +164,7 @@ he: {
   pagePrev: "שבעת הימים הקודמים",
   pageNext: "שבעת הימים הבאים",
   credit: "רעיון ופיתוח: רמי לנציאנו · נבנה בעזרת Claude",
+  dayHint: "לחצו על יום כדי לראות את הגרף שלו בלבד",
   cond: { clear: "בהיר", partly: "מעונן חלקית", cloudy: "מעונן", drizzle: "טפטוף", rain: "גשם", storm: "גשם כבד", snow: "שלג" },
   models: {
     ecmwf_ifs025: { agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "9 ק״מ · מוגש בגריד 25 ק״מ",
@@ -317,6 +318,7 @@ en: {
   pagePrev: "Previous seven days",
   pageNext: "Next seven days",
   credit: "Conceived and built by Rami Lanciano · Developed with Claude",
+  dayHint: "Tap a day to see its chart on its own",
   cond: { clear: "Clear", partly: "Partly cloudy", cloudy: "Cloudy", drizzle: "Drizzle", rain: "Rain", storm: "Heavy rain", snow: "Snow" },
   models: {
     ecmwf_ifs025: { agency: "European Centre for Medium-Range Weather Forecasts", home: "Reading, England · Bologna, Italy", grid: "9 km · served on a 25 km grid",
@@ -470,6 +472,7 @@ ru: {
   pagePrev: "Предыдущие семь дней",
   pageNext: "Следующие семь дней",
   credit: "Идея и разработка: Rami Lanciano · Создано с помощью Claude",
+  dayHint: "Нажмите на день, чтобы увидеть его график отдельно",
   cond: { clear: "Ясно", partly: "Переменная облачность", cloudy: "Облачно", drizzle: "Морось", rain: "Дождь", storm: "Сильный дождь", snow: "Снег" },
   models: {
     ecmwf_ifs025: { agency: "Европейский центр среднесрочных прогнозов погоды", home: "Рединг, Англия · Болонья, Италия", grid: "9 км · выдаётся на сетке 25 км",
@@ -623,6 +626,7 @@ es: {
   pagePrev: "Siete días anteriores",
   pageNext: "Siete días siguientes",
   credit: "Idea y desarrollo: Rami Lanciano · Creado con Claude",
+  dayHint: "Toca un día para ver su gráfico por separado",
   cond: { clear: "Despejado", partly: "Parcialmente nuboso", cloudy: "Nuboso", drizzle: "Llovizna", rain: "Lluvia", storm: "Lluvia fuerte", snow: "Nieve" },
   models: {
     ecmwf_ifs025: { agency: "Centro Europeo de Predicción Meteorológica a Plazo Medio", home: "Reading, Inglaterra · Bolonia, Italia", grid: "9 km · servido en malla de 25 km",
@@ -776,6 +780,7 @@ fr: {
   pagePrev: "Sept jours précédents",
   pageNext: "Sept jours suivants",
   credit: "Conception et développement : Rami Lanciano · Réalisé avec Claude",
+  dayHint: "Touchez un jour pour voir son graphique seul",
   cond: { clear: "Dégagé", partly: "Partiellement nuageux", cloudy: "Nuageux", drizzle: "Bruine", rain: "Pluie", storm: "Fortes pluies", snow: "Neige" },
   models: {
     ecmwf_ifs025: { agency: "Centre européen pour les prévisions météorologiques à moyen terme", home: "Reading, Angleterre · Bologne, Italie", grid: "9 km · fourni sur une grille de 25 km",
@@ -929,6 +934,7 @@ ar: {
   pagePrev: "الأيام السبعة السابقة",
   pageNext: "الأيام السبعة التالية",
   credit: "فكرة وتطوير: Rami Lanciano · بُني بمساعدة Claude",
+  dayHint: "اضغط على يوم لعرض رسمه البياني وحده",
   cond: { clear: "صحو", partly: "غائم جزئيًا", cloudy: "غائم", drizzle: "رذاذ", rain: "مطر", storm: "مطر غزير", snow: "ثلج" },
   models: {
     ecmwf_ifs025: { agency: "المركز الأوروبي للتنبؤات الجوية متوسطة المدى", home: "ريدينغ، إنجلترا · بولونيا، إيطاليا", grid: "9 كم · يُقدَّم على شبكة 25 كم",
