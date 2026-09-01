@@ -1514,6 +1514,11 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .wx button{font-family:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
 .wx button:focus-visible,.wx input:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
 /* recharts מקבל מיקוד בלחיצה וספארי מצייר סביבו מסגרת — לא רלוונטי בגרף */
+/* recharts מצייר מחדש את הצורות בכל עדכון טולטיפ. אם המגע התחיל על צורה,
+   iOS ממשיך לשלוח אליה אירועים והיא כבר הוחלפה — ההחלקה נתקעת.
+   שקיפות למגע מבטיחה שהיעד הוא תמיד ה-div העוטף, שלא מוחלף. */
+.chart-box .recharts-surface{pointer-events:none}
+.chart-box .recharts-wrapper{touch-action:pan-y}
 .chart-box *:focus,.chart-box *:focus-visible,
 .chart-box .recharts-wrapper,.chart-box .recharts-surface{outline:none!important}
 .sky{position:absolute;inset:0 0 auto;height:420px;pointer-events:none;
