@@ -888,7 +888,7 @@ function Weather({ lang, setLang }) {
           <div className="daystrip">
             <div className="bands" dir={dir}>
               {view.map((d) => (
-                <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`}
+                <button key={d.i} className={`band ${scope === "day" && daySel === d.i ? "on" : ""}`}
                   onClick={() => pickDay(d.i)}>
                   <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
                   <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
