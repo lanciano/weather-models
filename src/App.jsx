@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from "react";
 import {
   ComposedChart, Line, Area, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, ReferenceArea,
@@ -495,6 +495,23 @@ function Weather({ lang, setLang }) {
   const view = useMemo(() => days.slice(page * PAGE, page * PAGE + PAGE), [days, page]);
   const maxWeekRain = useMemo(() => Math.max(1, ...days.map((d) => d.ag?.hi || 0)), [days]);
 
+  /* בחירת יום משנה את גובה פאנל הפירוט והסקשן השעתי — שניהם מעל הגרף.
+     מודדים איפה הגרף יושב על המסך לפני ואחרי, ומפצים על ההפרש. */
+  const panelRef = useRef(null);
+  const anchorTop = useRef(null);
+
+  const anchor = () => { anchorTop.current = panelRef.current?.getBoundingClientRect().top ?? null; };
+
+  useLayoutEffect(() => {
+    if (anchorTop.current == null) return;
+    const after = panelRef.current?.getBoundingClientRect().top;
+    if (after != null) window.scrollBy(0, after - anchorTop.current);
+    anchorTop.current = null;
+  }, [daySel, scope]);
+
+  const pickDay = (i) => { anchor(); setDaySel(i); setScope("day"); };
+  const showWeek = () => { anchor(); setScope("week"); };
+
   const goPage = useCallback((n) => {
     const p = Math.min(pages - 1, Math.max(0, n));
     setPage(p);
@@ -847,7 +864,7 @@ function Weather({ lang, setLang }) {
           </div>
         </div>
 
-        <div className="panel">
+        <div className="panel" ref={panelRef}>
           {!active.length && <div className="veil">{t("pensEmpty")}</div>}
           {variable === "temperature_2m" && (
             <div className="ptop">
@@ -859,7 +876,7 @@ function Weather({ lang, setLang }) {
             <div className="bands" dir={dir}>
               {view.map((d) => (
                 <button key={d.i} className={`band ${daySel === d.i ? "on" : ""}`}
-                  onClick={() => { setDaySel(d.i); setScope("day"); }}>
+                  onClick={() => pickDay(d.i)}>
                   <span className="b-ic">{React.createElement(ICONS[d.icon])}</span>
                   <span className="b-day"><i className="lg">{d.dow}</i><i className="sm">{d.dowS}</i></span>
                   <span className="b-date">{d.date}</span>
@@ -871,7 +888,7 @@ function Weather({ lang, setLang }) {
               {scope === "day" && sel ? (
                 <>
                   <span className="ds-side">
-                    <button className="back-week" onClick={() => setScope("week")}>
+                    <button className="back-week" onClick={showWeek}>
                       <span className="bw-ic"><Chev flip={dir === "rtl"} /></span>
                       {t("scopeWeek")}
                     </button>
