@@ -161,9 +161,9 @@ function outliers(pairs) {
 const toT = (c, u) => (typeof c === "number" ? (u === "f" ? c * 9 / 5 + 32 : c) : c);
 const toDT = (c, u) => (typeof c === "number" ? (u === "f" ? c * 9 / 5 : c) : c);
 
-function UnitToggle({ value, onChange }) {
+function UnitToggle({ value, onChange, size }) {
   return (
-    <span className="utog" dir="ltr">
+    <span className={`utog${size === "lg" ? " lg" : ""}`} dir="ltr">
       <button className={value === "c" ? "on" : ""} onClick={() => onChange("c")}>°C</button>
       <button className={value === "f" ? "on" : ""} onClick={() => onChange("f")}>°F</button>
     </span>
@@ -862,15 +862,11 @@ function Weather({ lang, setLang }) {
               <button key={k} className={`vtab ${variable === k ? "on" : ""}`} onClick={() => setVariable(k)}>{t(key)}</button>
             ))}
           </div>
+          {variable === "temperature_2m" && <UnitToggle value={unitT} onChange={setUnitT} size="lg" />}
         </div>
 
         <div className="panel" ref={panelRef}>
           {!active.length && <div className="veil">{t("pensEmpty")}</div>}
-          {variable === "temperature_2m" && (
-            <div className="ptop">
-              <UnitToggle value={unitT} onChange={setUnitT} />
-            </div>
-          )}
 
           <div className="daystrip">
             <div className="bands" dir={dir}>
@@ -1554,6 +1550,11 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .utog button{background:none;border:0;padding:2px 9px;border-radius:999px;
   font-size:11.5px;font-weight:500;color:var(--muted);line-height:1.5;transition:.15s}
 .utog button.on{background:var(--rule);color:var(--text);font-weight:600}
+/* גרסה בגודל הלשוניות, לשבת לצידן */
+.utog.lg{background:var(--panel);border:1px solid var(--rule);border-radius:10px;
+  padding:0;overflow:hidden}
+.utog.lg button{padding:8px 15px;border-radius:0;font-size:13.5px;line-height:1.5}
+.utog.lg button.on{background:var(--sky);color:#0E1728;font-weight:600}
 
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
   max-width:1120px;margin:0 auto;padding:16px 0 26px;border-bottom:1px solid var(--rule)}
@@ -1696,8 +1697,6 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .vtab{background:transparent;border:0;padding:8px 15px;font-size:13.5px;color:var(--muted);font-weight:500;white-space:nowrap}
 .vtab.on{background:var(--sky);color:#0E1728;font-weight:600}
 .panel{position:relative;background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:10px 12px 0}
-.ptop{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:11.5px;
-  color:var(--muted);font-weight:300;margin-bottom:4px;min-height:22px}
 /* שורת הימים תמיד מוצגת — הימים נראים כמו כפתורים, ומתחת שורה שלעולם לא ריקה */
 .daystrip{margin-bottom:8px}
 .bands{display:flex;gap:5px}
