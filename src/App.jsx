@@ -498,6 +498,35 @@ function Weather({ lang, setLang }) {
     });
   }, [data, amb, marine, active, dates, unitT]);
 
+  /* מה קורה עכשיו ומה צפוי בשעה הקרובה — נגזר מהשעה הנוכחית בסדרה השעתית */
+  const now = useMemo(() => {
+    if (!data?.hourly?.time) return null;
+    const t0 = Date.now();
+    let idx = data.hourly.time.findIndex((iso) => new Date(iso).getTime() > t0);
+    if (idx <= 0) idx = 1;
+    const cur = idx - 1;
+
+    const at = (base, i) => nums(active.map((m) => pick(data.hourly, base, m)?.[i]));
+    const temps = at("temperature_2m", cur);
+    const feels = at("apparent_temperature", cur);
+    const cloud = at("cloud_cover", cur);
+    const nextRain = at("precipitation", idx);
+    const nextSnow = at("snowfall", idx);
+
+    if (!temps.length) return null;
+    const medRain = nextRain.length ? median(nextRain) : 0;
+    const medSnow = nextSnow.length ? median(nextSnow) : 0;
+    return {
+      temp: toT(median(temps), unitT),
+      feels: feels.length ? toT(median(feels), unitT) : null,
+      icon: pickIcon(0, cloud.length ? mean(cloud) : null, median(temps)),
+      wet: nextRain.filter((v) => v >= 0.1).length,
+      total: nextRain.length,
+      rain: medRain,
+      snowy: medSnow > 0.05 && medSnow / 7 >= medRain * 0.5,
+    };
+  }, [data, active, unitT]);
+
   const sel = days[daySel];
   const pages = Math.max(1, Math.ceil(days.length / PAGE));
   const view = useMemo(() => days.slice(page * PAGE, page * PAGE + PAGE), [days, page]);
@@ -542,6 +571,7 @@ function Weather({ lang, setLang }) {
       const vals = nums(active.map((m) => pick(data.hourly, "precipitation", m)?.[i]));
       const snows = nums(active.map((m) => pick(data.hourly, "snowfall", m)?.[i]));
       const temps = nums(active.map((m) => pick(data.hourly, "temperature_2m", m)?.[i]));
+      const feelsH = nums(active.map((m) => pick(data.hourly, "apparent_temperature", m)?.[i]));
       const d = new Date(data.hourly.time[i]);
       const med = vals.length ? median(vals) : 0;
       const max = vals.length ? Math.max(...vals) : 0;
@@ -551,6 +581,7 @@ function Weather({ lang, setLang }) {
         wet: vals.filter((v) => v >= 0.1).length, total: vals.length,
         snow: snows.length ? median(snows) : null,
         temp: temps.length ? toT(median(temps), unitT) : null,
+        feels: feelsH.length ? toT(median(feelsH), unitT) : null,
       });
     }
     return out;
@@ -656,6 +687,30 @@ function Weather({ lang, setLang }) {
       <section className="week">
         {loading && <div className="wload">{t("loading")}</div>}
         {error && <div className="werr">{error} <button onClick={load}>{t("retry")}</button></div>}
+
+        {now && (
+          <div className="nowbar">
+            <span className="now-ic">{React.createElement(ICONS[now.icon])}</span>
+            <span className="now-txt">
+              <span className="now-lab">{t("nowLabel")}</span>
+              <b>{fmt(now.temp, 0)}°</b>
+              {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
+                <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
+              )}
+            </span>
+          </div>
+        )}
+
+        {now && now.total > 0 && now.wet > now.total / 2 && (
+          <div className="soon">
+            <span className="soon-ic">{React.createElement(ICONS[now.snowy ? "snow" : "rain"])}</span>
+            <span>
+              <Rich text={now.snowy
+                ? t("rainSoonSnow", { n: now.wet, total: now.total })
+                : t("rainSoon", { n: now.wet, total: now.total, v: fmt(now.rain) })} />
+            </span>
+          </div>
+        )}
 
         <div className="week-nav">
           {page > 0 && (
@@ -810,6 +865,9 @@ function Weather({ lang, setLang }) {
                   <Bar yAxisId="l" dataKey="med" stackId="p" fill="#5AB3F0" animationDuration={700} />
                   <Bar yAxisId="l" dataKey="extra" stackId="p" fill="#9BB6E8" fillOpacity={0.28}
                     radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                  <Line yAxisId="r" dataKey="feels" stroke="#F5A24B" strokeWidth={1.4} dot={false}
+                    strokeDasharray="4 3" strokeOpacity={0.65} activeDot={false}
+                    type="monotone" connectNulls isAnimationActive={false} />
                   <Line yAxisId="r" dataKey="temp" stroke="#F5A24B" strokeWidth={2} dot={false}
                     activeDot={<TempDot />} type="monotone" connectNulls animationDuration={800} />
                 </ComposedChart>
@@ -831,6 +889,7 @@ function Weather({ lang, setLang }) {
               <span><i className="sw solid" /> {t("legMedian")}</span>
               <span><i className="sw ghost" /> {t("legGhost")}</span>
               <span><i className="sw warm" /> {t("legTemp")}</span>
+              <span><i className="sw dash" /> {t("feelsLike")}</span>
               <span><i className="sw grad" /> {t("legAgree")}</span>
             </div>
           </div>
@@ -1266,6 +1325,14 @@ function TempDot({ cx, cy, payload }) {
   );
 }
 
+/** "4 מתוך 4" קורא רע — כשכולם או אף אחד מסכימים, אומרים את זה במילים */
+function agreeText(t, wet, total) {
+  if (!total) return "–";
+  if (wet === total) return t("tipAgreeAll");
+  if (wet === 0) return t("tipAgreeNone");
+  return t("ofTotal", { a: wet, b: total });
+}
+
 function HourTip({ active, payload, label, narrow, onHover }) {
   const { t } = useI18n();
   const live = !!(active && payload && payload.length);
@@ -1279,12 +1346,15 @@ function HourTip({ active, payload, label, narrow, onHover }) {
       <div className="tip-h">{r.label}</div>
       <div className="tip-r"><span className="tip-n">{t("tipMedian")}</span><span className="tip-v">{fmt(r.med)} {mm}</span></div>
       <div className="tip-r"><span className="tip-n">{t("tipWettest")}</span><span className="tip-v">{fmt(r.max)} {mm}</span></div>
-      <div className="tip-r"><span className="tip-n">{t("tipAgree")}</span><span className="tip-v">{t("ofTotal", { a: r.wet, b: r.total })}</span></div>
+      <div className="tip-r"><span className="tip-n">{t("tipAgree")}</span><span className="tip-v">{agreeText(t, r.wet, r.total)}</span></div>
       {typeof r.snow === "number" && r.snow > 0.05 && (
         <div className="tip-r"><span className="tip-n">{t("snow")}</span><span className="tip-v">{fmt(r.snow)} {t("unitCm")}</span></div>
       )}
       {typeof r.temp === "number" && (
         <div className="tip-r"><span className="tip-n">{t("tipTemp")}</span><span className="tip-v">{fmt(r.temp, 0)}°</span></div>
+      )}
+      {typeof r.feels === "number" && (
+        <div className="tip-r"><span className="tip-n">{t("feelsLike")}</span><span className="tip-v">{fmt(r.feels, 0)}°</span></div>
       )}
     </div>
   );
@@ -1649,6 +1719,20 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .w-bar i{height:100%;background:var(--sky);border-radius:3px;display:block}
 .w-warn{position:absolute;top:7px;inset-inline-end:7px;width:7px;height:7px;border-radius:50%;background:var(--warm)}
 
+/* עכשיו + התרעת השעה הקרובה */
+.nowbar{display:flex;align-items:center;gap:12px;margin-bottom:10px;
+  background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
+.now-ic{width:44px;height:44px;flex:none}
+.now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
+.now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
+.now-txt b{font-size:30px;font-weight:700;line-height:1}
+.now-txt em{font-style:normal;font-size:13px;color:var(--dim);font-weight:300}
+.soon{display:flex;align-items:center;gap:11px;margin-bottom:10px;
+  background:rgba(90,179,240,.09);border:1px solid rgba(90,179,240,.3);border-radius:12px;
+  padding:10px 14px;font-size:13.5px;color:var(--dim);font-weight:300;line-height:1.55}
+.soon b{color:var(--text);font-weight:600}
+.soon-ic{width:32px;height:32px;flex:none}
 .detail{margin-top:10px;background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:16px 16px 14px}
 .d-main{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .d-ic{width:66px;height:66px;flex:none}
@@ -1809,6 +1893,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .sw.solid{background:var(--sky)}
 .sw.ghost{background:#9BB6E8;opacity:.28}
 .sw.warm{background:var(--warm)}
+.sw.dash{background:repeating-linear-gradient(90deg,var(--warm) 0 4px,transparent 4px 7px);opacity:.7}
 .sw.grad{background:linear-gradient(90deg,rgba(90,179,240,.15),var(--sky))}
 
 .tip{background:#1C2B47;border:1px solid #3A507A;border-radius:10px;padding:10px 12px;font-size:13px;min-width:158px;
@@ -1910,6 +1995,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .w-mm{font-size:9.5px}
   .w-bar{width:calc(100% - 8px);height:3px;margin-top:3px}
   .w-warn{width:6px;height:6px;top:4px;inset-inline-end:4px}
+  .nowbar{padding:10px 12px;gap:10px;border-radius:12px}
+  .now-ic{width:38px;height:38px}
+  .now-txt b{font-size:26px}
+  .now-txt em{font-size:12px}
+  .soon{padding:9px 11px;gap:9px;font-size:12.5px}
+  .soon-ic{width:26px;height:26px}
   .detail{padding:14px 13px}
   .d-ic{width:54px;height:54px}
   .d-verdict{text-align:start;min-width:0;max-width:none;flex:1 1 100%;margin-top:4px}
