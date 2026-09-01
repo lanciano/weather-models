@@ -754,11 +754,15 @@ function Weather({ lang, setLang }) {
               <div className="d-txt">
                 <div className="d-day">{t("scopeDay", { day: sel.dow })} · {sel.date}</div>
                 <div className="d-cond">{t(`cond.${sel.icon}`)}</div>
-                <div className="d-temps"><b>{fmt(sel.tmax, 0)}°</b> <span>/ {fmt(sel.tmin, 0)}°</span>
-                  {typeof sel.feels === "number" && (
-                    <span className="d-feels">· {t("feelsLike")} {fmt(sel.feels, 0)}°</span>
-                  )}
-                  {typeof sel.wind === "number" && <span className="d-wind">{t("windTo", { v: fmt(sel.wind, 0) })}</span>}</div>
+                <div className="d-temps">
+                  <span className="dt-main"><b>{fmt(sel.tmax, 0)}°</b> <span>/ {fmt(sel.tmin, 0)}°</span></span>
+                  <span className="dt-more">
+                    {typeof sel.feels === "number" && (
+                      <span className="d-feels">{t("feelsLike")} {fmt(sel.feels, 0)}°</span>
+                    )}
+                    {typeof sel.wind === "number" && <span className="d-wind">{t("windTo", { v: fmt(sel.wind, 0) })}</span>}
+                  </span>
+                </div>
               </div>
               <div className={`d-verdict v-${sel.ag?.level || "dry"}`}>
                 <b>{sel.ag ? t(sel.ag.key) : "—"}</b>
@@ -861,6 +865,7 @@ function Weather({ lang, setLang }) {
                   <YAxis yAxisId="r" orientation="right" domain={["auto", "auto"]} width={38}
                     tick={{ fontSize: 11, fill: "#F5A24B" }} axisLine={false} tickLine={false} />
                   <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }}
+                    offset={26} allowEscapeViewBox={{ x: false, y: true }}
                     content={<HourTip narrow={narrow} onHover={setHHover} />} />
                   <Bar yAxisId="l" dataKey="med" stackId="p" fill="#5AB3F0" animationDuration={700} />
                   <Bar yAxisId="l" dataKey="extra" stackId="p" fill="#9BB6E8" fillOpacity={0.28}
@@ -1313,23 +1318,36 @@ function TempDot({ cx, cy, payload }) {
   const feels = typeof payload.feels === "number"
     && Math.round(payload.feels) !== Math.round(payload.temp)
     ? Math.round(payload.feels) : null;
-  const w = feels != null ? 62 : 42;
-  const h = feels != null ? 34 : 22;
+  const w = feels != null ? 74 : 42;
+  const h = feels != null ? 36 : 22;
   const gap = 11;
   const above = cy > h + gap + 6;
   const y = above ? cy - gap - h : cy + gap;
   const ty = above ? cy - gap : cy + gap;
+  const ink = "#0E1728";
   return (
     <g style={{ pointerEvents: "none" }}>
-      <circle cx={cx} cy={cy} r={5.5} fill="#F5A24B" stroke="#0E1728" strokeWidth={2.5} />
+      <circle cx={cx} cy={cy} r={5.5} fill="#F5A24B" stroke={ink} strokeWidth={2.5} />
       <path d={above ? `M${cx - 5} ${ty} L${cx} ${ty + 5} L${cx + 5} ${ty} Z`
         : `M${cx - 5} ${ty} L${cx} ${ty - 5} L${cx + 5} ${ty} Z`} fill="#F5A24B" />
-      <rect x={cx - w / 2} y={y} width={w} height={h} rx={8} fill="#F5A24B" />
-      <text x={cx} y={feels != null ? y + 12 : y + h / 2} textAnchor="middle" dominantBaseline="central"
-        fontSize="13.5" fontWeight="700" fill="#0E1728">{Math.round(payload.temp)}°</text>
-      {feels != null && (
-        <text x={cx} y={y + 25} textAnchor="middle" dominantBaseline="central"
-          fontSize="10.5" fontWeight="600" fill="#0E1728" opacity="0.72">≈{feels}°</text>
+      <rect x={cx - w / 2} y={y} width={w} height={h} rx={9} fill="#F5A24B" />
+
+      {feels == null ? (
+        <text x={cx} y={y + h / 2} textAnchor="middle" dominantBaseline="central"
+          fontSize="13.5" fontWeight="700" fill={ink}>{Math.round(payload.temp)}°</text>
+      ) : (
+        <>
+          {/* דגימות קו זהות לגרף — רציף לטמפרטורה, מקווקו ל"מרגיש כמו" */}
+          <line x1={cx - w / 2 + 9} y1={y + 12} x2={cx - w / 2 + 24} y2={y + 12}
+            stroke={ink} strokeWidth={2.6} strokeLinecap="round" />
+          <text x={cx - w / 2 + 30} y={y + 12} textAnchor="start" dominantBaseline="central"
+            fontSize="13" fontWeight="700" fill={ink}>{Math.round(payload.temp)}°</text>
+
+          <line x1={cx - w / 2 + 9} y1={y + 25} x2={cx - w / 2 + 24} y2={y + 25}
+            stroke={ink} strokeWidth={1.6} strokeDasharray="3.5 2.5" strokeLinecap="round" opacity={0.75} />
+          <text x={cx - w / 2 + 30} y={y + 25} textAnchor="start" dominantBaseline="central"
+            fontSize="11.5" fontWeight="600" fill={ink} opacity={0.8}>{feels}°</text>
+        </>
       )}
     </g>
   );
@@ -1751,8 +1769,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .d-cond{font-size:14px;color:var(--dim)}
 .d-temps{font-size:14px;color:var(--muted);margin-top:2px}
 .d-temps b{font-size:24px;color:var(--text)}
-.d-wind{margin-inline-start:4px;font-size:13px}
-.d-feels{margin-inline-start:4px;font-size:13px}
+.dt-main{display:block}
+.dt-more{display:block;margin-top:3px;font-size:13px;line-height:1.5}
+.dt-more>span+span::before{content:" · ";color:var(--rule)}
 
 /* tiles */
 .cond-wrap{margin-top:18px;border-top:1px solid var(--rule2);padding-top:14px}
@@ -2016,7 +2035,6 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .d-ic{width:54px;height:54px}
   .d-verdict{text-align:start;min-width:0;max-width:none;flex:1 1 100%;margin-top:4px}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
-  .d-feels{margin-inline-start:4px}
   .tiles{grid-template-columns:repeat(3,1fr);gap:5px}
   .tile{padding:7px 7px 6px;border-radius:9px;gap:0}
   .ti-lab{font-size:9.5px}
