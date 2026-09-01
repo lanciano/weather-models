@@ -1769,8 +1769,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .d-cond{font-size:14px;color:var(--dim)}
 .d-temps{font-size:14px;color:var(--muted);margin-top:2px}
 .d-temps b{font-size:24px;color:var(--text)}
-.dt-main{display:block}
-.dt-more{display:block;margin-top:3px;font-size:13px;line-height:1.5}
+.dt-main{display:inline}
+.dt-more{display:inline;font-size:13px;line-height:1.5}
+.dt-more::before{content:" · ";color:var(--rule)}
 .dt-more>span+span::before{content:" · ";color:var(--rule)}
 
 /* tiles */
@@ -2034,6 +2035,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .detail{padding:14px 13px}
   .d-ic{width:54px;height:54px}
   .d-verdict{text-align:start;min-width:0;max-width:none;flex:1 1 100%;margin-top:4px}
+  /* בשורה אחת זה גולש בשפות הארוכות — במובייל יורד שורה */
+  .dt-main{display:block}
+  .dt-more{display:block;margin-top:3px}
+  .dt-more::before{content:none}
+  /* "כולם: יבש" תופס גובה בלי להוסיף מידע — בדסקטופ יש מקום, כאן לא */
+  .d-verdict.v-dry{display:none}
   .d-chip{font-size:11.5px;padding:3px 9px;gap:5px}
   .tiles{grid-template-columns:repeat(3,1fr);gap:5px}
   .tile{padding:7px 7px 6px;border-radius:9px;gap:0}
