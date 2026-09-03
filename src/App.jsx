@@ -1181,30 +1181,6 @@ function useSkill(place, t) {
   return skill;
 }
 
-/** הלוגו — אותו סימן של האייקון: ענן, שמש מציצה, ושלושה עטי מודל שלא מסכימים */
-const Logo = () => (
-  <svg viewBox="0 0 100 100" aria-hidden="true">
-    <g fill="#F5C451" stroke="#F5C451" strokeWidth="3.4" strokeLinecap="round">
-      <circle cx="63" cy="30" r="11" stroke="none" />
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
-        const t = ((a + 22.5) * Math.PI) / 180;
-        return <line key={a}
-          x1={63 + Math.cos(t) * 16} y1={30 + Math.sin(t) * 16}
-          x2={63 + Math.cos(t) * 21} y2={30 + Math.sin(t) * 21} />;
-      })}
-    </g>
-    <g fill="#8A9EBE">
-      <rect x="19" y="42" width="51" height="18" rx="9" />
-      <circle cx="33" cy="43" r="14" /><circle cx="55" cy="40" r="17" />
-    </g>
-    <g strokeWidth="5.4" strokeLinecap="round">
-      <line x1="29" y1="66" x2="24" y2="90" stroke="#5AB3F0" />
-      <line x1="45" y1="66" x2="40" y2="80" stroke="#F5A24B" />
-      <line x1="60" y1="66" x2="55" y2="96" stroke="#6FD99A" />
-    </g>
-  </svg>
-);
-
 const Chev = ({ flip }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
     strokeLinecap="round" strokeLinejoin="round"
