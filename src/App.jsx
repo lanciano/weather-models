@@ -84,6 +84,28 @@ const Globe = () => (
   </svg>
 );
 
+/** הסימן של האפליקציה — אותו עיצוב כמו האייקון */
+const Logo = () => (
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <g fill="#F5C451" stroke="#F5C451" strokeWidth="3.4" strokeLinecap="round">
+      <circle cx="63" cy="30" r="11" stroke="none" />
+      <line x1="73.16" y1="36.12" x2="77.78" y2="38.91" /><line x1="66.12" y1="42.84" x2="68.91" y2="47.46" />
+      <line x1="56.88" y1="42.84" x2="54.09" y2="47.46" /><line x1="49.84" y1="36.12" x2="45.22" y2="38.91" />
+      <line x1="49.84" y1="23.88" x2="45.22" y2="21.09" /><line x1="56.88" y1="17.16" x2="54.09" y2="12.54" />
+      <line x1="66.12" y1="17.16" x2="68.91" y2="12.54" /><line x1="73.16" y1="23.88" x2="77.78" y2="21.09" />
+    </g>
+    <g fill="#8A9EBE">
+      <rect x="19" y="42" width="51" height="18" rx="9" />
+      <circle cx="33" cy="43" r="14" /><circle cx="55" cy="40" r="17" />
+    </g>
+    <g strokeWidth="5.4" strokeLinecap="round">
+      <line x1="29" y1="66" x2="24" y2="90" stroke="#5AB3F0" />
+      <line x1="45" y1="66" x2="40" y2="80" stroke="#F5A24B" />
+      <line x1="60" y1="66" x2="55" y2="96" stroke="#6FD99A" />
+    </g>
+  </svg>
+);
+
 function pickIcon(med, cloud, tmax) {
   if (med >= 0.5 && typeof tmax === "number" && tmax <= 2) return "snow";
   if (med >= 12) return "storm";
@@ -281,6 +303,7 @@ function Weather({ lang, setLang }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const boxRef = useRef(null);
+  const lastLoad = useRef(0);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width:760px)");
@@ -339,11 +362,27 @@ function Weather({ lang, setLang }) {
       const j = await r.json();
       if (j.error) throw new Error(j.reason || "bad request");
       setData(j);
+      lastLoad.current = Date.now();
     } catch (e) { setError(e.message || "error"); setData(null); }
     finally { setLoading(false); }
   }, [place, active]);
 
   useEffect(() => { load(); }, [load]);
+
+  /* המודלים מתעדכנים בערך אחת לשעה. מרעננים כשחוזרים ללשונית — המקרה
+     שבו הנתונים באמת מיושנים — ובנוסף כל רבע שעה ברקע. */
+  useEffect(() => {
+    const stale = () => Date.now() - lastLoad.current > 10 * 60 * 1000;
+    const onVisible = () => { if (document.visibilityState === "visible" && stale()) load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    const timer = setInterval(() => { if (document.visibilityState === "visible") load(); }, 15 * 60 * 1000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      clearInterval(timer);
+    };
+  }, [load]);
 
   /* קריאות משנה: מדדי סביבה ממקור יחיד, וים אם יש ים.
      שתיהן נכשלות בשקט — הן מוסיפות מידע, לא נושאות את האתר. */
@@ -631,9 +670,14 @@ function Weather({ lang, setLang }) {
       <div className="sky" />
 
       <div className="topbar">
-        <div className="eyebrow">{t("eyebrow")}</div>
+        <span className="brand">
+          <span className="brand-ic"><Logo /></span>
+          <span className="brand-name">{SITE_NAME}</span>
+        </span>
         <LangSwitch lang={lang} setLang={setLang} />
       </div>
+
+      <div className="eyebrow-row"><div className="eyebrow">{t("eyebrow")}</div></div>
 
       <header className="head">
         <div className="head-l">
@@ -1136,6 +1180,30 @@ function useSkill(place, t) {
 
   return skill;
 }
+
+/** הלוגו — אותו סימן של האייקון: ענן, שמש מציצה, ושלושה עטי מודל שלא מסכימים */
+const Logo = () => (
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <g fill="#F5C451" stroke="#F5C451" strokeWidth="3.4" strokeLinecap="round">
+      <circle cx="63" cy="30" r="11" stroke="none" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+        const t = ((a + 22.5) * Math.PI) / 180;
+        return <line key={a}
+          x1={63 + Math.cos(t) * 16} y1={30 + Math.sin(t) * 16}
+          x2={63 + Math.cos(t) * 21} y2={30 + Math.sin(t) * 21} />;
+      })}
+    </g>
+    <g fill="#8A9EBE">
+      <rect x="19" y="42" width="51" height="18" rx="9" />
+      <circle cx="33" cy="43" r="14" /><circle cx="55" cy="40" r="17" />
+    </g>
+    <g strokeWidth="5.4" strokeLinecap="round">
+      <line x1="29" y1="66" x2="24" y2="90" stroke="#5AB3F0" />
+      <line x1="45" y1="66" x2="40" y2="80" stroke="#F5A24B" />
+      <line x1="60" y1="66" x2="55" y2="96" stroke="#6FD99A" />
+    </g>
+  </svg>
+);
 
 const Chev = ({ flip }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
@@ -1652,6 +1720,12 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 /* language */
 .topbar{position:relative;z-index:40;max-width:1120px;margin:0 auto;padding-top:18px;
   display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:inline-flex;align-items:center;gap:9px;min-width:0}
+.brand-ic{width:30px;height:30px;flex:none}
+.brand-ic svg{width:100%;height:100%;display:block}
+.brand-name{font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--text);
+  white-space:nowrap;direction:ltr}
+.eyebrow-row{max-width:1120px;margin:0 auto;padding-top:14px}
 .lang{position:relative}
 .lang-btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
   border:1px solid var(--rule);border-radius:999px;padding:6px 14px 6px 11px;
@@ -2007,6 +2081,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .wx{padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right))
       calc(48px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
   .topbar{padding-top:12px;gap:10px}
+  .brand-ic{width:26px;height:26px}
+  .brand-name{font-size:14.5px}
+  .eyebrow-row{padding-top:11px}
   .eyebrow{font-size:10.5px;letter-spacing:.16em}
   .head{padding-top:12px;gap:20px}
   .head-r{flex:1 1 100%}
