@@ -1308,7 +1308,7 @@ function Radar({ place }) {
           {grid && (
             <>
               <TileGrid cls="rd-base" {...grid} opacity={1}
-                url={(x, y) => `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${RADAR_Z}/${y}/${x}`} />
+                url={(x, y) => `https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${RADAR_Z}/${y}/${x}`} />
               {host && frame && (
                 <TileGrid cls="rd-fall" {...grid} opacity={1}
                   url={(x, y) => `${host}${frame.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`} />
@@ -1343,7 +1343,7 @@ function Radar({ place }) {
 
         <div className="radar-credit">
           <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">{t("radarCredit")}</a>
-          <span>© Esri · © OpenStreetMap</span>
+          <span>© Esri · HERE · Garmin · © OpenStreetMap</span>
         </div>
       </div>
     </section>
