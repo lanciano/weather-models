@@ -1221,9 +1221,12 @@ function TileGrid({ url, cols, rows, x0, y0, left, top, opacity, cls }) {
       if (y < 0 || y >= 2 ** RADAR_Z) continue;
       out.push(
         <img key={`${dx}-${dy}`} src={url(x, y)} alt="" loading="eager" draggable={false}
+          /* אריח מכ״ם ללא כיסוי מחזיר 404 — מסתירים במקום להציג תמונה שבורה */
+          onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+          onLoad={(e) => { e.currentTarget.style.visibility = "visible"; }}
           style={{
-            position: "absolute", width: TILE, height: TILE,
-            left: left + dx * TILE, top: top + dy * TILE,
+            position: "absolute", width: TILE + 1, height: TILE + 1,
+            left: Math.round(left + dx * TILE), top: Math.round(top + dy * TILE),
           }} />
       );
     }
@@ -1237,6 +1240,7 @@ function Radar({ place }) {
   const [host, setHost] = useState("");
   const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 300 });
   const wrapRef = useRef(null);
 
@@ -1247,10 +1251,13 @@ function Radar({ place }) {
       const j = await r.json();
       const past = j?.radar?.past || [];
       const soon = j?.radar?.nowcast || [];
-      const all = [...past, ...soon].filter((f) => f && f.path);
+      /* כל פריים = כ-12 אריחים. מגבילים את הסדרה כדי לא להעמיס
+         על השרת שלהם ועל הגלישה של המשתמש. */
+      const trimmed = past.slice(-8);
+      const all = [...trimmed, ...soon.slice(0, 3)].filter((f) => f && f.path);
       setHost(j.host || "https://tilecache.rainviewer.com");
       setFrames(all);
-      setI(Math.max(0, past.length - 1));
+      setI(Math.max(0, trimmed.length - 1));
     } catch { setFrames([]); }
   }, []);
 
@@ -1270,10 +1277,19 @@ function Radar({ place }) {
   }, []);
 
   useEffect(() => {
-    if (!playing || !frames?.length) return;
-    const timer = setInterval(() => setI((n) => (n + 1) % frames.length), 480);
+    if (!playing || !visible || !frames?.length) return;
+    const timer = setInterval(() => setI((n) => (n + 1) % frames.length), 700);
     return () => clearInterval(timer);
-  }, [playing, frames]);
+  }, [playing, visible, frames]);
+
+  /* לא מנפישים פאנל שלא רואים */
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const grid = useMemo(() => {
     if (!box.w) return null;
@@ -1313,10 +1329,12 @@ function Radar({ place }) {
             <>
               <TileGrid cls="rd-base" {...grid} opacity={1}
                 url={(x, y) => `https://basemaps.cartocdn.com/dark_all/${RADAR_Z}/${x}/${y}.png?key=${CARTO_KEY}`} />
-              {host && frame && (
-                <TileGrid cls="rd-fall" {...grid} opacity={1}
-                  url={(x, y) => `${host}${frame.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`} />
-              )}
+              {/* כל פריים נטען פעם אחת ומוחלף בשקיפות. החלפת src בכל צעד
+                  הייתה מושכת את כל האריחים מחדש — ומכאן ה-429. */}
+              {host && visible && frames?.map((f, k) => (
+                <TileGrid key={f.time} cls="rd-fall" {...grid} opacity={k === i ? 1 : 0}
+                  url={(x, y) => `${host}${f.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`} />
+              ))}
             </>
           )}
           <span className="rd-pin" />
@@ -1995,7 +2013,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .radar-map img{user-select:none;-webkit-user-drag:none}
 /* Dark Matter כבר כהה ומאופקת — רק ריכוך קל כדי שהמכ״ם ישלוט */
 .rd-base{filter:saturate(.7) brightness(.92)}
-.rd-fall{filter:saturate(1.25) contrast(1.1)}
+.rd-fall{filter:saturate(1.25) contrast(1.1);transition:opacity .18s linear}
 .rd-pin{position:absolute;top:50%;left:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
   border-radius:50%;background:var(--warm);box-shadow:0 0 0 2.5px #0E1728,0 0 0 4px rgba(245,162,75,.45);z-index:3}
 .rd-veil{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
