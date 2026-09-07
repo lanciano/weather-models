@@ -944,6 +944,8 @@ function Weather({ lang, setLang }) {
         </section>
       )}
 
+      <Radar place={place} />
+
       {/* ── pens ── */}
       <section className="pens">
         <div className="sec-head"><h2>{t("pensTitle")}</h2><span className="sub">{t("pensSub")}</span></div>
@@ -1194,6 +1196,159 @@ const Star = () => (
     <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" />
   </svg>
 );
+
+/* ═══════════════════════ radar ═══════════════════════ */
+
+/* לולאה אזורית קבועה, לא מפה שמנווטים בה — אז מחשבים את אריחי
+   ה-Web Mercator ישירות ומוותרים על ספריית מפות שלמה. */
+const RADAR_Z = 6, TILE = 256;
+const lonToTile = (lon, z) => ((lon + 180) / 360) * 2 ** z;
+const latToTile = (lat, z) => {
+  const r = (lat * Math.PI) / 180;
+  return ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * 2 ** z;
+};
+const wrapX = (x, z) => ((x % 2 ** z) + 2 ** z) % 2 ** z;
+
+function TileGrid({ url, cols, rows, x0, y0, left, top, opacity, cls }) {
+  const out = [];
+  for (let dy = 0; dy < rows; dy++) {
+    for (let dx = 0; dx < cols; dx++) {
+      const x = wrapX(x0 + dx, RADAR_Z), y = y0 + dy;
+      if (y < 0 || y >= 2 ** RADAR_Z) continue;
+      out.push(
+        <img key={`${dx}-${dy}`} src={url(x, y)} alt="" loading="eager" draggable={false}
+          style={{
+            position: "absolute", width: TILE, height: TILE,
+            left: left + dx * TILE, top: top + dy * TILE,
+          }} />
+      );
+    }
+  }
+  return <div className={cls} style={{ position: "absolute", inset: 0, opacity }}>{out}</div>;
+}
+
+function Radar({ place }) {
+  const { t, dir, locale } = useI18n();
+  const [frames, setFrames] = useState(null);
+  const [host, setHost] = useState("");
+  const [i, setI] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [box, setBox] = useState({ w: 0, h: 300 });
+  const wrapRef = useRef(null);
+
+  /* רשימת הפריימים — ה-API עצמו אומר מה זמין, אז לא מניחים */
+  const loadFrames = useCallback(async () => {
+    try {
+      const r = await fetch("https://api.rainviewer.com/public/weather-maps.json");
+      const j = await r.json();
+      const past = j?.radar?.past || [];
+      const soon = j?.radar?.nowcast || [];
+      const all = [...past, ...soon].filter((f) => f && f.path);
+      setHost(j.host || "https://tilecache.rainviewer.com");
+      setFrames(all);
+      setI(Math.max(0, past.length - 1));
+    } catch { setFrames([]); }
+  }, []);
+
+  useEffect(() => {
+    loadFrames();
+    const timer = setInterval(loadFrames, 10 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [loadFrames]);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setBox({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el);
+    setBox({ w: el.clientWidth, h: el.clientHeight });
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!playing || !frames?.length) return;
+    const timer = setInterval(() => setI((n) => (n + 1) % frames.length), 480);
+    return () => clearInterval(timer);
+  }, [playing, frames]);
+
+  const grid = useMemo(() => {
+    if (!box.w) return null;
+    const fx = lonToTile(place.lon, RADAR_Z), fy = latToTile(place.lat, RADAR_Z);
+    const x0 = Math.floor(fx), y0 = Math.floor(fy);
+    const cols = Math.ceil(box.w / TILE) + 2, rows = Math.ceil(box.h / TILE) + 2;
+    const cx = Math.floor(cols / 2), cy = Math.floor(rows / 2);
+    return {
+      cols, rows,
+      x0: x0 - cx, y0: y0 - cy,
+      left: box.w / 2 - (fx - x0) * TILE - cx * TILE,
+      top: box.h / 2 - (fy - y0) * TILE - cy * TILE,
+    };
+  }, [box, place.lat, place.lon]);
+
+  const frame = frames?.[i];
+  const stamp = frame ? new Date(frame.time * 1000) : null;
+  const nowIdx = useMemo(() => {
+    if (!frames?.length) return 0;
+    const t0 = Date.now() / 1000;
+    let best = 0;
+    frames.forEach((f, k) => { if (f.time <= t0) best = k; });
+    return best;
+  }, [frames]);
+
+  return (
+    <section className="radar">
+      <div className="sec-head">
+        <h2>{t("radarTitle")}</h2>
+        <span className="sub">{t("radarSub")}</span>
+      </div>
+      <p className="radar-lead"><Rich text={t("radarLead")} /></p>
+
+      <div className="radar-panel">
+        <div className="radar-map" ref={wrapRef} dir="ltr">
+          {grid && (
+            <>
+              <TileGrid cls="rd-base" {...grid} opacity={1}
+                url={(x, y) => `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${RADAR_Z}/${x}/${y}.png`} />
+              {host && frame && (
+                <TileGrid cls="rd-fall" {...grid} opacity={1}
+                  url={(x, y) => `${host}${frame.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`} />
+              )}
+            </>
+          )}
+          <span className="rd-pin" />
+          {!frames && <div className="rd-veil">{t("radarLoading")}</div>}
+          {frames && !frames.length && <div className="rd-veil">{t("radarNone")}</div>}
+        </div>
+
+        {!!frames?.length && (
+          <div className="radar-ctl">
+            <button className="rd-play" onClick={() => setPlaying(!playing)}
+              aria-label={playing ? t("radarPause") : t("radarPlay")}>
+              {playing
+                ? <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.4" /><rect x="13.5" y="5" width="4" height="14" rx="1.4" /></svg>
+                : <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.2 19 12 8 18.8Z" /></svg>}
+            </button>
+
+            <input className="rd-slider" type="range" min={0} max={frames.length - 1} value={i}
+              onChange={(e) => { setPlaying(false); setI(Number(e.target.value)); }}
+              dir={dir} aria-label={t("radarTitle")} />
+
+            <span className={`rd-time ${i > nowIdx ? "soon" : ""}`}>
+              {stamp ? new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(stamp) : "--:--"}
+              {i > nowIdx && <em>{t("radarSoon")}</em>}
+              {i === nowIdx && <em>{t("radarNow")}</em>}
+            </span>
+          </div>
+        )}
+
+        <div className="radar-credit">
+          <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">{t("radarCredit")}</a>
+          <span>© OpenStreetMap · © CARTO</span>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /* ═══════════════════════ conditions ═══════════════════════ */
 
@@ -1823,6 +1978,38 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .dt-more::before{content:" · ";color:var(--rule)}
 .dt-more>span+span::before{content:" · ";color:var(--rule)}
 
+/* radar */
+.radar{max-width:1120px;margin:40px auto 0}
+.radar h2{font-size:24px}
+.radar-lead{font-size:14px;color:var(--dim);font-weight:300;line-height:1.7;
+  max-width:74ch;margin:0 0 14px;border-inline-start:2px solid var(--sky);padding-inline-start:13px}
+.radar-lead b{color:var(--text);font-weight:600}
+.radar-panel{background:var(--panel);border:1px solid var(--rule2);border-radius:14px;
+  padding:12px 12px 10px}
+.radar-map{position:relative;width:100%;height:320px;overflow:hidden;border-radius:10px;
+  background:#0B1420;isolation:isolate}
+.radar-map img{user-select:none;-webkit-user-drag:none}
+.rd-base{filter:saturate(.55) brightness(.82)}
+/* מכוונן את גווני המכ״ם לפלטה של האתר במקום להשאיר אותם זרים */
+.rd-fall{filter:saturate(1.15) brightness(1.06) hue-rotate(-8deg);mix-blend-mode:screen}
+.rd-pin{position:absolute;top:50%;left:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
+  border-radius:50%;background:var(--warm);box-shadow:0 0 0 2.5px #0E1728,0 0 0 4px rgba(245,162,75,.45);z-index:3}
+.rd-veil{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:20px;background:rgba(11,20,32,.86);font-size:13.5px;color:var(--muted);
+  font-weight:300;line-height:1.6}
+.radar-ctl{display:flex;align-items:center;gap:12px;padding:11px 4px 4px}
+.rd-play{width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:var(--panel2);border:1px solid var(--rule);border-radius:999px;color:var(--sky);padding:0}
+.rd-play svg{width:15px;height:15px;display:block}
+.rd-slider{flex:1;min-width:0;accent-color:var(--sky);background:transparent;height:22px}
+.rd-time{flex:none;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;
+  font-size:14px;font-weight:600;color:var(--text);min-width:74px}
+.rd-time em{font-style:normal;font-size:10.5px;font-weight:500;color:var(--muted);letter-spacing:.03em}
+.rd-time.soon{color:var(--sky)}
+.rd-time.soon em{color:var(--sky)}
+.radar-credit{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 4px 2px;
+  border-top:1px solid var(--rule2);margin-top:6px;font-size:11px;color:#6E819F;font-weight:300}
+.radar-credit a{color:#6E819F;text-decoration:underline;text-underline-offset:2px}
 /* tiles */
 .cond-wrap{margin-top:18px;border-top:1px solid var(--rule2);padding-top:14px}
 .cond-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
@@ -2104,6 +2291,14 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .cond-wrap{margin-top:14px;padding-top:12px}
   .cond-head{gap:8px;margin-bottom:8px}
   .cond-elev{font-size:10.5px}
+  .radar-panel{padding:10px 10px 8px}
+  .radar-map{height:250px;border-radius:9px}
+  .radar-lead{font-size:13px}
+  .radar-ctl{gap:10px;padding:10px 2px 3px}
+  .rd-play{width:31px;height:31px}
+  .rd-time{font-size:13px;min-width:64px}
+  .rd-time em{font-size:9.5px}
+  .radar-credit{font-size:10px;gap:3px 9px}
   .obs-row{font-size:12.5px}
   .readout{gap:8px;padding-top:8px}
   .readout.top{gap:8px;padding:7px 9px;min-height:36px}
