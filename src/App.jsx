@@ -1308,7 +1308,7 @@ function Radar({ place }) {
           {grid && (
             <>
               <TileGrid cls="rd-base" {...grid} opacity={1}
-                url={(x, y) => `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${RADAR_Z}/${x}/${y}.png`} />
+                url={(x, y) => `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${RADAR_Z}/${y}/${x}`} />
               {host && frame && (
                 <TileGrid cls="rd-fall" {...grid} opacity={1}
                   url={(x, y) => `${host}${frame.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`} />
@@ -1343,7 +1343,7 @@ function Radar({ place }) {
 
         <div className="radar-credit">
           <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">{t("radarCredit")}</a>
-          <span>© OpenStreetMap · © CARTO</span>
+          <span>© Esri · © OpenStreetMap</span>
         </div>
       </div>
     </section>
@@ -1989,7 +1989,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .radar-map{position:relative;width:100%;height:320px;overflow:hidden;border-radius:10px;
   background:#0B1420;isolation:isolate}
 .radar-map img{user-select:none;-webkit-user-drag:none}
-.rd-base{filter:saturate(.55) brightness(.82)}
+.rd-base{filter:brightness(.9) contrast(1.05)}
 /* מכוונן את גווני המכ״ם לפלטה של האתר במקום להשאיר אותם זרים */
 .rd-fall{filter:saturate(1.15) brightness(1.06) hue-rotate(-8deg);mix-blend-mode:screen}
 .rd-pin{position:absolute;top:50%;left:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
