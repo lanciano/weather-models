@@ -1201,6 +1201,10 @@ const Star = () => (
 
 /* לולאה אזורית קבועה, לא מפה שמנווטים בה — אז מחשבים את אריחי
    ה-Web Mercator ישירות ומוותרים על ספריית מפות שלמה. */
+/* מפתח CARTO — חינמי, עד 5M אריחים בחודש. הוא גלוי בקוד לקוח מטבע הדברים.
+   להחלפה: carto.com/basemaps/apikey */
+const CARTO_KEY = "cb1_2zwn_1_5d15dc4bdc6b8dc82110188f";
+
 const RADAR_Z = 6, TILE = 256;
 const lonToTile = (lon, z) => ((lon + 180) / 360) * 2 ** z;
 const latToTile = (lat, z) => {
@@ -1308,7 +1312,7 @@ function Radar({ place }) {
           {grid && (
             <>
               <TileGrid cls="rd-base" {...grid} opacity={1}
-                url={(x, y) => `https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${RADAR_Z}/${y}/${x}`} />
+                url={(x, y) => `https://basemaps.cartocdn.com/dark_all/${RADAR_Z}/${x}/${y}.png?key=${CARTO_KEY}`} />
               {host && frame && (
                 <TileGrid cls="rd-fall" {...grid} opacity={1}
                   url={(x, y) => `${host}${frame.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`} />
@@ -1343,7 +1347,7 @@ function Radar({ place }) {
 
         <div className="radar-credit">
           <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">{t("radarCredit")}</a>
-          <span>© Esri · HERE · Garmin · © OpenStreetMap</span>
+          <span>© CARTO · © OpenStreetMap</span>
         </div>
       </div>
     </section>
@@ -1989,9 +1993,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .radar-map{position:relative;width:100%;height:320px;overflow:hidden;border-radius:10px;
   background:#0B1420;isolation:isolate}
 .radar-map img{user-select:none;-webkit-user-drag:none}
-.rd-base{filter:brightness(.9) contrast(1.05)}
-/* מכוונן את גווני המכ״ם לפלטה של האתר במקום להשאיר אותם זרים */
-.rd-fall{filter:saturate(1.15) brightness(1.06) hue-rotate(-8deg);mix-blend-mode:screen}
+/* Dark Matter כבר כהה ומאופקת — רק ריכוך קל כדי שהמכ״ם ישלוט */
+.rd-base{filter:saturate(.7) brightness(.92)}
+.rd-fall{filter:saturate(1.25) contrast(1.1)}
 .rd-pin{position:absolute;top:50%;left:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
   border-radius:50%;background:var(--warm);box-shadow:0 0 0 2.5px #0E1728,0 0 0 4px rgba(245,162,75,.45);z-index:3}
 .rd-veil{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
