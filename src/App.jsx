@@ -195,14 +195,14 @@ function UnitToggle({ value, onChange, size }) {
 /* ═══════════════════════ root ═══════════════════════ */
 
 const FALLBACK_NAMES = {
-  he: { name: "תל אביב-יפו", region: "ישראל" },
-  en: { name: "Tel Aviv-Yafo", region: "Israel" },
-  ru: { name: "Тель-Авив-Яффа", region: "Израиль" },
-  es: { name: "Tel Aviv-Yafo", region: "Israel" },
-  fr: { name: "Tel-Aviv-Jaffa", region: "Israël" },
-  ar: { name: "تل أبيب - يافا", region: "إسرائيل" },
+  he: { name: "לונדון", region: "אנגליה, בריטניה" },
+  en: { name: "London", region: "England, United Kingdom" },
+  ru: { name: "Лондон", region: "Англия, Великобритания" },
+  es: { name: "Londres", region: "Inglaterra, Reino Unido" },
+  fr: { name: "Londres", region: "Angleterre, Royaume-Uni" },
+  ar: { name: "لندن", region: "إنجلترا، المملكة المتحدة" },
 };
-const FALLBACK_COORDS = { lat: 32.0853, lon: 34.7818 };
+const FALLBACK_COORDS = { lat: 51.5074, lon: -0.1278 };
 const fallbackFor = (lang) => ({ ...(FALLBACK_NAMES[lang] || FALLBACK_NAMES.en), ...FALLBACK_COORDS });
 const loadSaved = () => {
   try {
