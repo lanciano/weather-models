@@ -2009,10 +2009,10 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .radar-panel{background:var(--panel);border:1px solid var(--rule2);border-radius:14px;
   padding:12px 12px 10px}
 .radar-map{position:relative;width:100%;height:320px;overflow:hidden;border-radius:10px;
-  background:#0B1420;isolation:isolate}
+  background:#141C2B;isolation:isolate}
 .radar-map img{user-select:none;-webkit-user-drag:none}
-/* Dark Matter כבר כהה ומאופקת — רק ריכוך קל כדי שהמכ״ם ישלוט */
-.rd-base{filter:saturate(.7) brightness(.92)}
+/* Dark Matter כהה מאוד מלכתחילה — מבהירים כדי שהיבשה והתוויות ייקראו */
+.rd-base{filter:saturate(.8) brightness(1.55) contrast(.95)}
 .rd-fall{filter:saturate(1.25) contrast(1.1);transition:opacity .18s linear}
 .rd-pin{position:absolute;top:50%;left:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
   border-radius:50%;background:var(--warm);box-shadow:0 0 0 2.5px #0E1728,0 0 0 4px rgba(245,162,75,.45);z-index:3}
