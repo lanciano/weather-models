@@ -687,7 +687,12 @@ function Weather({ lang, setLang }) {
         <div className="head-r" ref={boxRef}>
           <label className="lab" htmlFor="q">{t("searchLabel")}</label>
           <div className="srch-wrap">
-            <input id="q" className="srch" value={query} autoComplete="off"
+            <span className="srch-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round">
+                <circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.4 15.4 20 20" />
+              </svg>
+            </span>
+            <input id="q" className="srch" value={query} autoComplete="off" type="search"
               placeholder={t("searchPlaceholder")} onChange={(e) => setQuery(e.target.value)} />
             {!!results.length && (
               <ul className="res">
@@ -1852,7 +1857,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .wx h1{font-weight:700} .wx h2{font-weight:600} .wx h3{font-weight:600}
 .wx b{font-weight:600}
 .wx button{font-family:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
-.wx button:focus-visible,.wx input:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.wx button:focus-visible,.wx input:not(.srch):focus-visible{outline:2px solid var(--sky);outline-offset:2px}
 /* recharts מקבל מיקוד בלחיצה וספארי מצייר סביבו מסגרת — לא רלוונטי בגרף */
 /* recharts מצייר מחדש את הצורות בכל עדכון טולטיפ. אם המגע התחיל על צורה,
    iOS ממשיך לשלוח אליה אירועים והיא כבר הוחלפה — ההחלקה נתקעת.
@@ -1915,11 +1920,18 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
 .head-r{flex:0 1 300px;position:relative}
-.lab{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:500}
+.lab{display:block;font-size:12.5px;color:var(--dim);margin-bottom:7px;font-weight:500;letter-spacing:.02em}
 .srch-wrap{position:relative}
-.srch{width:100%;background:var(--panel);border:1px solid var(--rule);border-radius:10px;
-  padding:11px 13px;font-size:16px;font-family:inherit;color:var(--text)}
-.srch::placeholder{color:#6B7D9B;font-weight:300}
+.srch-ic{position:absolute;top:50%;inset-inline-start:13px;transform:translateY(-50%);
+  width:18px;height:18px;color:var(--sky);pointer-events:none;z-index:1}
+.srch-ic svg{width:100%;height:100%;display:block}
+.srch{width:100%;background:var(--panel2);border:1px solid #3A507A;border-radius:10px;
+  padding:12px 13px;padding-inline-start:40px;font-size:16px;font-family:inherit;color:var(--text);
+  transition:.15s;-webkit-appearance:none;appearance:none}
+.srch::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.srch::placeholder{color:#8296B5;font-weight:400}
+.srch:focus{outline:none;border-color:var(--sky);background:#1C3151;
+  box-shadow:0 0 0 3px rgba(90,179,240,.16)}
 .hint{font-size:12px;color:var(--muted);margin-top:6px}
 .res{position:absolute;z-index:30;inset-inline:0;top:100%;margin:6px 0 0;padding:5px;list-style:none;
   background:var(--panel2);border:1px solid var(--rule);border-radius:10px;max-height:290px;overflow:auto;
