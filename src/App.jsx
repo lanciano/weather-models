@@ -52,22 +52,36 @@ const Sun = ({ cx = 24, cy = 20, r = 7.5 }) => (
 const Drops = ({ xs, len = 6 }) => (
   <g>{xs.map(([x, y], i) => <line key={i} x1={x} y1={y} x2={x - 2.4} y2={y + len} stroke={C.drop} strokeWidth="2.6" strokeLinecap="round" />)}</g>
 );
-/* סהרון — עיגול מלא ועיגול־צל מוסט, במילוי evenodd. אין mask/id ולכן בטוח לשכפול */
-const Moon = ({ cx = 24, cy = 20, r = 7.5 }) => {
-  const ir = r * 0.86, ox = cx + r * 0.52, oy = cy - r * 0.26;
+/* כוכב ארבע-קצוות רך (נבדל מ-Star של המנהיג שהוא בן חמש קצוות) */
+const Twinkle = ({ cx, cy, s }) => (
+  <path fill={C.moon} d={`M ${cx} ${cy - s} Q ${cx + s * 0.16} ${cy - s * 0.16} ${cx + s} ${cy}`
+    + ` Q ${cx + s * 0.16} ${cy + s * 0.16} ${cx} ${cy + s}`
+    + ` Q ${cx - s * 0.16} ${cy + s * 0.16} ${cx - s} ${cy}`
+    + ` Q ${cx - s * 0.16} ${cy - s * 0.16} ${cx} ${cy - s} Z`} />
+);
+/* סהרון — קשת חיצונית ברדיוס r וקשת פנימית שטוחה (ir>r) שחוזרת. בלי mask/id */
+const Moon = ({ cx = 24, cy = 20, r = 7.5, stars = false }) => {
+  const ir = r * 1.45;
   return (
-    <path fillRule="evenodd" fill={C.moon}
-      d={`M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${2 * r} 0 a ${r} ${r} 0 1 0 ${-2 * r} 0 Z
-          M ${ox - ir} ${oy} a ${ir} ${ir} 0 1 0 ${2 * ir} 0 a ${ir} ${ir} 0 1 0 ${-2 * ir} 0 Z`}
-    />
+    <g>
+      <path fill={C.moon} transform={`rotate(-18 ${cx} ${cy})`}
+        d={`M ${cx} ${cy - r} A ${r} ${r} 0 0 0 ${cx} ${cy + r} A ${ir} ${ir} 0 0 1 ${cx} ${cy - r} Z`} />
+      {stars && (
+        <>
+          <Twinkle cx={cx + r * 1.28} cy={cy - r * 0.95} s={2.6} />
+          <Twinkle cx={cx + r * 1.86} cy={cy - r * 0.05} s={1.9} />
+          <Twinkle cx={cx + r * 1.32} cy={cy + r * 0.82} s={1.4} />
+        </>
+      )}
+    </g>
   );
 };
 
 const ICONS = {
   clear: () => <svg viewBox="0 0 48 48"><Sun cx={24} cy={24} r={9} /></svg>,
   partly: () => <svg viewBox="0 0 48 48"><Sun cx={31} cy={16} r={6.5} /><Cloud y={2} /></svg>,
-  "clear-night": () => <svg viewBox="0 0 48 48"><Moon cx={24} cy={24} r={9} /></svg>,
-  "partly-night": () => <svg viewBox="0 0 48 48"><Moon cx={31} cy={16} r={6.5} /><Cloud y={2} /></svg>,
+  "clear-night": () => <svg viewBox="0 0 48 48"><Moon cx={20} cy={25} r={11} stars /></svg>,
+  "partly-night": () => <svg viewBox="0 0 48 48"><Moon cx={31} cy={15} r={7.5} /><Cloud y={2} /></svg>,
   cloudy: () => <svg viewBox="0 0 48 48"><Cloud fill={C.dark} y={-4} /><Cloud y={3} /></svg>,
   drizzle: () => <svg viewBox="0 0 48 48"><Cloud y={-4} /><Drops xs={[[20, 34], [29, 34]]} len={5} /></svg>,
   rain: () => <svg viewBox="0 0 48 48"><Cloud fill={C.dark} y={-5} /><Drops xs={[[17, 33], [24, 35], [31, 33], [20.5, 39], [27.5, 39]]} /></svg>,
