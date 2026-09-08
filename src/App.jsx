@@ -178,6 +178,10 @@ const fmt = (v, d = 1) => (typeof v === "number" ? v.toFixed(d) : "–");
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
 const median = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const isoDate = (d) => d.toISOString().slice(0, 10);
+/** האזור בלי מקטעים שכבר נאמרים בשם — "Tokyo, Japan" ליד "Tokyo" נקרא ככפילות,
+ *  ומדינה שהיא גם השם ("Japan" ליד "Japan") נעלמת לגמרי */
+const subRegion = (name, region) =>
+  (region || "").split(", ").filter((x) => x && x !== name).join(", ");
 
 /** מרנדר **מודגש** בתוך מחרוזת מתורגמת */
 function Rich({ text }) {
@@ -794,12 +798,23 @@ function Weather({ lang, setLang }) {
         {now && (
           <div className="nowbar">
             <span className="now-ic">{React.createElement(ICONS[now.icon])}</span>
-            <span className="now-txt">
-              <span className="now-lab">{t("nowLabel")}</span>
-              <b>{fmt(now.temp, 0)}°</b>
-              {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
-                <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
-              )}
+            <span className="now-main">
+              {/* עוגן המיקום. המקום נשמר ב-localStorage, אז בטעינה חוזרת
+                  צריך להיות ברור מיד על איזו עיר מסתכלים — בלי לחפש את זה
+                  בפסקת הפתיחה או בשורת הקואורדינטות הקטנה */}
+              <span className="now-place">
+                <span className="np-name">{place.name}</span>
+                {!!subRegion(place.name, place.region) && (
+                  <span className="np-region">{subRegion(place.name, place.region)}</span>
+                )}
+              </span>
+              <span className="now-txt">
+                <span className="now-lab">{t("nowLabel")}</span>
+                <b>{fmt(now.temp, 0)}°</b>
+                {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
+                  <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
+                )}
+              </span>
             </span>
           </div>
         )}
@@ -2054,6 +2069,11 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
 .now-ic{width:44px;height:44px;flex:none}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
+.now-main{display:flex;flex-direction:column;gap:3px;min-width:0}
+/* אותה שפה של .rn/.rr בתוצאות החיפוש, כדי שהשם והאזור יקראו אותו דבר בשני המקומות */
+.now-place{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;min-width:0}
+.np-name{font-size:14.5px;font-weight:600;color:var(--text)}
+.np-region{font-size:12px;color:var(--muted);font-weight:300}
 .now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 .now-txt b{font-size:30px;font-weight:700;line-height:1}
@@ -2368,6 +2388,8 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .w-warn{width:6px;height:6px;top:4px;inset-inline-end:4px}
   .nowbar{justify-content:center;padding:10px 12px;gap:11px;border-radius:12px}
   .now-ic{width:36px;height:36px}
+  .now-main{align-items:center}
+  .now-place{justify-content:center;gap:6px}
   .now-txt{justify-content:center;gap:8px}
   .now-txt b{font-size:26px}
   .now-txt em{font-size:12px}
