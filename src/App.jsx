@@ -1920,7 +1920,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
 .head-r{flex:0 1 300px;position:relative}
-.lab{display:block;font-size:12.5px;color:var(--dim);margin-bottom:7px;font-weight:500;letter-spacing:.02em}
+.lab{display:block;font-size:15px;color:var(--dim);margin-bottom:8px;font-weight:500;letter-spacing:.02em}
 .srch-wrap{position:relative}
 .srch-ic{position:absolute;top:50%;inset-inline-start:13px;transform:translateY(-50%);
   width:18px;height:18px;color:var(--sky);pointer-events:none;z-index:1}
