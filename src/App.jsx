@@ -2063,7 +2063,10 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .nowbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
   margin-bottom:10px;
   background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
-.now-ic{width:44px;height:44px;justify-self:end}
+/* הגודל נקבע כשהכרטיס היה שורה אחת. מאז הבלוק גדל לשתי שורות (61px
+   בדסקטופ, 57 במובייל) והאייקון נשאר קטן ביחס. 52/44 עדיין נמוך מגובה
+   הבלוק, ולכן ההגדלה לא מוסיפה ולו פיקסל לגובה הכרטיס. */
+.now-ic{width:52px;height:52px;justify-self:end}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
 /* השם מיושר לקצה ההתחלה של השורה — כלומר למילה "עכשיו", ומתהפך עם
    השפה. כל ניסיון למרכז אותו מול המספר נכשל: מירכוז שתי שורות ברוחבים
@@ -2383,7 +2386,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .w-bar{width:calc(100% - 8px);height:3px;margin-top:3px}
   .w-warn{width:6px;height:6px;top:4px;inset-inline-end:4px}
   .nowbar{padding:10px 12px;gap:11px;border-radius:12px}
-  .now-ic{width:36px;height:36px}
+  .now-ic{width:44px;height:44px}
   .now-txt{gap:8px}
   .now-txt b{font-size:26px}
   .now-txt em{font-size:12px}
