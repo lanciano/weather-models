@@ -555,14 +555,17 @@ function Weather({ lang, setLang }) {
     if (!temps.length) return null;
     const medRain = nextRain.length ? median(nextRain) : 0;
     const medSnow = nextSnow.length ? median(nextSnow) : 0;
+    const snowy = medSnow > 0.05 && medSnow / 7 >= medRain * 0.5;
     return {
       temp: toT(median(temps), unitT),
       feels: feels.length ? toT(median(feels), unitT) : null,
-      icon: pickIcon(0, cloud.length ? mean(cloud) : null, median(temps)),
+      /* אותו חישוב כמו הכרטיסים היומיים — משקעים אמיתיים, לא 0 קשיח —
+         כדי שהאייקון כאן לא יסתור את זה שליד שם העיר בחיפוש */
+      icon: snowy ? "snow" : pickIcon(medRain, cloud.length ? mean(cloud) : null, median(temps)),
       wet: nextRain.filter((v) => v >= 0.1).length,
       total: nextRain.length,
       rain: medRain,
-      snowy: medSnow > 0.05 && medSnow / 7 >= medRain * 0.5,
+      snowy,
     };
   }, [data, active, unitT]);
 
