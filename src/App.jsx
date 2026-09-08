@@ -794,18 +794,18 @@ function Weather({ lang, setLang }) {
         {now && (
           <div className="nowbar">
             <span className="now-ic">{React.createElement(ICONS[now.icon])}</span>
-            <span className="now-main">
-              {/* עוגן המיקום. המקום נשמר ב-localStorage, אז בטעינה חוזרת
-                  צריך להיות ברור מיד על איזו עיר מסתכלים — בלי לחפש את זה
-                  בפסקת הפתיחה או בשורת הקואורדינטות הקטנה */}
-              <span className="np-name">{place.name}</span>
-              <span className="now-txt">
-                <span className="now-lab">{t("nowLabel")}</span>
+            <span className="now-txt">
+              <span className="now-lab">{t("nowLabel")}</span>
+              {/* עוגן המיקום. המקום נשמר ב-localStorage, אז בטעינה חוזרת צריך
+                  להיות ברור מיד על איזו עיר מסתכלים. השם יושב מחוץ לזרימה
+                  ומרוכז על המספר עצמו, כך שאורך השם לא מזיז דבר. */}
+              <span className="now-deg">
+                <span className="np-name">{place.name}</span>
                 <b>{fmt(now.temp, 0)}°</b>
-                {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
-                  <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
-                )}
               </span>
+              {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
+                <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
+              )}
             </span>
           </div>
         )}
@@ -2065,13 +2065,14 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
 .now-ic{width:44px;height:44px;justify-self:end}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
-/* הבלוק כולו ממורכז בכרטיס, אבל שתי השורות שבתוכו מיושרות לקצה ההתחלה
-   המשותף. מירכוז של שתי שורות ברוחבים שונים משנן את קצה ההתחלה, והפער
-   משתנה עם אורך שם העיר — בעברית, שבה העין נאחזת בקצה הימני, זה נקרא
-   כאילו הטקסט קופץ בכל החלפת עיר. */
-.now-main{display:flex;flex-direction:column;align-items:start;gap:3px;min-width:0}
-.np-name{font-size:14.5px;font-weight:600;color:var(--text)}
-.now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+/* השם מרוכז על המספר עצמו ולא על השורה. הוא מחוץ לזרימה, ולכן אורך שם
+   העיר לא משנה שום רוחב ולא מזיז אף אלמנט אחר — קודם הוא היה שורה בזרימה
+   וכל החלפת עיר הזיזה את קצה הטקסט. ה-padding-top שומר לו את הגובה. */
+.now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:20px}
+.now-deg{position:relative;display:inline-flex}
+.np-name{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+  margin-bottom:2px;white-space:nowrap;
+  font-size:14.5px;font-weight:600;color:var(--text)}
 .now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 .now-txt b{font-size:30px;font-weight:700;line-height:1}
 .now-txt em{font-style:normal;font-size:13px;color:var(--dim);font-weight:300}
