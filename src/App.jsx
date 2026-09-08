@@ -68,9 +68,9 @@ const Moon = ({ cx = 24, cy = 20, r = 7.5, stars = false }) => {
         d={`M ${cx} ${cy - r} A ${r} ${r} 0 0 0 ${cx} ${cy + r} A ${ir} ${ir} 0 0 1 ${cx} ${cy - r} Z`} />
       {stars && (
         <>
-          <Twinkle cx={cx + r * 1.28} cy={cy - r * 0.95} s={2.6} />
-          <Twinkle cx={cx + r * 1.86} cy={cy - r * 0.05} s={1.9} />
-          <Twinkle cx={cx + r * 1.32} cy={cy + r * 0.82} s={1.4} />
+          <Twinkle cx={cx + r * 1.06} cy={cy - r * 0.95} s={2.5} />
+          <Twinkle cx={cx + r * 1.44} cy={cy - r * 0.05} s={1.8} />
+          <Twinkle cx={cx + r * 1.10} cy={cy + r * 0.82} s={1.35} />
         </>
       )}
     </g>
@@ -80,7 +80,8 @@ const Moon = ({ cx = 24, cy = 20, r = 7.5, stars = false }) => {
 const ICONS = {
   clear: () => <svg viewBox="0 0 48 48"><Sun cx={24} cy={24} r={9} /></svg>,
   partly: () => <svg viewBox="0 0 48 48"><Sun cx={31} cy={16} r={6.5} /><Cloud y={2} /></svg>,
-  "clear-night": () => <svg viewBox="0 0 48 48"><Moon cx={20} cy={25} r={11} stars /></svg>,
+  /* רוחב ה-bbox מיושר לשאר הסט (~30) — קודם הוא היה 36 והכוכבים נראו תלושים */
+  "clear-night": () => <svg viewBox="0 0 48 48"><Moon cx={21} cy={24} r={10.5} stars /></svg>,
   /* הירח מתרומם מעל הענן — בלי קרניים כמו לשמש הוא נבלע בו. הכוכב משמאל
      תופס את המקום שבו הקרניים יוצאות ב-partly, כדי ששני האייקונים יאוזנו זהה */
   "partly-night": () => <svg viewBox="0 0 48 48"><Moon cx={32} cy={11} r={8.5} /><Twinkle cx={17} cy={12} s={2.2} /><Cloud y={2} /></svg>,
