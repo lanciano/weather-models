@@ -2065,11 +2065,13 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
 .now-ic{width:44px;height:44px;justify-self:end}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
-/* ממורכז בשני הרוחבים. כשזו הייתה שורה אחת יישור לשמאל עבד, אבל בלוק
-   דו-שורתי שצף בצד של כרטיס רחב נקרא כלא-מסודר */
-.now-main{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
-.np-name{font-size:14.5px;font-weight:600;color:var(--text);text-align:center}
-.now-txt{display:flex;align-items:baseline;justify-content:center;gap:10px;flex-wrap:wrap}
+/* הבלוק כולו ממורכז בכרטיס, אבל שתי השורות שבתוכו מיושרות לקצה ההתחלה
+   המשותף. מירכוז של שתי שורות ברוחבים שונים משנן את קצה ההתחלה, והפער
+   משתנה עם אורך שם העיר — בעברית, שבה העין נאחזת בקצה הימני, זה נקרא
+   כאילו הטקסט קופץ בכל החלפת עיר. */
+.now-main{display:flex;flex-direction:column;align-items:start;gap:3px;min-width:0}
+.np-name{font-size:14.5px;font-weight:600;color:var(--text)}
+.now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 .now-txt b{font-size:30px;font-weight:700;line-height:1}
 .now-txt em{font-style:normal;font-size:13px;color:var(--dim);font-weight:300}
