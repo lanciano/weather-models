@@ -745,6 +745,9 @@ function Weather({ lang, setLang }) {
             </span>
             <input id="q" className="srch" value={query} autoComplete="off" type="search"
               placeholder={t("searchPlaceholder")} onChange={(e) => setQuery(e.target.value)} />
+            {/* מחוץ לזרימה בכוונה — כאן היה div שנכנס ויוצא ודחף את כל הדף
+                בכל הקלדה. הריפוד הסופי של .srch שמור תמיד, גם כשאין ספינר */}
+            <span className={`srch-spin ${searching ? "on" : ""}`} aria-hidden="true" />
             {!!results.length && (
               <ul className="res">
                 {results.map((r) => {
@@ -773,7 +776,7 @@ function Weather({ lang, setLang }) {
               </ul>
             )}
           </div>
-          {searching && <div className="hint">{t("searching")}</div>}
+          <span className="sr-live" role="status">{searching ? t("searching") : ""}</span>
           <div className="coords">
             {place.region && <>{place.region} · </>}{place.lat.toFixed(3)}°, {place.lon.toFixed(3)}°
             <button className="geo" onClick={locate} disabled={locating}>
@@ -1977,13 +1980,23 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   width:18px;height:18px;color:var(--sky);pointer-events:none;z-index:1}
 .srch-ic svg{width:100%;height:100%;display:block}
 .srch{width:100%;background:var(--panel2);border:1px solid #3A507A;border-radius:10px;
-  padding:12px 13px;padding-inline-start:40px;font-size:16px;font-family:inherit;color:var(--text);
+  padding:12px 13px;padding-inline-start:40px;padding-inline-end:36px;
+  font-size:16px;font-family:inherit;color:var(--text);
   transition:.15s;-webkit-appearance:none;appearance:none}
 .srch::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
 .srch::placeholder{color:#8296B5;font-weight:400}
 .srch:focus{outline:none;border-color:var(--sky);background:#1C3151;
   box-shadow:0 0 0 3px rgba(90,179,240,.16)}
-.hint{font-size:12px;color:var(--muted);margin-top:6px}
+/* ממורכז ב-margin ולא ב-translateY, כדי שאנימציית הסיבוב לא תדרוס אותו */
+.srch-spin{position:absolute;top:50%;inset-inline-end:13px;width:15px;height:15px;margin-top:-7.5px;
+  border:2px solid rgba(201,214,239,.22);border-top-color:var(--sky);border-radius:50%;
+  opacity:0;pointer-events:none;transition:opacity .15s}
+.srch-spin.on{opacity:1;animation:srch-spin .6s linear infinite}
+@keyframes srch-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.srch-spin.on{animation:none}}
+/* מוסר לקוראי מסך בלבד — אפס שטח, ולכן אפס קפיצה */
+.sr-live{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0}
 .res{position:absolute;z-index:30;inset-inline:0;top:100%;margin:6px 0 0;padding:5px;list-style:none;
   background:var(--panel2);border:1px solid var(--rule);border-radius:10px;max-height:290px;overflow:auto;
   box-shadow:0 14px 34px rgba(0,0,0,.42)}
