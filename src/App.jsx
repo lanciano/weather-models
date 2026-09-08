@@ -794,20 +794,18 @@ function Weather({ lang, setLang }) {
         {now && (
           <div className="nowbar">
             <span className="now-ic">{React.createElement(ICONS[now.icon])}</span>
-            <span className="now-txt">
-              <span className="now-lab">{t("nowLabel")}</span>
-              {/* עוגן המיקום. המקום נשמר ב-localStorage, אז בטעינה חוזרת צריך
-                  להיות ברור מיד על איזו עיר מסתכלים. השם יושב מחוץ לזרימה
-                  ומרוכז על המספר עצמו, כך שאורך השם לא מזיז דבר. */}
-              <b>
-                <span className="deg-n">
-                  <span className="np-name">{place.name}</span>
-                  {fmt(now.temp, 0)}
-                </span>°
-              </b>
-              {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
-                <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
-              )}
+            <span className="now-main">
+              {/* עוגן המיקום. המקום נשמר ב-localStorage, אז בטעינה חוזרת
+                  צריך להיות ברור מיד על איזו עיר מסתכלים — בלי לחפש את זה
+                  בפסקת הפתיחה או בשורת הקואורדינטות הקטנה */}
+              <span className="np-name">{place.name}</span>
+              <span className="now-txt">
+                <span className="now-lab">{t("nowLabel")}</span>
+                <b>{fmt(now.temp, 0)}°</b>
+                {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
+                  <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
+                )}
+              </span>
             </span>
           </div>
         )}
@@ -2067,22 +2065,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
 .now-ic{width:44px;height:44px;justify-self:end}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
-/* השם מרוכז על הספרות בלבד, לא על "15°". סימן המעלה מסיט את מרכז
-   התיבה ב-6px ימינה, בעוד שהעין מודדת סימטריה מול המספר הגדול — ולכן
-   העוגן הוא .deg-n שעוטף את הספרות והמעלה נשארת מחוצה לו. השם מחוץ
-   לזרימה, כך שאורך שם העיר לא משנה שום רוחב ולא מזיז אף אלמנט אחר.
-   ה-padding-top שומר לו את הגובה. */
-.now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:20px}
-/* תיבת העיגון = הספרות + חצי מרוחב המעלה, כך שהמרכז נופל רבע-מעלה
-   מהספרות: עם המעלה המלאה זה נטה ימינה מדי ובלעדיה שמאלה מדי.
-   ה-padding מרחיב את תיבת ה-position והמרג'ין השלילי מבטל את ההזזה
-   של הסימן עצמו. inline-end מצביע אל המעלה גם ב-LTR וגם ב-RTL,
-   ו-em נשמר יחסי לגופן (30px בדסקטופ, 26px במובייל). */
-.deg-n{position:relative;display:inline-block;
-  padding-inline-end:.235em;margin-inline-end:-.235em}
-.np-name{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
-  margin-bottom:2px;white-space:nowrap;line-height:1.25;
-  font-size:14.5px;font-weight:600;color:var(--text)}
+/* השם מיושר לקצה ההתחלה של השורה — כלומר למילה "עכשיו", ומתהפך עם
+   השפה. כל ניסיון למרכז אותו מול המספר נכשל: מירכוז שתי שורות ברוחבים
+   שונים משנן את קצה ההתחלה, והשיניון משתנה עם אורך שם העיר. */
+.now-main{display:flex;flex-direction:column;align-items:start;gap:6px;min-width:0}
+.np-name{font-size:14.5px;font-weight:600;color:var(--text)}
+.now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 .now-txt b{font-size:30px;font-weight:700;line-height:1}
 .now-txt em{font-style:normal;font-size:13px;color:var(--dim);font-weight:300}
