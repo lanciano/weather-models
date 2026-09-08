@@ -81,7 +81,9 @@ const ICONS = {
   clear: () => <svg viewBox="0 0 48 48"><Sun cx={24} cy={24} r={9} /></svg>,
   partly: () => <svg viewBox="0 0 48 48"><Sun cx={31} cy={16} r={6.5} /><Cloud y={2} /></svg>,
   "clear-night": () => <svg viewBox="0 0 48 48"><Moon cx={20} cy={25} r={11} stars /></svg>,
-  "partly-night": () => <svg viewBox="0 0 48 48"><Moon cx={31} cy={15} r={7.5} /><Cloud y={2} /></svg>,
+  /* הירח מתרומם מעל הענן — בלי קרניים כמו לשמש הוא נבלע בו. הכוכב משמאל
+     תופס את המקום שבו הקרניים יוצאות ב-partly, כדי ששני האייקונים יאוזנו זהה */
+  "partly-night": () => <svg viewBox="0 0 48 48"><Moon cx={32} cy={11} r={8.5} /><Twinkle cx={17} cy={12} s={2.2} /><Cloud y={2} /></svg>,
   cloudy: () => <svg viewBox="0 0 48 48"><Cloud fill={C.dark} y={-4} /><Cloud y={3} /></svg>,
   drizzle: () => <svg viewBox="0 0 48 48"><Cloud y={-4} /><Drops xs={[[20, 34], [29, 34]]} len={5} /></svg>,
   rain: () => <svg viewBox="0 0 48 48"><Cloud fill={C.dark} y={-5} /><Drops xs={[[17, 33], [24, 35], [31, 33], [20.5, 39], [27.5, 39]]} /></svg>,
