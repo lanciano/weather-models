@@ -392,7 +392,6 @@ function Weather({ lang, setLang }) {
       `?latitude=${place.lat}&longitude=${place.lon}` +
       "&hourly=precipitation,snowfall,temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,cloud_cover" +
       "&daily=precipitation_sum,snowfall_sum,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,wind_gusts_10m_max" +
-      "&current=is_day" +
       `&models=${active.join(",")}&timezone=auto&forecast_days=${DAYS_N}`;
     try {
       const r = await fetch(url);
@@ -430,8 +429,12 @@ function Weather({ lang, setLang }) {
 
     (async () => {
       try {
+        /* current נשען כאן דווקא על היעדר models: בלעדיו Open-Meteo מחזיר
+           best-match, בדיוק כמו הבקשה שמזינה את האייקונים בחיפוש. עם models
+           הוא מחזיר את המודל הראשון ברשימה — ומשם נבעו האייקונים הסותרים. */
         const r = await fetch("https://api.open-meteo.com/v1/forecast?" + geo +
-          "&hourly=relative_humidity_2m,surface_pressure,wind_direction_10m,uv_index&daily=uv_index_max");
+          "&hourly=relative_humidity_2m,surface_pressure,wind_direction_10m,uv_index&daily=uv_index_max" +
+          "&current=weather_code,is_day");
         const j = await r.json();
         if (!dead) setAmb(j.error ? null : j);
       } catch { if (!dead) setAmb(null); }
@@ -594,20 +597,25 @@ function Weather({ lang, setLang }) {
     const medRain = nextRain.length ? median(nextRain) : 0;
     const medSnow = nextSnow.length ? median(nextSnow) : 0;
     const snowy = medSnow > 0.05 && medSnow / 7 >= medRain * 0.5;
-    const base = snowy ? "snow" : pickIcon(medRain, cloud.length ? mean(cloud) : null, median(temps));
+
+    /* האייקון נגזר מ-weather_code של amb.current — אותו מקור best-match בדיוק
+       שמזין את האייקון ליד שם העיר בחיפוש, ולכן השניים זהים מהבנייה.
+       pickIcon נשאר כגיבוי לזמן שבו amb עוד לא הגיע או נכשל: הוא לא מכיר
+       ערפל, וסף הטפטוף שלו גבוה פי ארבעה מזה של WMO — ומכאן הפערים שהיו.
+       הטמפרטורה וההתרעה על השעה הקרובה נשארות רב-מודליות. */
+    const wmo = wmoIcon(amb?.current?.weather_code);
+    const base = wmo || (snowy ? "snow" : pickIcon(medRain, cloud.length ? mean(cloud) : null, median(temps)));
     return {
       temp: toT(median(temps), unitT),
       feels: feels.length ? toT(median(feels), unitT) : null,
-      /* אותו חישוב כמו הכרטיסים היומיים — משקעים אמיתיים, לא 0 קשיח —
-         כדי שהאייקון כאן לא יסתור את זה שליד שם העיר בחיפוש.
-         is_day מ-Open-Meteo (לא תלוי מודל) הופך שמש לירח אחרי השקיעה. */
-      icon: nightIcon(base, pick(data.current, "is_day", active[0])),
+      /* is_day מאותו current — הופך שמש לירח אחרי השקיעה */
+      icon: nightIcon(base, amb?.current?.is_day),
       wet: nextRain.filter((v) => v >= 0.1).length,
       total: nextRain.length,
       rain: medRain,
       snowy,
     };
-  }, [data, active, unitT]);
+  }, [data, amb, active, unitT]);
 
   const sel = days[daySel];
   const pages = Math.max(1, Math.ceil(days.length / PAGE));
