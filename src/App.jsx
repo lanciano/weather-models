@@ -30,7 +30,7 @@ const VAR_UNITS = { precipitation: "unitMmH", temperature_2m: "unitC", wind_spee
 
 /* ═══════════════════════ icons ═══════════════════════ */
 
-const C = { cloud: "#8397B7", dark: "#64789B", sun: "#F5C451", drop: "#57B6EF", snow: "#BFE3FF" };
+const C = { cloud: "#8397B7", dark: "#64789B", sun: "#F5C451", drop: "#57B6EF", snow: "#BFE3FF", moon: "#C9D6EF" };
 
 const Cloud = ({ fill = C.cloud, y = 0 }) => (
   <g fill={fill} transform={`translate(0 ${y})`}>
@@ -52,10 +52,22 @@ const Sun = ({ cx = 24, cy = 20, r = 7.5 }) => (
 const Drops = ({ xs, len = 6 }) => (
   <g>{xs.map(([x, y], i) => <line key={i} x1={x} y1={y} x2={x - 2.4} y2={y + len} stroke={C.drop} strokeWidth="2.6" strokeLinecap="round" />)}</g>
 );
+/* סהרון — עיגול מלא ועיגול־צל מוסט, במילוי evenodd. אין mask/id ולכן בטוח לשכפול */
+const Moon = ({ cx = 24, cy = 20, r = 7.5 }) => {
+  const ir = r * 0.86, ox = cx + r * 0.52, oy = cy - r * 0.26;
+  return (
+    <path fillRule="evenodd" fill={C.moon}
+      d={`M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${2 * r} 0 a ${r} ${r} 0 1 0 ${-2 * r} 0 Z
+          M ${ox - ir} ${oy} a ${ir} ${ir} 0 1 0 ${2 * ir} 0 a ${ir} ${ir} 0 1 0 ${-2 * ir} 0 Z`}
+    />
+  );
+};
 
 const ICONS = {
   clear: () => <svg viewBox="0 0 48 48"><Sun cx={24} cy={24} r={9} /></svg>,
   partly: () => <svg viewBox="0 0 48 48"><Sun cx={31} cy={16} r={6.5} /><Cloud y={2} /></svg>,
+  "clear-night": () => <svg viewBox="0 0 48 48"><Moon cx={24} cy={24} r={9} /></svg>,
+  "partly-night": () => <svg viewBox="0 0 48 48"><Moon cx={31} cy={16} r={6.5} /><Cloud y={2} /></svg>,
   cloudy: () => <svg viewBox="0 0 48 48"><Cloud fill={C.dark} y={-4} /><Cloud y={3} /></svg>,
   drizzle: () => <svg viewBox="0 0 48 48"><Cloud y={-4} /><Drops xs={[[20, 34], [29, 34]]} len={5} /></svg>,
   rain: () => <svg viewBox="0 0 48 48"><Cloud fill={C.dark} y={-5} /><Drops xs={[[17, 33], [24, 35], [31, 33], [20.5, 39], [27.5, 39]]} /></svg>,
@@ -132,6 +144,11 @@ function wmoIcon(code) {
   if (code === 95 || code === 96 || code === 99) return "storm";
   return "cloudy";
 }
+
+/** גרסת לילה לאייקון — רק לאלה שיש בהם גרם שמימי גלוי (שמש → ירח).
+ *  isDay: 1 יום · 0 לילה · undefined → מתייחסים כיום (בלי לנחש) */
+const NIGHT_OF = { clear: "clear-night", partly: "partly-night" };
+const nightIcon = (name, isDay) => (isDay === 0 && NIGHT_OF[name]) || name;
 
 /* ═══════════════════════ helpers ═══════════════════════ */
 
@@ -355,6 +372,7 @@ function Weather({ lang, setLang }) {
       `?latitude=${place.lat}&longitude=${place.lon}` +
       "&hourly=precipitation,snowfall,temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,cloud_cover" +
       "&daily=precipitation_sum,snowfall_sum,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,wind_gusts_10m_max" +
+      "&current=is_day" +
       `&models=${active.join(",")}&timezone=auto&forecast_days=${DAYS_N}`;
     try {
       const r = await fetch(url);
@@ -431,13 +449,13 @@ function Weather({ lang, setLang }) {
           try {
             const lats = list.map((p) => p.latitude).join(",");
             const lons = list.map((p) => p.longitude).join(",");
-            const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weather_code&forecast_days=1`);
+            const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weather_code,is_day&forecast_days=1`);
             const wj = await wr.json();
             if (dead) return;
             const arr = Array.isArray(wj) ? wj : [wj];
             setResults((cur) => cur.map((p, i) => {
               const c = arr[i]?.current;
-              return c ? { ...p, curTemp: c.temperature_2m, curCode: c.weather_code } : p;
+              return c ? { ...p, curTemp: c.temperature_2m, curCode: c.weather_code, curDay: c.is_day } : p;
             }));
           } catch { /* לא קריטי — התוצאות כבר מוצגות בלי אייקון */ }
         }
@@ -556,12 +574,14 @@ function Weather({ lang, setLang }) {
     const medRain = nextRain.length ? median(nextRain) : 0;
     const medSnow = nextSnow.length ? median(nextSnow) : 0;
     const snowy = medSnow > 0.05 && medSnow / 7 >= medRain * 0.5;
+    const base = snowy ? "snow" : pickIcon(medRain, cloud.length ? mean(cloud) : null, median(temps));
     return {
       temp: toT(median(temps), unitT),
       feels: feels.length ? toT(median(feels), unitT) : null,
       /* אותו חישוב כמו הכרטיסים היומיים — משקעים אמיתיים, לא 0 קשיח —
-         כדי שהאייקון כאן לא יסתור את זה שליד שם העיר בחיפוש */
-      icon: snowy ? "snow" : pickIcon(medRain, cloud.length ? mean(cloud) : null, median(temps)),
+         כדי שהאייקון כאן לא יסתור את זה שליד שם העיר בחיפוש.
+         is_day מ-Open-Meteo (לא תלוי מודל) הופך שמש לירח אחרי השקיעה. */
+      icon: nightIcon(base, pick(data.current, "is_day", active[0])),
       wet: nextRain.filter((v) => v >= 0.1).length,
       total: nextRain.length,
       rain: medRain,
@@ -701,7 +721,7 @@ function Weather({ lang, setLang }) {
               <ul className="res">
                 {results.map((r) => {
                   const ic = wmoIcon(r.curCode);
-                  const Ic = ic ? ICONS[ic] : null;
+                  const Ic = ic ? ICONS[nightIcon(ic, r.curDay)] : null;
                   return (
                     <li key={r.id}>
                       <button onClick={() => {
