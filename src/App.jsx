@@ -799,10 +799,12 @@ function Weather({ lang, setLang }) {
               {/* עוגן המיקום. המקום נשמר ב-localStorage, אז בטעינה חוזרת צריך
                   להיות ברור מיד על איזו עיר מסתכלים. השם יושב מחוץ לזרימה
                   ומרוכז על המספר עצמו, כך שאורך השם לא מזיז דבר. */}
-              <span className="now-deg">
-                <span className="np-name">{place.name}</span>
-                <b>{fmt(now.temp, 0)}°</b>
-              </span>
+              <b>
+                <span className="deg-n">
+                  <span className="np-name">{place.name}</span>
+                  {fmt(now.temp, 0)}
+                </span>°
+              </b>
               {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
                 <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
               )}
@@ -2065,13 +2067,15 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
 .now-ic{width:44px;height:44px;justify-self:end}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
-/* השם מרוכז על המספר עצמו ולא על השורה. הוא מחוץ לזרימה, ולכן אורך שם
-   העיר לא משנה שום רוחב ולא מזיז אף אלמנט אחר — קודם הוא היה שורה בזרימה
-   וכל החלפת עיר הזיזה את קצה הטקסט. ה-padding-top שומר לו את הגובה. */
+/* השם מרוכז על הספרות בלבד, לא על "15°". סימן המעלה מסיט את מרכז
+   התיבה ב-6px ימינה, בעוד שהעין מודדת סימטריה מול המספר הגדול — ולכן
+   העוגן הוא .deg-n שעוטף את הספרות והמעלה נשארת מחוצה לו. השם מחוץ
+   לזרימה, כך שאורך שם העיר לא משנה שום רוחב ולא מזיז אף אלמנט אחר.
+   ה-padding-top שומר לו את הגובה. */
 .now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:20px}
-.now-deg{position:relative;display:inline-flex}
+.deg-n{position:relative}
 .np-name{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
-  margin-bottom:2px;white-space:nowrap;
+  margin-bottom:2px;white-space:nowrap;line-height:1.25;
   font-size:14.5px;font-weight:600;color:var(--text)}
 .now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 .now-txt b{font-size:30px;font-weight:700;line-height:1}
