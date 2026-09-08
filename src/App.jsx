@@ -2056,14 +2056,19 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .w-warn{position:absolute;top:7px;inset-inline-end:7px;width:7px;height:7px;border-radius:50%;background:var(--warm)}
 
 /* עכשיו + התרעת השעה הקרובה */
-.nowbar{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;
+/* גריד ולא flex: עם 1fr auto 1fr העמודה האמצעית יושבת תמיד בדיוק על
+   מרכז הכרטיס, ולכן בלוק הטקסט לא זז כשהשם מתחלף או כש"מרגיש כמו"
+   נעלם. ב-flex האייקון היה חלק מהקבוצה הממורכזת והסיט את הטקסט
+   בחצי רוחבו — היסט שהשתנה עם כל שינוי רוחב. */
+.nowbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
+  margin-bottom:10px;
   background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
-.now-ic{width:44px;height:44px;flex:none}
+.now-ic{width:44px;height:44px;justify-self:end}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
 /* ממורכז בשני הרוחבים. כשזו הייתה שורה אחת יישור לשמאל עבד, אבל בלוק
    דו-שורתי שצף בצד של כרטיס רחב נקרא כלא-מסודר */
 .now-main{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
-.np-name{font-size:14.5px;font-weight:600;color:var(--text)}
+.np-name{font-size:14.5px;font-weight:600;color:var(--text);text-align:center}
 .now-txt{display:flex;align-items:baseline;justify-content:center;gap:10px;flex-wrap:wrap}
 .now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 .now-txt b{font-size:30px;font-weight:700;line-height:1}
