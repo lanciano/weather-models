@@ -2073,7 +2073,13 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
    לזרימה, כך שאורך שם העיר לא משנה שום רוחב ולא מזיז אף אלמנט אחר.
    ה-padding-top שומר לו את הגובה. */
 .now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:20px}
-.deg-n{position:relative}
+/* תיבת העיגון = הספרות + חצי מרוחב המעלה, כך שהמרכז נופל רבע-מעלה
+   מהספרות: עם המעלה המלאה זה נטה ימינה מדי ובלעדיה שמאלה מדי.
+   ה-padding מרחיב את תיבת ה-position והמרג'ין השלילי מבטל את ההזזה
+   של הסימן עצמו. inline-end מצביע אל המעלה גם ב-LTR וגם ב-RTL,
+   ו-em נשמר יחסי לגופן (30px בדסקטופ, 26px במובייל). */
+.deg-n{position:relative;display:inline-block;
+  padding-inline-end:.235em;margin-inline-end:-.235em}
 .np-name{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
   margin-bottom:2px;white-space:nowrap;line-height:1.25;
   font-size:14.5px;font-weight:600;color:var(--text)}
