@@ -2279,8 +2279,13 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .head-l{flex:1 1 400px;min-width:0}
 .eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--sky);font-weight:500;line-height:1.4}
 .head h1{font-size:clamp(30px,5.5vw,50px)}
-/* הכותרת בעברית ארוכה יותר משאר השפות — מקטינים רק אצלה כדי שתשב בשורה אחת */
-html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
+/* הכותרת בעברית ארוכה משאר השפות וצריכה לשבת בשורה אחת. תקרה קבועה לא
+   מספיקה: עמודת הכותרת היא בערך 372px-100vw עד שהמכולה נעצרת על 1120,
+   ומעליו היא קבועה על 784. לכן הגודל נגזר מרוחב העמודה עצמה — חלוקה
+   ב-13.6 היא יחס הרוחב-לגובה של המחרוזת הזו בגופן, עם מרווח ביטחון.
+   קודם היה clamp(26px,4.6vw,42px): ב-1700px זה הותיר 245px של חלל מול
+   תיבת החיפוש, וזה מה שנקרא כרווח מיותר. */
+html[lang="he"] .head h1{font-size:clamp(26px,calc((100vw - 372px) / 13.6),58px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
 .head-r{flex:0 1 300px;position:relative}
 .lab{display:block;font-size:15px;color:var(--dim);margin-bottom:8px;font-weight:500;letter-spacing:.02em}
