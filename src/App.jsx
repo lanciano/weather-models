@@ -1361,6 +1361,10 @@ const WORLD = [
 const WET_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67,
   71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99]);
 
+/* 60 ולא 100: בשיעור פגיעה של ~17% זה עדיין כ-10 ערים רטובות, הרבה
+   מעבר לחמש שמוצגות, אבל בקשה קלה בהרבה על המכסה */
+const WET_SAMPLE = 60, WET_TTL = 10 * 60 * 1000, WET_KEY = "wx-wet";
+
 const shuffled = (a) => {
   const s = [...a];
   for (let i = s.length - 1; i > 0; i--) {
@@ -1379,15 +1383,27 @@ function WetNow({ onPick, unitT }) {
 
   useEffect(() => {
     let dead = false;
-    (async () => {
-      setRows(null);
+
+    /* קאש קצר: מה שיורד בעולם לא משתנה בין רענון לרענון, ובלעדיו כל
+       טעינה מחדש שילמה עוד בקשה מהמכסה — וגזלה אותה מהתחזית של
+       המשתמש עצמו. רענון ידני עוקף אותו. */
+    if (!nonce) {
       try {
-        /* מדגם אקראי בכל טעינה — גם הבקשה קלה יותר וגם הערים משתנות */
-        const pick = shuffled(WORLD).slice(0, 100);
+        const c = JSON.parse(localStorage.getItem(WET_KEY));
+        if (c && Date.now() - c.at < WET_TTL && c.rows?.length) { setRows(c.rows); return; }
+      } catch { /* private mode */ }
+    }
+
+    setRows(null);
+    /* התחזית של המשתמש נשלחת ראשונה ומקבלת את המכסה; הפאנל הזה משני */
+    const timer = setTimeout(async () => {
+      try {
+        const pick = shuffled(WORLD).slice(0, WET_SAMPLE);
         const lats = pick.map((c) => c[2]).join(",");
         const lons = pick.map((c) => c[3]).join(",");
         const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
           "&current=weather_code,temperature_2m,is_day&forecast_days=1");
+        if (!r.ok) throw new Error(`${r.status}`);
         const j = await r.json();
         if (dead) return;
         const arr = Array.isArray(j) ? j : [j];
@@ -1399,10 +1415,14 @@ function WetNow({ onPick, unitT }) {
               code: cur.weather_code, temp: cur.temperature_2m, day: cur.is_day });
           }
         });
-        setRows(shuffled(wet).slice(0, 5));
+        const five = shuffled(wet).slice(0, 6);
+        setRows(five);
+        try { localStorage.setItem(WET_KEY, JSON.stringify({ at: Date.now(), rows: five })); }
+        catch { /* private mode */ }
       } catch { if (!dead) setRows([]); }
-    })();
-    return () => { dead = true; };
+    }, 1500);
+
+    return () => { dead = true; clearTimeout(timer); };
   }, [nonce]);
 
   if (rows && !rows.length) return null;
@@ -2164,9 +2184,11 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .res-t{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .rn{display:block;font-size:14.5px;font-weight:500}
 .rr{display:block;font-size:12px;color:var(--muted);font-weight:300}
-/* פאנל "יורד עכשיו". צ'יפים בשורה נגללת ולא רשימה אנכית, כדי שהוא לא
-   ידחוף את מזג האוויר של המשתמש עצמו אל מתחת לקיפול. */
-.wet{margin:0 0 14px}
+/* פאנל "יורד עכשיו". צ'יפים בשורה אחת ולא רשימה אנכית, כדי שהוא לא
+   ידחוף את מזג האוויר של המשתמש עצמו אל מתחת לקיפול.
+   ה-max-width הוא אותו 1120 של כל שאר הסקשנים — בלעדיו הוא נמתח על כל
+   רוחב החלון ובלט מהעמודה בדסקטופ רחב. */
+.wet{max-width:1120px;margin:18px auto 0}
 .wet-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:9px}
 .wet-head h2{font-size:15px;font-weight:600;margin:0}
 .wet-head .sub{font-size:12px;color:var(--muted);font-weight:300}
@@ -2175,19 +2197,24 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .wet-again:hover:not(:disabled){color:var(--sky);background:var(--panel2)}
 .wet-again:disabled{opacity:.4}
 .wet-again svg{width:100%;height:100%;display:block}
-.wet-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;
+/* grid-auto-flow:column שומר הכול בשורה אחת, ו-minmax(150px,1fr) גורם
+   לצ'יפים למלא בדיוק את הרוחב הזמין בדסקטופ ולהתכווץ עד 150px במובייל —
+   ומשם והלאה השורה נגללת. רספונסיבי בלי למדוד רוחב ב-JS. */
+.wet-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,1fr);
+  gap:8px;overflow-x:auto;padding-bottom:2px;
   scrollbar-width:none;-ms-overflow-style:none}
 .wet-row::-webkit-scrollbar{display:none}
 .wet-load{font-size:12.5px;color:var(--muted);font-weight:300;padding:6px 2px}
-.wet-chip{display:flex;align-items:center;gap:8px;flex:none;
+.wet-chip{display:flex;align-items:center;gap:8px;min-width:0;
   background:var(--panel);border:1px solid var(--rule2);border-radius:12px;
   padding:7px 11px 7px 8px;text-align:start;transition:.15s}
 .wet-chip:hover{border-color:var(--sky);background:var(--panel2)}
 .wet-ic{width:30px;height:30px;flex:none}
 .wet-ic svg{width:100%;height:100%;display:block}
-.wet-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
-.wet-n{font-size:13.5px;font-weight:500;white-space:nowrap}
-.wet-c{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
+.wet-txt{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.wet-n{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wet-c{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
 .wet-t{font-size:14px;font-weight:600;color:var(--dim);font-variant-numeric:tabular-nums;
   margin-inline-start:2px}
 .coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;
