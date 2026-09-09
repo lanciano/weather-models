@@ -2276,22 +2276,20 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
   max-width:1120px;margin:0 auto;padding:16px 0 26px;border-bottom:1px solid var(--rule)}
-/* שתי העמודות גדלות יחד ולא רק הכותרת. קודם head-l בלעה את כל השארית,
-   וכותרת קצרה ממנה הותירה חלל מולה; עכשיו החצי השני עובר ל-head-r,
-   שפשוט מקבל תיבת חיפוש רחבה יותר. הבסיס 400 נשמר כדי שנקודת השבירה
-   לשורה נפרדת תישאר איפה שהייתה (772px). */
-.head-l{flex:1 1 400px;min-width:0}
+/* שתי העמודות גדלות יחד ולא רק הכותרת: קודם head-l בלעה את כל השארית,
+   וכותרת קצרה ממנה הותירה חלל מולה. הבסיסים 320+260 (ולא 400+300)
+   מורידים את נקודת השבירה לשורה נפרדת מ-772px ל-652, כדי שטלפון אופקי
+   יישאר בשתי עמודות ולא יערום את החיפוש מתחת לכותרת. */
+.head-l{flex:1 1 320px;min-width:0}
 .eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--sky);font-weight:500;line-height:1.4}
 .head h1{font-size:clamp(30px,5.5vw,50px)}
-/* הכותרת בעברית ארוכה משאר השפות וצריכה לשבת בשורה אחת. תקרה קבועה לא
-   מספיקה: עמודת הכותרת היא בערך 372px-100vw עד שהמכולה נעצרת על 1120,
-   ומעליו היא קבועה על 784. לכן הגודל נגזר מרוחב העמודה עצמה — חלוקה
-   העמודה היא 32px+ מחצית המכולה, ולכן הגודל נגזר מ-3.68vw ולא מ-vw מלא.
-   התקרה 43 (מול 50 של שאר השפות) היא הרוחב שהעמודה מרשה כשהמכולה
-   נעצרת על 1120 — וזה גם מונע שבירה לשתי שורות בטלפון אופקי. */
-html[lang="he"] .head h1{font-size:clamp(26px,calc(3.68vw + 1px),43px)}
+/* הכותרת בעברית ארוכה משאר השפות וצריכה לשבת בשורה אחת. עמודת הכותרת
+   היא בערך מחצית המכולה, ולכן הגודל נגזר מ-3.68vw ולא מ-vw מלא. התקרה
+   42 היא מה שהעמודה מרשה כשהמכולה נעצרת על 1120, והרצפה 26 היא שקובעת
+   בטלפון אופקי — שם היא מותירה מרווח מהגלישה. */
+html[lang="he"] .head h1{font-size:clamp(26px,calc(3.68vw - 0.4px),42px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
-.head-r{flex:1 1 300px;max-width:520px;position:relative}
+.head-r{flex:1 1 260px;min-width:0;max-width:520px;position:relative}
 .lab{display:block;font-size:15px;color:var(--dim);margin-bottom:8px;font-weight:500;letter-spacing:.02em}
 .srch-wrap{position:relative}
 .srch-ic{position:absolute;top:50%;inset-inline-start:13px;transform:translateY(-50%);
@@ -2730,7 +2728,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,calc(3.68vw + 1px),43px)}
   .eyebrow-row{padding-top:11px}
   .eyebrow{font-size:10.5px;letter-spacing:.16em}
   .head{padding-top:12px;gap:20px}
-  .head-r{flex:1 1 100%}
+  /* 240 ולא 100%: ברוחב הזה עדיין נכנסות שתי עמודות, וטלפון אופקי
+     שומר את החיפוש לצד הכותרת במקום מתחתיה */
+  .head-r{flex:1 1 240px}
   .wrow{gap:3px}
   .week-nav{gap:4px}
   .nav-arrow{width:19px;border-radius:9px}
@@ -2823,6 +2823,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,calc(3.68vw + 1px),43px)}
   .s-name{order:1;grid-column:1 / -1}
   .s-n{order:3;font-size:12px}
   .s-n::before{content:attr(data-l) ": ";color:var(--muted)}
+}
+
+/* רק כאן באמת אין מקום לשתי עמודות: 320+20+240 = 580 מול המכולה.
+   מעל זה — טלפון אופקי — הכותרת והחיפוש נשארים זה לצד זה. */
+@media (max-width:640px){
+  .head-r{flex:1 1 100%}
 }
 /* ריחוף רק במכשירים עם מצביע אמיתי.
    ב-iOS כלל :hover גורם ללחיצה הראשונה "להדליק" ריחוף ורק לשנייה להפעיל. */
