@@ -1276,6 +1276,8 @@ const Star = () => (
 const CARTO_KEY = "cb1_2zwn_1_5d15dc4bdc6b8dc82110188f";
 
 const RADAR_Z = 6, TILE = 256;
+/* אריח PNG שקוף לחלוטין. מעליו יש כבר החזרים כלשהם, כלומר כיסוי מכ״ם */
+const EMPTY_TILE = 400;
 const lonToTile = (lon, z) => ((lon + 180) / 360) * 2 ** z;
 const latToTile = (lat, z) => {
   const r = (lat * Math.PI) / 180;
@@ -1476,6 +1478,7 @@ function Radar({ place }) {
   const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [visible, setVisible] = useState(false);
+  const [bare, setBare] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 300 });
   const wrapRef = useRef(null);
 
@@ -1550,6 +1553,27 @@ function Radar({ place }) {
     return best;
   }, [frames]);
 
+  /* אריח ריק לגמרי מ-RainViewer שוקל בדיוק 334 בייט. אזור שיש בו מכ״ם
+     אבל אין גשם עדיין מחזיר מאות בייטים של החזרים חלשים (נמדד: פולין
+     יבשה 782, סקוטלנד 2045), ולכן הגודל מבדיל בין "אין גשם" לבין "אין
+     מכ״ם". RainViewer לא חושף מפת כיסוי בשום צורה אחרת, ובלי זה מפה
+     ריקה בפטגוניה או במזרח אפריקה נקראת בטעות כ"לא יורד כלום". */
+  useEffect(() => {
+    if (!host || !frames?.length) return;
+    let dead = false;
+    (async () => {
+      try {
+        const f = frames[nowIdx] || frames[frames.length - 1];
+        const x = wrapX(Math.floor(lonToTile(place.lon, RADAR_Z)), RADAR_Z);
+        const y = Math.floor(latToTile(place.lat, RADAR_Z));
+        const r = await fetch(`${host}${f.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`);
+        const b = await r.blob();
+        if (!dead) setBare(b.size <= EMPTY_TILE);
+      } catch { if (!dead) setBare(false); }
+    })();
+    return () => { dead = true; };
+  }, [host, frames, nowIdx, place.lat, place.lon]);
+
   return (
     <section className="radar">
       <div className="sec-head">
@@ -1575,6 +1599,8 @@ function Radar({ place }) {
           <span className="rd-pin" />
           {!frames && <div className="rd-veil">{t("radarLoading")}</div>}
           {frames && !frames.length && <div className="rd-veil">{t("radarNone")}</div>}
+          {/* מפת הבסיס נשארת גלויה — היא עדיין אומרת איפה אנחנו */}
+          {!!frames?.length && bare && <div className="rd-nocov">{t("radarNone")}</div>}
         </div>
 
         {!!frames?.length && (
@@ -2329,6 +2355,10 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .rd-veil{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
   text-align:center;padding:20px;background:rgba(11,20,32,.86);font-size:13.5px;color:var(--muted);
   font-weight:300;line-height:1.6}
+.rd-nocov{position:absolute;z-index:4;inset-inline:10px;bottom:10px;
+  padding:9px 12px;border-radius:10px;text-align:center;
+  background:rgba(11,20,32,.9);border:1px solid var(--rule2);
+  font-size:12.5px;color:var(--dim);font-weight:300;line-height:1.5}
 .radar-ctl{display:flex;align-items:center;gap:12px;padding:11px 4px 4px}
 .rd-play{width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;
   background:var(--panel2);border:1px solid var(--rule);border-radius:999px;color:var(--sky);padding:0}
