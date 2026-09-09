@@ -2212,9 +2212,13 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .wet-ic{width:30px;height:30px;flex:none}
 .wet-ic svg{width:100%;height:100%;display:block}
 .wet-txt{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
-.wet-n{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wet-c{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap;
+/* שמות הערים והמדינות ברשימה הם תמיד לטיניים. בלי direction:ltr הם יורשים
+   RTL מהדף העברי, וה-ellipsis נחתך בתחילת המילה — "‎...terdam" במקום
+   "Amster…" */
+.wet-n,.wet-c{direction:ltr;text-align:start;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
+.wet-n{font-size:13.5px;font-weight:500}
+.wet-c{font-size:11px;color:var(--muted);font-weight:300}
 .wet-t{font-size:14px;font-weight:600;color:var(--dim);font-variant-numeric:tabular-nums;
   margin-inline-start:2px}
 .coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;
