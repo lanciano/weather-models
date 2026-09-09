@@ -791,21 +791,20 @@ function Weather({ lang, setLang }) {
         {loading && <div className="wload">{t("loading")}</div>}
         {error && <div className="werr">{error} <button onClick={load}>{t("retry")}</button></div>}
 
+        {/* עוגן המיקום בקופסה משלו. המקום נשמר ב-localStorage, אז בטעינה
+            חוזרת צריך להיות ברור מיד על איזו עיר מסתכלים. לא מותנה ב-now
+            כדי שהשם יופיע כבר בזמן הטעינה, לפני שהנתונים חוזרים. */}
+        <div className="placebar">{place.name}</div>
+
         {now && (
           <div className="nowbar">
             <span className="now-ic">{React.createElement(ICONS[now.icon])}</span>
-            <span className="now-main">
-              {/* עוגן המיקום. המקום נשמר ב-localStorage, אז בטעינה חוזרת
-                  צריך להיות ברור מיד על איזו עיר מסתכלים — בלי לחפש את זה
-                  בפסקת הפתיחה או בשורת הקואורדינטות הקטנה */}
-              <span className="np-name">{place.name}</span>
-              <span className="now-txt">
-                <span className="now-lab">{t("nowLabel")}</span>
-                <b>{fmt(now.temp, 0)}°</b>
-                {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
-                  <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
-                )}
-              </span>
+            <span className="now-txt">
+              <span className="now-lab">{t("nowLabel")}</span>
+              <b>{fmt(now.temp, 0)}°</b>
+              {typeof now.feels === "number" && Math.round(now.feels) !== Math.round(now.temp) && (
+                <em>{t("nowFeels", { v: fmt(now.feels, 0) })}</em>
+              )}
             </span>
           </div>
         )}
@@ -2056,23 +2055,27 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .w-warn{position:absolute;top:7px;inset-inline-end:7px;width:7px;height:7px;border-radius:50%;background:var(--warm)}
 
 /* עכשיו + התרעת השעה הקרובה */
-/* גריד ולא flex: עם 1fr auto 1fr העמודה האמצעית יושבת תמיד בדיוק על
-   מרכז הכרטיס, ולכן בלוק הטקסט לא זז כשהשם מתחלף או כש"מרגיש כמו"
-   נעלם. ב-flex האייקון היה חלק מהקבוצה הממורכזת והסיט את הטקסט
-   בחצי רוחבו — היסט שהשתנה עם כל שינוי רוחב. */
-.nowbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
+/* flex ולא grid: הגריד 1fr auto 1fr מרכז את עמודת הטקסט בלבד, והאייקון
+   תלוי מחוצה לה — כך שהקבוצה הנראית יצאה מוסטת בחצי רוחב האייקון והמרווח
+   (55px נמדדו). הוא נדרש רק כשהשם ישב כאן והבלוק היה דו-שורתי; מאז שהשם
+   עבר ל-.placebar זו שורה אחת, ומירכוז הקבוצה כולה הוא הנכון. */
+.nowbar{display:flex;align-items:center;justify-content:center;gap:12px;
   margin-bottom:10px;
-  background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:11px 15px}
+  background:var(--panel);border:1px solid var(--rule2);
+  border-radius:0 0 14px 14px;padding:11px 15px}
 /* הגודל נקבע כשהכרטיס היה שורה אחת. מאז הבלוק גדל לשתי שורות (61px
    בדסקטופ, 57 במובייל) והאייקון נשאר קטן ביחס. 52/44 עדיין נמוך מגובה
    הבלוק, ולכן ההגדלה לא מוסיפה ולו פיקסל לגובה הכרטיס. */
-.now-ic{width:52px;height:52px;justify-self:end}
+.now-ic{width:52px;height:52px;flex:none}
 .now-ic svg,.soon-ic svg{width:100%;height:100%;display:block}
-/* השם מיושר לקצה ההתחלה של השורה — כלומר למילה "עכשיו", ומתהפך עם
-   השפה. כל ניסיון למרכז אותו מול המספר נכשל: מירכוז שתי שורות ברוחבים
-   שונים משנן את קצה ההתחלה, והשיניון משתנה עם אורך שם העיר. */
-.now-main{display:flex;flex-direction:column;align-items:start;gap:6px;min-width:0}
-.np-name{font-size:14.5px;font-weight:600;color:var(--text)}
+/* שורה משלו מעל "עכשיו", מחוברת אליה לכרטיס אחד (בלי בורדר תחתון ובלי
+   מרווח). כשהשם ישב בתוך שורת "עכשיו" הוא נאלץ להתיישר מול משהו — המספר,
+   המילה "עכשיו", או מרכז הבלוק — וכל בחירה הזיזה משהו אחר. בשורה משלו
+   אין מול מה להתיישר והמירכוז פשוט עובד. */
+.placebar{margin-bottom:0;padding:11px 15px;text-align:center;
+  background:var(--panel);border:1px solid var(--rule2);border-bottom:0;
+  border-radius:14px 14px 0 0;
+  font-size:19px;font-weight:700;color:var(--text)}
 .now-txt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .now-lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
 .now-txt b{font-size:30px;font-weight:700;line-height:1}
@@ -2385,7 +2388,8 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   .w-mm{font-size:9.5px}
   .w-bar{width:calc(100% - 8px);height:3px;margin-top:3px}
   .w-warn{width:6px;height:6px;top:4px;inset-inline-end:4px}
-  .nowbar{padding:10px 12px;gap:11px;border-radius:12px}
+  .placebar{padding:10px 12px;font-size:17px;border-radius:12px 12px 0 0}
+  .nowbar{padding:10px 12px;gap:11px;border-radius:0 0 12px 12px}
   .now-ic{width:44px;height:44px}
   .now-txt{gap:8px}
   .now-txt b{font-size:26px}
