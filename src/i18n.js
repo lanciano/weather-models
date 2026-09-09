@@ -185,6 +185,9 @@ he: {
   radarNone: "אין כיסוי מכ״ם באזור הזה. הרשת הגלובלית מכסה 150 מדינות אך לא כל שטח.",
   radarCredit: "נתוני מכ״ם: RainViewer",
   cond: { clear: "בהיר", partly: "מעונן חלקית", cloudy: "מעונן", drizzle: "טפטוף", rain: "גשם", storm: "גשם כבד", snow: "שלג" },
+  wetTitle: "יורד עכשיו בעולם",
+  wetSub: "לחצו על עיר כדי לראות את התחזית שלה",
+  wetRefresh: "ערים אחרות",
   models: {
     ecmwf_ifs025: { agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "9 ק״מ · מוגש בגריד 25 ק״מ",
       note: "המודל הגלובלי המדויק ביותר שקיים, כבר יותר מעשור ברציפות. אם מודל אחר סותר אותו, ברוב המקרים הטעות אצל האחר. חלש יותר בפירוט מקומי — הוא מכוון לתמונה הגדולה ולטווח של 3–10 ימים." },
@@ -358,6 +361,9 @@ en: {
   radarNone: "No radar coverage in this area. The global network spans 150 countries but not every location.",
   radarCredit: "Radar data by RainViewer",
   cond: { clear: "Clear", partly: "Partly cloudy", cloudy: "Cloudy", drizzle: "Drizzle", rain: "Rain", storm: "Heavy rain", snow: "Snow" },
+  wetTitle: "Falling right now",
+  wetSub: "Tap a city to see its forecast",
+  wetRefresh: "Other cities",
   models: {
     ecmwf_ifs025: { agency: "European Centre for Medium-Range Weather Forecasts", home: "Reading, England · Bologna, Italy", grid: "9 km · served on a 25 km grid",
       note: "The most accurate global model in existence, and has been for over a decade. When another model contradicts it, the error is usually the other one's. Weaker on local detail — it aims at the big picture and the 3–10 day range." },
@@ -531,6 +537,9 @@ ru: {
   radarNone: "В этом районе нет радарного покрытия. Глобальная сеть охватывает 150 стран, но не каждую точку.",
   radarCredit: "Радарные данные: RainViewer",
   cond: { clear: "Ясно", partly: "Переменная облачность", cloudy: "Облачно", drizzle: "Морось", rain: "Дождь", storm: "Сильный дождь", snow: "Снег" },
+  wetTitle: "Идёт прямо сейчас",
+  wetSub: "Нажмите на город, чтобы увидеть прогноз",
+  wetRefresh: "Другие города",
   models: {
     ecmwf_ifs025: { agency: "Европейский центр среднесрочных прогнозов погоды", home: "Рединг, Англия · Болонья, Италия", grid: "9 км · выдаётся на сетке 25 км",
       note: "Самая точная глобальная модель из существующих, и остаётся такой уже больше десяти лет. Если другая модель ей противоречит, ошибка обычно у неё. Слабее в локальных деталях — она нацелена на общую картину и диапазон 3–10 дней." },
@@ -704,6 +713,9 @@ es: {
   radarNone: "No hay cobertura de radar en esta zona. La red global cubre 150 países, pero no cada punto.",
   radarCredit: "Datos de radar: RainViewer",
   cond: { clear: "Despejado", partly: "Parcialmente nuboso", cloudy: "Nuboso", drizzle: "Llovizna", rain: "Lluvia", storm: "Lluvia fuerte", snow: "Nieve" },
+  wetTitle: "Cayendo ahora mismo",
+  wetSub: "Toca una ciudad para ver su pronóstico",
+  wetRefresh: "Otras ciudades",
   models: {
     ecmwf_ifs025: { agency: "Centro Europeo de Predicción Meteorológica a Plazo Medio", home: "Reading, Inglaterra · Bolonia, Italia", grid: "9 km · servido en malla de 25 km",
       note: "El modelo global más preciso que existe, y lo es desde hace más de una década. Cuando otro modelo lo contradice, el error suele estar en el otro. Más flojo en el detalle local: apunta al cuadro general y al rango de 3 a 10 días." },
@@ -877,6 +889,9 @@ fr: {
   radarNone: "Pas de couverture radar dans cette zone. Le réseau mondial couvre 150 pays, mais pas chaque point.",
   radarCredit: "Données radar : RainViewer",
   cond: { clear: "Dégagé", partly: "Partiellement nuageux", cloudy: "Nuageux", drizzle: "Bruine", rain: "Pluie", storm: "Fortes pluies", snow: "Neige" },
+  wetTitle: "Il tombe en ce moment",
+  wetSub: "Touchez une ville pour voir sa prévision",
+  wetRefresh: "Autres villes",
   models: {
     ecmwf_ifs025: { agency: "Centre européen pour les prévisions météorologiques à moyen terme", home: "Reading, Angleterre · Bologne, Italie", grid: "9 km · fourni sur une grille de 25 km",
       note: "Le modèle global le plus précis qui existe, et cela depuis plus de dix ans. Quand un autre modèle le contredit, l'erreur vient le plus souvent de l'autre. Plus faible sur le détail local : il vise la vue d'ensemble et l'échéance de 3 à 10 jours." },
@@ -1050,6 +1065,9 @@ ar: {
   radarNone: "لا تغطية رادارية في هذه المنطقة. الشبكة العالمية تغطي 150 دولة لكن ليس كل موقع.",
   radarCredit: "بيانات الرادار: RainViewer",
   cond: { clear: "صحو", partly: "غائم جزئيًا", cloudy: "غائم", drizzle: "رذاذ", rain: "مطر", storm: "مطر غزير", snow: "ثلج" },
+  wetTitle: "يهطل الآن",
+  wetSub: "اضغط على مدينة لعرض توقعاتها",
+  wetRefresh: "مدن أخرى",
   models: {
     ecmwf_ifs025: { agency: "المركز الأوروبي للتنبؤات الجوية متوسطة المدى", home: "ريدينغ، إنجلترا · بولونيا، إيطاليا", grid: "9 كم · يُقدَّم على شبكة 25 كم",
       note: "أدقّ نموذج عالمي موجود، ومنذ أكثر من عقد. حين يخالفه نموذج آخر، يكون الخطأ عند الآخر في الغالب. أضعف في التفصيل المحلي — فهو موجّه للصورة الكبرى ولمدى 3 إلى 10 أيام." },

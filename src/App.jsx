@@ -786,6 +786,12 @@ function Weather({ lang, setLang }) {
         </div>
       </header>
 
+      {/* ── מי רטוב עכשיו בעולם ── */}
+      <WetNow unitT={unitT} onPick={(p) => {
+        setPlace(p);
+        setQuery(""); setResults([]); setDaySel(0); setPage(0); setScope("week");
+      }} />
+
       {/* ── week strip ── */}
       <section className="week">
         {loading && <div className="wload">{t("loading")}</div>}
@@ -1297,6 +1303,151 @@ function TileGrid({ url, cols, rows, x0, y0, left, top, opacity, cls }) {
   }
   return <div className={cls} style={{ position: "absolute", inset: 0, opacity }}>{out}</div>;
 }
+
+/* ערים לפאנל "יורד עכשיו" — פרושות על קווי רוחב ואורך כדי שתמיד
+   יהיה מקום רטוב אי-שם. שם, קוד מדינה, קו רוחב, קו אורך. */
+const WORLD = [
+  ["Reykjavik","Iceland",64.15,-21.94], ["Torshavn","Faroe Islands",62.01,-6.77], ["Bergen","Norway",60.39,5.32],
+  ["Oslo","Norway",59.91,10.75], ["Stockholm","Sweden",59.33,18.07], ["Helsinki","Finland",60.17,24.94],
+  ["Tallinn","Estonia",59.44,24.75], ["Riga","Latvia",56.95,24.11], ["Vilnius","Lithuania",54.69,25.28],
+  ["Copenhagen","Denmark",55.68,12.57], ["Dublin","Ireland",53.35,-6.26], ["Glasgow","United Kingdom",55.86,-4.25],
+  ["Manchester","United Kingdom",53.48,-2.24], ["London","United Kingdom",51.51,-0.13], ["Amsterdam","Netherlands",52.37,4.9],
+  ["Brussels","Belgium",50.85,4.35], ["Hamburg","Germany",53.55,9.99], ["Berlin","Germany",52.52,13.4],
+  ["Munich","Germany",48.14,11.58], ["Zurich","Switzerland",47.37,8.54], ["Vienna","Austria",48.21,16.37],
+  ["Prague","Czechia",50.08,14.44], ["Warsaw","Poland",52.23,21.01], ["Budapest","Hungary",47.5,19.04],
+  ["Bucharest","Romania",44.43,26.1], ["Kyiv","Ukraine",50.45,30.52], ["Minsk","Belarus",53.9,27.57],
+  ["Moscow","Russia",55.76,37.62], ["St Petersburg","Russia",59.93,30.34], ["Kazan","Russia",55.79,49.11],
+  ["Novosibirsk","Russia",55.03,82.92], ["Vladivostok","Russia",43.12,131.89], ["Paris","France",48.86,2.35],
+  ["Lyon","France",45.76,4.84], ["Milan","Italy",45.46,9.19], ["Rome","Italy",41.9,12.5],
+  ["Naples","Italy",40.85,14.27], ["Barcelona","Spain",41.39,2.17], ["Madrid","Spain",40.42,-3.7],
+  ["Lisbon","Portugal",38.72,-9.14], ["Porto","Portugal",41.15,-8.61], ["Athens","Greece",37.98,23.73],
+  ["Istanbul","Türkiye",41.01,28.98], ["Ankara","Türkiye",39.93,32.86], ["Tbilisi","Georgia",41.72,44.79],
+  ["Baku","Azerbaijan",40.41,49.87], ["Tehran","Iran",35.69,51.39], ["Dubai","United Arab Emirates",25.2,55.27],
+  ["Karachi","Pakistan",24.86,67.0], ["Lahore","Pakistan",31.55,74.34], ["Delhi","India",28.61,77.21],
+  ["Mumbai","India",19.08,72.88], ["Kolkata","India",22.57,88.36], ["Chennai","India",13.08,80.27],
+  ["Bengaluru","India",12.97,77.59], ["Kathmandu","Nepal",27.72,85.32], ["Dhaka","Bangladesh",23.81,90.41],
+  ["Colombo","Sri Lanka",6.93,79.86], ["Yangon","Myanmar",16.87,96.2], ["Bangkok","Thailand",13.76,100.5],
+  ["Hanoi","Vietnam",21.03,105.85], ["Ho Chi Minh City","Vietnam",10.82,106.63], ["Phnom Penh","Cambodia",11.56,104.92],
+  ["Kuala Lumpur","Malaysia",3.14,101.69], ["Singapore","Singapore",1.35,103.82], ["Jakarta","Indonesia",-6.21,106.85],
+  ["Bali","Indonesia",-8.65,115.22], ["Manila","Philippines",14.6,120.98], ["Hong Kong","Hong Kong",22.32,114.17],
+  ["Taipei","Taiwan",25.03,121.57], ["Guangzhou","China",23.13,113.26], ["Shanghai","China",31.23,121.47],
+  ["Chengdu","China",30.57,104.07], ["Beijing","China",39.9,116.41], ["Seoul","South Korea",37.57,126.98],
+  ["Tokyo","Japan",35.68,139.69], ["Osaka","Japan",34.69,135.5], ["Sapporo","Japan",43.06,141.35],
+  ["Sydney","Australia",-33.87,151.21], ["Melbourne","Australia",-37.81,144.96], ["Brisbane","Australia",-27.47,153.03],
+  ["Perth","Australia",-31.95,115.86], ["Darwin","Australia",-12.46,130.84], ["Auckland","New Zealand",-36.85,174.76],
+  ["Wellington","New Zealand",-41.29,174.78], ["Suva","Fiji",-18.14,178.44], ["Nairobi","Kenya",-1.29,36.82],
+  ["Kampala","Uganda",0.35,32.58], ["Addis Ababa","Ethiopia",9.03,38.74], ["Dar es Salaam","Tanzania",-6.79,39.21],
+  ["Kinshasa","DR Congo",-4.44,15.27], ["Lagos","Nigeria",6.52,3.38], ["Abuja","Nigeria",9.06,7.49],
+  ["Accra","Ghana",5.6,-0.19], ["Abidjan","Côte d'Ivoire",5.36,-4.01], ["Dakar","Senegal",14.72,-17.47],
+  ["Douala","Cameroon",4.05,9.77], ["Libreville","Gabon",0.42,9.47], ["Antananarivo","Madagascar",-18.88,47.51],
+  ["Cape Town","South Africa",-33.92,18.42], ["Johannesburg","South Africa",-26.2,28.05], ["Maputo","Mozambique",-25.97,32.57],
+  ["Cairo","Egypt",30.04,31.24], ["Casablanca","Morocco",33.57,-7.59], ["Anchorage","United States",61.22,-149.9],
+  ["Vancouver","Canada",49.28,-123.12], ["Calgary","Canada",51.05,-114.07], ["Winnipeg","Canada",49.9,-97.14],
+  ["Toronto","Canada",43.65,-79.38], ["Montreal","Canada",45.5,-73.57], ["Halifax","Canada",44.65,-63.58],
+  ["Seattle","United States",47.61,-122.33], ["Portland","United States",45.52,-122.68], ["San Francisco","United States",37.77,-122.42],
+  ["Los Angeles","United States",34.05,-118.24], ["Denver","United States",39.74,-104.98], ["Chicago","United States",41.88,-87.63],
+  ["Houston","United States",29.76,-95.37], ["New Orleans","United States",29.95,-90.07], ["Atlanta","United States",33.75,-84.39],
+  ["Miami","United States",25.76,-80.19], ["New York","United States",40.71,-74.01], ["Boston","United States",42.36,-71.06],
+  ["Mexico City","Mexico",19.43,-99.13], ["Guatemala City","Guatemala",14.63,-90.51], ["San Jose","Costa Rica",9.93,-84.08],
+  ["Panama City","Panama",8.98,-79.52], ["Havana","Cuba",23.11,-82.37], ["San Juan","Puerto Rico",18.47,-66.11],
+  ["Bogota","Colombia",4.71,-74.07], ["Medellin","Colombia",6.24,-75.57], ["Caracas","Venezuela",10.49,-66.88],
+  ["Quito","Ecuador",-0.18,-78.47], ["Lima","Peru",-12.05,-77.04], ["La Paz","Bolivia",-16.5,-68.15],
+  ["Manaus","Brazil",-3.12,-60.02], ["Belem","Brazil",-1.46,-48.5], ["Brasilia","Brazil",-15.79,-47.88],
+  ["Sao Paulo","Brazil",-23.55,-46.63], ["Rio de Janeiro","Brazil",-22.91,-43.17], ["Montevideo","Uruguay",-34.9,-56.16],
+  ["Buenos Aires","Argentina",-34.6,-58.38], ["Santiago","Chile",-33.45,-70.67], ["Ushuaia","Argentina",-54.8,-68.3],
+];
+
+/* קודי WMO של משקעים בפועל — טפטוף, גשם, ממטרים, שלג וסופות */
+const WET_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67,
+  71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99]);
+
+const shuffled = (a) => {
+  const s = [...a];
+  for (let i = s.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [s[i], s[j]] = [s[j], s[i]];
+  }
+  return s;
+};
+
+/** איפה יורד גשם או שלג ברגע זה. דגימה אקראית של ערים בבקשה מרובת
+ *  קואורדינטות אחת, סינון לפי קוד WMO, וחמש מתוך הפגיעות. */
+function WetNow({ onPick, unitT }) {
+  const { t } = useI18n();
+  const [rows, setRows] = useState(null);
+  const [nonce, setNonce] = useState(0);
+
+  useEffect(() => {
+    let dead = false;
+    (async () => {
+      setRows(null);
+      try {
+        /* מדגם אקראי בכל טעינה — גם הבקשה קלה יותר וגם הערים משתנות */
+        const pick = shuffled(WORLD).slice(0, 100);
+        const lats = pick.map((c) => c[2]).join(",");
+        const lons = pick.map((c) => c[3]).join(",");
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
+          "&current=weather_code,temperature_2m,is_day&forecast_days=1");
+        const j = await r.json();
+        if (dead) return;
+        const arr = Array.isArray(j) ? j : [j];
+        const wet = [];
+        pick.forEach((c, i) => {
+          const cur = arr[i]?.current;
+          if (cur && WET_CODES.has(cur.weather_code)) {
+            wet.push({ name: c[0], cc: c[1], lat: c[2], lon: c[3],
+              code: cur.weather_code, temp: cur.temperature_2m, day: cur.is_day });
+          }
+        });
+        setRows(shuffled(wet).slice(0, 5));
+      } catch { if (!dead) setRows([]); }
+    })();
+    return () => { dead = true; };
+  }, [nonce]);
+
+  if (rows && !rows.length) return null;
+
+  return (
+    <section className="wet">
+      <div className="wet-head">
+        <h2>{t("wetTitle")}</h2>
+        <span className="sub">{t("wetSub")}</span>
+        <button className="wet-again" onClick={() => setNonce((n) => n + 1)}
+          disabled={!rows} title={t("wetRefresh")} aria-label={t("wetRefresh")}>
+          <Refresh />
+        </button>
+      </div>
+      <div className="wet-row">
+        {!rows && <span className="wet-load">{t("loading")}</span>}
+        {rows?.map((r) => {
+          const ic = nightIcon(wmoIcon(r.code), r.day);
+          const Ic = ICONS[ic];
+          return (
+            <button key={`${r.name}-${r.lat}`} className="wet-chip"
+              title={t(`cond.${ic.replace("-night", "")}`)}
+              onClick={() => onPick({ name: r.name, region: r.cc, lat: r.lat, lon: r.lon })}>
+              <span className="wet-ic"><Ic /></span>
+              <span className="wet-txt">
+                <span className="wet-n">{r.name}</span>
+                {/* האייקון כבר נושא את סוג המשקעים, אז השורה השנייה עונה
+                    על "איפה" — שם המדינה עוזר בערים פחות מוכרות */}
+                <span className="wet-c">{r.cc}</span>
+              </span>
+              <span className="wet-t">{fmt(toT(r.temp, unitT), 0)}°</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+const Refresh = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12a9 9 0 1 1-2.6-6.4" /><path d="M21 3v6h-6" />
+  </svg>
+);
 
 function Radar({ place }) {
   const { t, dir, locale } = useI18n();
@@ -2013,6 +2164,32 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .res-t{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .rn{display:block;font-size:14.5px;font-weight:500}
 .rr{display:block;font-size:12px;color:var(--muted);font-weight:300}
+/* פאנל "יורד עכשיו". צ'יפים בשורה נגללת ולא רשימה אנכית, כדי שהוא לא
+   ידחוף את מזג האוויר של המשתמש עצמו אל מתחת לקיפול. */
+.wet{margin:0 0 14px}
+.wet-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.wet-head h2{font-size:15px;font-weight:600;margin:0}
+.wet-head .sub{font-size:12px;color:var(--muted);font-weight:300}
+.wet-again{margin-inline-start:auto;width:26px;height:26px;flex:none;padding:4px;
+  background:none;border:0;color:var(--muted);border-radius:7px;transition:.15s}
+.wet-again:hover:not(:disabled){color:var(--sky);background:var(--panel2)}
+.wet-again:disabled{opacity:.4}
+.wet-again svg{width:100%;height:100%;display:block}
+.wet-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;
+  scrollbar-width:none;-ms-overflow-style:none}
+.wet-row::-webkit-scrollbar{display:none}
+.wet-load{font-size:12.5px;color:var(--muted);font-weight:300;padding:6px 2px}
+.wet-chip{display:flex;align-items:center;gap:8px;flex:none;
+  background:var(--panel);border:1px solid var(--rule2);border-radius:12px;
+  padding:7px 11px 7px 8px;text-align:start;transition:.15s}
+.wet-chip:hover{border-color:var(--sky);background:var(--panel2)}
+.wet-ic{width:30px;height:30px;flex:none}
+.wet-ic svg{width:100%;height:100%;display:block}
+.wet-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.wet-n{font-size:13.5px;font-weight:500;white-space:nowrap}
+.wet-c{font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap}
+.wet-t{font-size:14px;font-weight:600;color:var(--dim);font-variant-numeric:tabular-nums;
+  margin-inline-start:2px}
 .coords{margin-top:9px;font-size:12px;color:var(--muted);font-weight:300;
   display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .geo{background:none;border:0;padding:0;font-size:12px;color:var(--sky);font-weight:500;
