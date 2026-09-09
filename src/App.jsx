@@ -1419,6 +1419,27 @@ const WET_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67,
    מעבר לחמש שמוצגות, אבל בקשה קלה בהרבה על המכסה */
 const WET_SAMPLE = 60, WET_TTL = 10 * 60 * 1000, WET_KEY = "wx-wet";
 
+/** משאיר רק ערים שהאריח שלהן ב-RainViewer אינו ריק, כלומר יש שם מכ״ם.
+ *  נכשל בשקט אל תוך הרשימה המקורית — עדיף להציג ערים מאשר פאנל ריק. */
+async function withRadar(cities) {
+  try {
+    const meta = await (await fetch("https://api.rainviewer.com/public/weather-maps.json")).json();
+    const host = meta.host || "https://tilecache.rainviewer.com";
+    const frame = (meta.radar?.past || []).slice(-1)[0];
+    if (!frame) return cities;
+    const hits = await Promise.all(cities.map(async (c) => {
+      try {
+        const x = wrapX(Math.floor(lonToTile(c.lon, RADAR_Z)), RADAR_Z);
+        const y = Math.floor(latToTile(c.lat, RADAR_Z));
+        const r = await fetch(`${host}${frame.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`);
+        return (await r.blob()).size > EMPTY_TILE;
+      } catch { return true; }
+    }));
+    const kept = cities.filter((_, i) => hits[i]);
+    return kept.length ? kept : cities;
+  } catch { return cities; }
+}
+
 const shuffled = (a) => {
   const s = [...a];
   for (let i = s.length - 1; i > 0; i--) {
@@ -1469,7 +1490,13 @@ function WetNow({ onPick, unitT }) {
               code: cur.weather_code, temp: cur.temperature_2m, day: cur.is_day });
           }
         });
-        const five = shuffled(wet).slice(0, 6);
+        /* מסננים ערים שאין עליהן כיסוי מכ״ם, כדי שלחיצה על עיר מהפאנל
+           לא תוביל למפה ריקה. כאן די בפריים אחד — בניגוד לבדיקה שבמכ״ם
+           עצמו — כי אלה ערים שיורד בהן גשם ברגע זה, ולכן אם יש כיסוי הוא
+           חייב להראות משהו. אריח ריק כאן פירושו היעדר מכ״ם, לא היעדר גשם. */
+        const covered = await withRadar(shuffled(wet).slice(0, 14));
+        const five = covered.slice(0, 6);
+        if (dead) return;
         setRows(five);
         try { localStorage.setItem(WET_KEY, JSON.stringify({ at: Date.now(), rows: five })); }
         catch { /* private mode */ }
@@ -1605,26 +1632,30 @@ function Radar({ place, theme }) {
     return best;
   }, [frames]);
 
-  /* אריח ריק לגמרי מ-RainViewer שוקל בדיוק 334 בייט. אזור שיש בו מכ״ם
-     אבל אין גשם עדיין מחזיר מאות בייטים של החזרים חלשים (נמדד: פולין
-     יבשה 782, סקוטלנד 2045), ולכן הגודל מבדיל בין "אין גשם" לבין "אין
-     מכ״ם". RainViewer לא חושף מפת כיסוי בשום צורה אחרת, ובלי זה מפה
-     ריקה בפטגוניה או במזרח אפריקה נקראת בטעות כ"לא יורד כלום". */
+  /* אריח ריק לגמרי מ-RainViewer שוקל בדיוק 334 בייט, ולכן הגודל מבדיל
+     בין "יש מכ״ם" ל"אין מכ״ם" — RainViewer לא חושף מפת כיסוי בשום צורה
+     אחרת. אבל חובה לדגום את כל הלולאה ולא פריים בודד: נמדד שאתונה
+     וליסבון מחזירות נתונים ב-1 מתוך 13 פריימים בלבד, כלומר בדיקת פריים
+     אחד הייתה מכריזה עליהן "ללא כיסוי" ברוב הזמן. מוסקבה, ניירובי,
+     מנילה ואושוואיה הן 0 מתוך 13 — שם באמת אין מכ״ם. */
   useEffect(() => {
     if (!host || !frames?.length) return;
     let dead = false;
     (async () => {
-      try {
-        const f = frames[nowIdx] || frames[frames.length - 1];
-        const x = wrapX(Math.floor(lonToTile(place.lon, RADAR_Z)), RADAR_Z);
-        const y = Math.floor(latToTile(place.lat, RADAR_Z));
-        const r = await fetch(`${host}${f.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`);
-        const b = await r.blob();
-        if (!dead) setBare(b.size <= EMPTY_TILE);
-      } catch { if (!dead) setBare(false); }
+      const x = wrapX(Math.floor(lonToTile(place.lon, RADAR_Z)), RADAR_Z);
+      const y = Math.floor(latToTile(place.lat, RADAR_Z));
+      const sizes = await Promise.all(frames.map(async (f) => {
+        try {
+          const r = await fetch(`${host}${f.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`);
+          return (await r.blob()).size;
+        } catch { return -1; }
+      }));
+      if (dead) return;
+      const seen = sizes.filter((n) => n >= 0);
+      setBare(seen.length > 0 && seen.every((n) => n <= EMPTY_TILE));
     })();
     return () => { dead = true; };
-  }, [host, frames, nowIdx, place.lat, place.lon]);
+  }, [host, frames, place.lat, place.lon]);
 
   return (
     <section className="radar">
