@@ -2646,7 +2646,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .s-ctl{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
 .s-grp{display:flex;flex-direction:column;gap:6px}
 .s-lab{font-size:12px;color:var(--muted);font-weight:500}
-.s-run{background:var(--sky);color:var(--night);border:0;border-radius:10px;padding:10px 22px;font-weight:600;font-size:14px}
+/* .wx button{color:inherit} הוא (0,1,1) ומנצח .s-run שהוא (0,1,0) —
+   ולכן הצבע נדרס. הסלקטור המקונן מעלה ל-(0,2,0) ומחזיר את השליטה. */
+.wx .s-run{background:var(--sky);color:var(--night);border:0;border-radius:10px;padding:10px 22px;font-weight:600;font-size:14px}
 .s-run:disabled{opacity:.55}
 .s-empty,.s-err,.s-note{font-size:13.5px;color:var(--muted);font-weight:300;padding:10px 0}
 .s-err{color:var(--rose)}
