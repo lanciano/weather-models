@@ -186,6 +186,8 @@ he: {
   radarCredit: "נתוני מכ״ם: RainViewer",
   cond: { clear: "בהיר", partly: "מעונן חלקית", cloudy: "מעונן", drizzle: "טפטוף", rain: "גשם", storm: "גשם כבד", snow: "שלג" },
   wetTitle: "גשם ושלג בעולם ברגע זה",
+  themeToLight: "מצב בהיר",
+  themeToDark: "מצב כהה",
   wetSub: "לחץ על עיר כדי להציג",
   wetRefresh: "ערים אחרות",
   models: {
@@ -362,6 +364,8 @@ en: {
   radarCredit: "Radar data by RainViewer",
   cond: { clear: "Clear", partly: "Partly cloudy", cloudy: "Cloudy", drizzle: "Drizzle", rain: "Rain", storm: "Heavy rain", snow: "Snow" },
   wetTitle: "Rain and snow, right now",
+  themeToLight: "Light mode",
+  themeToDark: "Dark mode",
   wetSub: "Tap a city for its forecast",
   wetRefresh: "Other cities",
   models: {
@@ -538,6 +542,8 @@ ru: {
   radarCredit: "Радарные данные: RainViewer",
   cond: { clear: "Ясно", partly: "Переменная облачность", cloudy: "Облачно", drizzle: "Морось", rain: "Дождь", storm: "Сильный дождь", snow: "Снег" },
   wetTitle: "Дождь и снег, прямо сейчас",
+  themeToLight: "Светлая тема",
+  themeToDark: "Тёмная тема",
   wetSub: "Нажмите на город, чтобы увидеть прогноз",
   wetRefresh: "Другие города",
   models: {
@@ -714,6 +720,8 @@ es: {
   radarCredit: "Datos de radar: RainViewer",
   cond: { clear: "Despejado", partly: "Parcialmente nuboso", cloudy: "Nuboso", drizzle: "Llovizna", rain: "Lluvia", storm: "Lluvia fuerte", snow: "Nieve" },
   wetTitle: "Lluvia y nieve, ahora mismo",
+  themeToLight: "Modo claro",
+  themeToDark: "Modo oscuro",
   wetSub: "Toca una ciudad para ver su pronóstico",
   wetRefresh: "Otras ciudades",
   models: {
@@ -890,6 +898,8 @@ fr: {
   radarCredit: "Données radar : RainViewer",
   cond: { clear: "Dégagé", partly: "Partiellement nuageux", cloudy: "Nuageux", drizzle: "Bruine", rain: "Pluie", storm: "Fortes pluies", snow: "Neige" },
   wetTitle: "Pluie et neige, en ce moment",
+  themeToLight: "Mode clair",
+  themeToDark: "Mode sombre",
   wetSub: "Touchez une ville pour sa prévision",
   wetRefresh: "Autres villes",
   models: {
@@ -1066,6 +1076,8 @@ ar: {
   radarCredit: "بيانات الرادار: RainViewer",
   cond: { clear: "صحو", partly: "غائم جزئيًا", cloudy: "غائم", drizzle: "رذاذ", rain: "مطر", storm: "مطر غزير", snow: "ثلج" },
   wetTitle: "مطر وثلج، في هذه اللحظة",
+  themeToLight: "الوضع الفاتح",
+  themeToDark: "الوضع الداكن",
   wetSub: "اضغط على مدينة لعرض توقعاتها",
   wetRefresh: "مدن أخرى",
   models: {

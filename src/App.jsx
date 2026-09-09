@@ -30,7 +30,10 @@ const VAR_UNITS = { precipitation: "unitMmH", temperature_2m: "unitC", wind_spee
 
 /* ═══════════════════════ icons ═══════════════════════ */
 
-const C = { cloud: "#8397B7", dark: "#64789B", sun: "#F5C451", drop: "#57B6EF", snow: "#BFE3FF", moon: "#C9D6EF" };
+/* דרך משתנים, כי var() נפתר גם ב-presentation attribute של SVG —
+   כך האייקונים מתחלפים עם הערכה בלי קוד נוסף */
+const C = { cloud: "var(--ic-cloud)", dark: "var(--ic-cloud2)", sun: "var(--ic-sun)",
+  drop: "var(--ic-drop)", snow: "var(--ic-snow)", moon: "var(--ic-moon)" };
 
 const Cloud = ({ fill = C.cloud, y = 0 }) => (
   <g fill={fill} transform={`translate(0 ${y})`}>
@@ -270,6 +273,39 @@ export default function App() {
 
 /* ═══════════════════════ language switch ═══════════════════════ */
 
+const SunIc = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <circle cx="12" cy="12" r="4.2" />
+    {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+      const r = (a * Math.PI) / 180;
+      return <line key={a} x1={12 + Math.cos(r) * 7} y1={12 + Math.sin(r) * 7}
+        x2={12 + Math.cos(r) * 9.4} y2={12 + Math.sin(r) * 9.4} />;
+    })}
+  </svg>
+);
+const MoonIc = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 3a9 9 0 1 0 9 9 7.2 7.2 0 0 1-9-9Z" />
+  </svg>
+);
+
+/** מחליף ערכה. שני הסמלים תמיד גלויים והגלולה מחליקה ביניהם, כך שרואים
+ *  את שתי האפשרויות ולא צריך לנחש מה הכפתור יעשה. */
+function ThemeSwitch({ theme, setTheme }) {
+  const { t } = useI18n();
+  const light = theme === "light";
+  return (
+    <button className={`thm ${light ? "on" : ""}`} role="switch" aria-checked={light}
+      onClick={() => setTheme(light ? "dark" : "light")}
+      title={t(light ? "themeToDark" : "themeToLight")}
+      aria-label={t(light ? "themeToDark" : "themeToLight")}>
+      <span className="thm-knob" />
+      <span className="thm-ic thm-moon"><MoonIc /></span>
+      <span className="thm-ic thm-sun"><SunIc /></span>
+    </button>
+  );
+}
+
 function LangSwitch({ lang, setLang }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -306,6 +342,19 @@ function LangSwitch({ lang, setLang }) {
 
 function Weather({ lang, setLang }) {
   const { t, dir, dates } = useI18n();
+
+  /* כהה היא ברירת המחדל — גם כשאין ערך שמור וגם כשה-localStorage חסום */
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem("wx-theme") === "light" ? "light" : "dark"; }
+    catch { return "dark"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("wx-theme", theme); } catch { /* private */ }
+    /* גם צבע סרגל הדפדפן במובייל, לא רק הדף */
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute("content", theme === "light" ? "#F2F6FC" : "#0E1728");
+    document.documentElement.style.background = theme === "light" ? "#F2F6FC" : "#0E1728";
+  }, [theme]);
 
   const [place, setPlace] = useState(() => loadSaved() || fallbackFor(lang));
   const [locating, setLocating] = useState(false);
@@ -716,7 +765,7 @@ function Weather({ lang, setLang }) {
   }, [skill, active]);
 
   return (
-    <div dir={dir} className="wx">
+    <div dir={dir} className="wx" data-theme={theme}>
       <style>{CSS}</style>
       <div className="sky" />
 
@@ -725,7 +774,10 @@ function Weather({ lang, setLang }) {
           <span className="brand-ic"><Logo /></span>
           <span className="brand-name">{SITE_NAME}</span>
         </span>
-        <LangSwitch lang={lang} setLang={setLang} />
+        <span className="topbar-r">
+          <ThemeSwitch theme={theme} setTheme={setTheme} />
+          <LangSwitch lang={lang} setLang={setLang} />
+        </span>
       </div>
 
       <div className="eyebrow-row"><div className="eyebrow">{t("eyebrow")}</div></div>
@@ -972,16 +1024,16 @@ function Weather({ lang, setLang }) {
               <span className="chart-unit right" style={{ width: 38, color: "#F5A24B" }}>{degLabel}</span>
               <ResponsiveContainer>
                 <ComposedChart data={hourly24} margin={{ top: 10, right: 4, bottom: 0, left: 0 }} barCategoryGap="18%">
-                  <XAxis dataKey="label" reversed={dir === "rtl"} tick={{ fontSize: 11, fill: "#8FA1BC" }}
-                    axisLine={{ stroke: "#2E4166" }} tickLine={false} interval={narrow ? 3 : 2} />
-                  <YAxis yAxisId="l" domain={[0, maxYH]} width={38} tick={{ fontSize: 11, fill: "#8FA1BC" }}
+                  <XAxis dataKey="label" reversed={dir === "rtl"} tick={{ fontSize: 11, fill: "var(--muted)" }}
+                    axisLine={{ stroke: "var(--line2)" }} tickLine={false} interval={narrow ? 3 : 2} />
+                  <YAxis yAxisId="l" domain={[0, maxYH]} width={38} tick={{ fontSize: 11, fill: "var(--muted)" }}
                     axisLine={false} tickLine={false} />
                   <YAxis yAxisId="r" orientation="right" domain={["auto", "auto"]} width={38}
                     tick={{ fontSize: 11, fill: "#F5A24B" }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: "#FFFFFF", fillOpacity: 0.05 }} offset={54}
+                  <Tooltip cursor={{ fill: "var(--pure)", fillOpacity: 0.05 }} offset={54}
                     content={<HourTip narrow={narrow} onHover={setHHover} />} />
                   <Bar yAxisId="l" dataKey="med" stackId="p" fill="#5AB3F0" animationDuration={700} />
-                  <Bar yAxisId="l" dataKey="extra" stackId="p" fill="#9BB6E8" fillOpacity={0.28}
+                  <Bar yAxisId="l" dataKey="extra" stackId="p" fill="var(--ink2)" fillOpacity={0.28}
                     radius={[4, 4, 0, 0]} isAnimationActive={false} />
                   <Line yAxisId="r" dataKey="feels" stroke="#F5A24B" strokeWidth={1.4} dot={false}
                     strokeDasharray="4 3" strokeOpacity={0.65} activeDot={false}
@@ -1014,7 +1066,7 @@ function Weather({ lang, setLang }) {
         </section>
       )}
 
-      <Radar place={place} />
+      <Radar place={place} theme={theme} />
 
       {/* ── pens ── */}
       <section className="pens">
@@ -1026,7 +1078,7 @@ function Weather({ lang, setLang }) {
             return (
               <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on} className={`pen ${on ? "on" : ""}`}
                 style={on ? { borderColor: m.ink, color: m.ink, background: m.ink + "1A" } : undefined}>
-                <span className="nib" style={{ background: on ? m.ink : "transparent", borderColor: on ? m.ink : "#4A5A78" }} />
+                <span className="nib" style={{ background: on ? m.ink : "transparent", borderColor: on ? m.ink : "var(--faint2)" }} />
                 {m.short}
                 {win && <span className="pen-star" title={t("skillTag")}><Star /></span>}
               </button>
@@ -1105,17 +1157,17 @@ function Weather({ lang, setLang }) {
               <ComposedChart data={shown} margin={{ top: 6, right: PAD_R, bottom: 4, left: 0 }}>
                 <XAxis dataKey="i" type="number" domain={["dataMin", "dataMax"]} reversed={dir === "rtl"}
                   ticks={scope === "week" ? [] : shown.filter((r) => r.hour % 3 === 0).map((r) => r.i)}
-                  tickFormatter={(i) => trace[i]?.label || ""} tick={{ fontSize: 12, fill: "#8FA1BC" }}
-                  axisLine={{ stroke: "#2E4166" }} tickLine={false} interval={0} height={scope === "week" ? 6 : 24} />
+                  tickFormatter={(i) => trace[i]?.label || ""} tick={{ fontSize: 12, fill: "var(--muted)" }}
+                  axisLine={{ stroke: "var(--line2)" }} tickLine={false} interval={0} height={scope === "week" ? 6 : 24} />
                 <YAxis domain={variable === "precipitation" ? [0, maxY] : ["auto", "auto"]} width={PAD_L}
-                  tick={{ fontSize: 12, fill: "#8FA1BC" }} axisLine={false} tickLine={false} />
+                  tick={{ fontSize: 12, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
                 {scope === "week" && view.filter((d) => d.i % 2 === 1).map((d) => (
-                  <ReferenceArea key={d.i} x1={d.i * 24} x2={d.i * 24 + 23} fill="#FFFFFF" fillOpacity={0.028} strokeOpacity={0} />
+                  <ReferenceArea key={d.i} x1={d.i * 24} x2={d.i * 24 + 23} fill="var(--pure)" fillOpacity={0.028} strokeOpacity={0} />
                 ))}
-                {scope === "week" && view.slice(1).map((d) => <ReferenceLine key={d.i} x={d.i * 24} stroke="#2E4166" />)}
+                {scope === "week" && view.slice(1).map((d) => <ReferenceLine key={d.i} x={d.i * 24} stroke="var(--line2)" />)}
                 <Tooltip content={<ChartTip unit={unit} trace={trace} dates={dates} narrow={narrow} onHover={setHoverIdx} />}
-                  cursor={{ stroke: "#7E93B8", strokeDasharray: "3 3" }} />
-                <Area dataKey="band" stroke="none" fill="#9BB6E8" fillOpacity={0.16} isAnimationActive={false} connectNulls />
+                  cursor={{ stroke: "var(--dim2)", strokeDasharray: "3 3" }} />
+                <Area dataKey="band" stroke="none" fill="var(--ink2)" fillOpacity={0.16} isAnimationActive={false} connectNulls />
                 {active.map((m) => {
                   const win = m === leader;
                   return (
@@ -1471,7 +1523,7 @@ const Refresh = () => (
   </svg>
 );
 
-function Radar({ place }) {
+function Radar({ place, theme }) {
   const { t, dir, locale } = useI18n();
   const [frames, setFrames] = useState(null);
   const [host, setHost] = useState("");
@@ -1586,8 +1638,11 @@ function Radar({ place }) {
         <div className="radar-map" ref={wrapRef} dir="ltr">
           {grid && (
             <>
-              <TileGrid cls="rd-base" {...grid} opacity={1}
-                url={(x, y) => `https://basemaps.cartocdn.com/dark_all/${RADAR_Z}/${x}/${y}.png?key=${CARTO_KEY}`} />
+              {/* Dark Matter הפוך מהאינטואיציה — ים בהיר מיבשה — ולכן צריך שם
+                  את הטריק של sepia. ב-light_all היחס כבר נכון (ים 212 מול
+                  יבשה 250) ורק צריך להעצים את הכחול שכבר קיים במים. */}
+              <TileGrid cls={`rd-base ${theme === "light" ? "lite" : ""}`} {...grid} opacity={1}
+                url={(x, y) => `https://basemaps.cartocdn.com/${theme === "light" ? "light_all" : "dark_all"}/${RADAR_Z}/${x}/${y}.png?key=${CARTO_KEY}`} />
               {/* כל פריים נטען פעם אחת ומוחלף בשקיפות. החלפת src בכל צעד
                   הייתה מושכת את כל האריחים מחדש — ומכאן ה-429. */}
               {host && visible && frames?.map((f, k) => (
@@ -1805,7 +1860,7 @@ function TempDot({ cx, cy, payload }) {
   const above = cy > h + gap + 6;
   const y = above ? cy - gap - h : cy + gap;
   const ty = above ? cy - gap : cy + gap;
-  const ink = "#0E1728";
+  const ink = "var(--night)";
   return (
     <g style={{ pointerEvents: "none" }}>
       <circle cx={cx} cy={cy} r={5.5} fill="#F5A24B" stroke={ink} strokeWidth={2.5} />
@@ -1881,10 +1936,10 @@ function HourReadout({ row, pos }) {
         <span className="ro-chip" style={{ borderColor: "#5AB3F055" }}>
           <i style={{ background: "#5AB3F0" }} /><b style={{ color: "#5AB3F0" }}>{t("roMedian")}</b><em>{fmt(row.med)} {mm}</em>
         </span>
-        <span className="ro-chip" style={{ borderColor: "#9BB6E855" }}>
-          <i style={{ background: "#9BB6E8", opacity: 0.6 }} /><b style={{ color: "#9BB6E8" }}>{t("roWet")}</b><em>{fmt(row.max)} {mm}</em>
+        <span className="ro-chip" style={{ borderColor: "var(--ink2)55" }}>
+          <i style={{ background: "var(--ink2)", opacity: 0.6 }} /><b style={{ color: "var(--ink2)" }}>{t("roWet")}</b><em>{fmt(row.max)} {mm}</em>
         </span>
-        <span className="ro-chip" style={{ borderColor: "#8FA1BC44" }}>
+        <span className="ro-chip" style={{ borderColor: "var(--muted)44" }}>
           <b style={{ color: "var(--muted)" }}>{t("roAgree")}</b><em>{row.wet}/{row.total}</em>
         </span>
         {typeof row.snow === "number" && row.snow > 0.05 && (
@@ -2095,18 +2150,46 @@ function Scorecard({ place, models, unitT }) {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap');
 
-html,body,#root{margin:0;padding:0;min-height:100%;background:#0E1728}
+html,body,#root{margin:0;padding:0;min-height:100%;background:var(--night)}
 body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 
 .wx{
+  /* כהה — ברירת המחדל, ולא נגעתי באף ערך קיים */
   --night:#0E1728; --panel:#16223A; --panel2:#1B2942; --rule:#2A3B5A; --rule2:#22314D;
   --text:#E9EEF7; --muted:#8FA1BC; --dim:#B7C4D8;
+  --faint:#6E819F; --faint2:#4A5A78; --dim2:#7E93B8; --muted2:#8296B5; --ink2:#9BB6E8;
+  --line:#26385A; --line2:#2E4166; --line3:#42598A; --line4:#33486F; --edge:#3A507A;
+  --sel:#1C3151; --deep:#141C2B; --deep2:#101A2E; --deep3:#1C2B47; --pure:#FFFFFF;
+  --ic-cloud:#8397B7; --ic-cloud2:#64789B; --ic-sun:#F5C451;
+  --ic-drop:#57B6EF; --ic-snow:#BFE3FF; --ic-moon:#C9D6EF;
+  --shadow:rgba(0,0,0,.5);
+  /* .02 ו-.025 קורסים ל-tint-s, ו-.04 ו-.05 ל-tint: ההפרש ביניהם הוא
+     פחות מ-1.5/255 בבהירות מעל פאנל כהה, כלומר בלתי נראה */
+  --tint:rgba(255,255,255,.04); --tint-s:rgba(255,255,255,.02);
+  --veil:rgba(11,20,32,.88);
+  /* צבעי המודלים אינם כאן — הם ב-MODELS ונשארים זהים בשתי הערכות */
   --sky:#5AB3F0; --warm:#F5A24B; --mint:#6FD99A; --rose:#F27878;
   position:relative;min-height:100vh;background:var(--night);color:var(--text);
   font-family:'IBM Plex Sans Hebrew','IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;
   font-weight:400;line-height:1.6;font-variant-numeric:tabular-nums;overflow:hidden;
   padding:env(safe-area-inset-top) max(18px,env(safe-area-inset-right))
           calc(60px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
+}
+
+/* בהיר — היפוך התפקידים, לא היפוך המספרים. --text מקבל את גוון הפאנל
+   הכהה, ולכן הניגודיות והאופי נשמרים במקום להפוך לשחור-לבן גולמי. */
+.wx[data-theme="light"]{
+  --night:#F2F6FC; --panel:#FFFFFF; --panel2:#E9F0FA; --rule:#C6D5E9; --rule2:#DCE5F2;
+  --text:#16223A; --muted:#67788F; --dim:#3E5170;
+  --faint:#8494AC; --faint2:#9AA8BE; --dim2:#5B6E8C; --muted2:#6D7E96; --ink2:#2F5488;
+  --line:#D3DFEF; --line2:#C7D5E8; --line3:#B0C3DC; --line4:#BACBE0; --edge:#B7C8DE;
+  --sel:#DCE9FB; --deep:#EAF0F8; --deep2:#EEF3FA; --deep3:#E4EBF5; --pure:#16223A;
+  --ic-cloud:#8FA3C0; --ic-cloud2:#6C82A6; --ic-sun:#F0B429;
+  --ic-drop:#3A9BDC; --ic-snow:#7FB8E8; --ic-moon:#8FA6CC;
+  --shadow:rgba(22,34,58,.16);
+  --tint:rgba(22,34,58,.045); --tint-s:rgba(22,34,58,.022);
+  --veil:rgba(255,255,255,.92);
+  --sky:#2A80C4;
 }
 .wx *{box-sizing:border-box}
 .wx h1,.wx h2,.wx h3{margin:0;letter-spacing:-.02em;line-height:1.15}
@@ -2141,6 +2224,22 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   white-space:nowrap;direction:ltr}
 .eyebrow-row{max-width:1120px;margin:0 auto;padding-top:14px}
 .lang{position:relative}
+.topbar-r{display:inline-flex;align-items:center;gap:10px}
+/* הגלולה נעה בין שני הסמלים; inset-inline מטפל ב-RTL לבד */
+.thm{position:relative;display:inline-flex;align-items:center;justify-content:space-between;
+  gap:4px;width:62px;padding:4px 6px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:999px;transition:.15s;flex:none}
+.thm-knob{position:absolute;top:3px;inset-inline-start:3px;width:24px;height:24px;
+  border-radius:999px;background:var(--sel);border:1px solid var(--rule);
+  transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.thm.on .thm-knob{transform:translateX(var(--thm-shift,28px))}
+.wx[dir="rtl"] .thm.on .thm-knob,[dir="rtl"] .thm.on .thm-knob{--thm-shift:-28px}
+.thm-ic{position:relative;z-index:1;width:15px;height:15px;flex:none;transition:.15s}
+.thm-ic svg{width:100%;height:100%;display:block}
+.thm-moon{color:var(--ic-moon)}
+.thm-sun{color:var(--faint)}
+.thm.on .thm-moon{color:var(--faint)}
+.thm.on .thm-sun{color:var(--ic-sun)}
 .lang-btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
   border:1px solid var(--rule);border-radius:999px;padding:6px 14px 6px 11px;
   font-size:13px;font-weight:500;color:var(--dim);transition:.15s}
@@ -2148,15 +2247,15 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .lang-ic svg{width:100%;height:100%;display:block}
 .lang-menu{position:absolute;z-index:50;inset-inline-end:0;top:100%;margin:7px 0 0;padding:5px;
   list-style:none;min-width:186px;background:var(--panel2);border:1px solid var(--rule);
-  border-radius:11px;box-shadow:0 16px 38px rgba(0,0,0,.5)}
+  border-radius:11px;box-shadow:0 16px 38px var(--shadow)}
 .lang-menu button{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   width:100%;background:none;border:0;padding:8px 11px;border-radius:7px;text-align:start}
-.lang-menu button.on{background:#1C3151;box-shadow:0 0 0 1px var(--sky) inset}
+.lang-menu button.on{background:var(--sel);box-shadow:0 0 0 1px var(--sky) inset}
 .lm-native{font-size:14px;font-weight:500}
 .lm-flag{font-size:17px;line-height:1;flex:none}
 
 /* °C / °F */
-.utog{display:inline-flex;align-items:center;background:rgba(255,255,255,.04);
+.utog{display:inline-flex;align-items:center;background:var(--tint);
   border:1px solid var(--rule2);border-radius:999px;padding:2px;flex:none}
 .utog button{background:none;border:0;padding:2px 9px;border-radius:999px;
   font-size:11.5px;font-weight:500;color:var(--muted);line-height:1.5;transition:.15s}
@@ -2165,7 +2264,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .utog.lg{background:var(--panel);border:1px solid var(--rule);border-radius:10px;
   padding:0;overflow:hidden}
 .utog.lg button{padding:8px 15px;border-radius:0;font-size:13.5px;line-height:1.5}
-.utog.lg button.on{background:var(--sky);color:#0E1728;font-weight:600}
+.utog.lg button.on{background:var(--sky);color:var(--night);font-weight:600}
 
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
   max-width:1120px;margin:0 auto;padding:16px 0 26px;border-bottom:1px solid var(--rule)}
@@ -2181,17 +2280,17 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .srch-ic{position:absolute;top:50%;inset-inline-start:13px;transform:translateY(-50%);
   width:18px;height:18px;color:var(--sky);pointer-events:none;z-index:1}
 .srch-ic svg{width:100%;height:100%;display:block}
-.srch{width:100%;background:var(--panel2);border:1px solid #3A507A;border-radius:10px;
+.srch{width:100%;background:var(--panel2);border:1px solid var(--edge);border-radius:10px;
   padding:12px 13px;padding-inline-start:40px;padding-inline-end:36px;
   font-size:16px;font-family:inherit;color:var(--text);
   transition:.15s;-webkit-appearance:none;appearance:none}
 .srch::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
-.srch::placeholder{color:#8296B5;font-weight:400}
-.srch:focus{outline:none;border-color:var(--sky);background:#1C3151;
+.srch::placeholder{color:var(--muted2);font-weight:400}
+.srch:focus{outline:none;border-color:var(--sky);background:var(--sel);
   box-shadow:0 0 0 3px rgba(90,179,240,.16)}
 /* ממורכז ב-margin ולא ב-translateY, כדי שאנימציית הסיבוב לא תדרוס אותו */
 .srch-spin{position:absolute;top:50%;inset-inline-end:13px;width:15px;height:15px;margin-top:-7.5px;
-  border:2px solid rgba(201,214,239,.22);border-top-color:var(--sky);border-radius:50%;
+  border:2px solid var(--edge);border-top-color:var(--sky);border-radius:50%;
   opacity:0;pointer-events:none;transition:opacity .15s}
 .srch-spin.on{opacity:1;animation:srch-spin .6s linear infinite}
 @keyframes srch-spin{to{transform:rotate(360deg)}}
@@ -2201,7 +2300,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   clip-path:inset(50%);white-space:nowrap;border:0}
 .res{position:absolute;z-index:30;inset-inline:0;top:100%;margin:6px 0 0;padding:5px;list-style:none;
   background:var(--panel2);border:1px solid var(--rule);border-radius:10px;max-height:290px;overflow:auto;
-  box-shadow:0 14px 34px rgba(0,0,0,.42)}
+  box-shadow:0 14px 34px var(--shadow)}
 .res button{display:flex;align-items:center;gap:10px;width:100%;text-align:start;background:none;border:0;padding:8px 11px;border-radius:7px}
 .res-txt{flex:1;min-width:0}
 .res-wx{display:flex;align-items:center;gap:5px;flex:none;color:var(--dim)}
@@ -2256,7 +2355,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .week{max-width:1120px;margin:26px auto 0}
 .wload,.werr{font-size:13.5px;color:var(--muted);padding:10px 0}
 .werr{color:var(--rose)}
-.werr button{background:var(--sky);color:#0E1728;border:0;border-radius:7px;padding:5px 12px;font-weight:600;font-size:12.5px;margin-inline-start:8px}
+.werr button{background:var(--sky);color:var(--night);border:0;border-radius:7px;padding:5px 12px;font-weight:600;font-size:12.5px;margin-inline-start:8px}
 .week-nav{display:flex;align-items:stretch;gap:6px}
 .week-nav .wrow{flex:1;min-width:0}
 .wrow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;touch-action:pan-y}
@@ -2272,7 +2371,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   border-inline-start:2px solid var(--rule);padding-inline-start:11px}
 .wcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;
   background:var(--panel);border:1px solid var(--rule2);border-radius:12px;padding:10px 3px 9px;transition:.15s;min-width:0}
-.wcell.on{border-color:var(--sky);background:#1C3151;box-shadow:0 0 0 1px var(--sky) inset}
+.wcell.on{border-color:var(--sky);background:var(--sel);box-shadow:0 0 0 1px var(--sky) inset}
 .w-dow{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .w-dow .sm{display:none;font-style:normal}
 .w-dow .lg{font-style:normal}
@@ -2282,9 +2381,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .w-t{display:flex;gap:5px;align-items:baseline;font-size:12px;color:var(--muted)}
 .w-t b{font-size:16px;color:var(--text);font-weight:600}
 .w-t em{font-style:normal}
-.w-mm{font-size:11px;color:#6E819F;font-weight:400;white-space:nowrap}
+.w-mm{font-size:11px;color:var(--faint);font-weight:400;white-space:nowrap}
 .w-mm.wet{color:var(--sky);font-weight:600}
-.w-bar{width:calc(100% - 14px);height:4px;background:#22314D;border-radius:3px;overflow:hidden;margin-top:4px}
+.w-bar{width:calc(100% - 14px);height:4px;background:var(--rule2);border-radius:3px;overflow:hidden;margin-top:4px}
 .w-bar i{height:100%;background:var(--sky);border-radius:3px;display:block}
 .w-warn{position:absolute;top:7px;inset-inline-end:7px;width:7px;height:7px;border-radius:50%;background:var(--warm)}
 
@@ -2341,7 +2440,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .radar-panel{background:var(--panel);border:1px solid var(--rule2);border-radius:14px;
   padding:12px 12px 10px}
 .radar-map{position:relative;width:100%;height:320px;overflow:hidden;border-radius:10px;
-  background:#141C2B;isolation:isolate}
+  background:var(--deep);isolation:isolate}
 .radar-map img{user-select:none;-webkit-user-drag:none}
 /* Dark Matter כהה מאוד מלכתחילה — מבהירים כדי שהיבשה והתוויות ייקראו */
 /* Dark Matter הוא מונוכרום מוחלט: יבשה rgb(9,9,9) וים rgb(38,38,38), R=G=B
@@ -2351,13 +2450,14 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .rd-base{filter:brightness(1.30) contrast(.95) sepia(1) hue-rotate(188deg) saturate(2.4)}
 .rd-fall{filter:saturate(1.25) contrast(1.1);transition:opacity .18s linear}
 .rd-pin{position:absolute;top:50%;left:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
-  border-radius:50%;background:var(--warm);box-shadow:0 0 0 2.5px #0E1728,0 0 0 4px rgba(245,162,75,.45);z-index:3}
+  border-radius:50%;background:var(--warm);box-shadow:0 0 0 2.5px var(--night),0 0 0 4px rgba(245,162,75,.45);z-index:3}
 .rd-veil{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
-  text-align:center;padding:20px;background:rgba(11,20,32,.86);font-size:13.5px;color:var(--muted);
+  text-align:center;padding:20px;background:var(--veil);font-size:13.5px;color:var(--muted);
   font-weight:300;line-height:1.6}
+.rd-base.lite{filter:saturate(3.4) contrast(1.06) brightness(.99)}
 .rd-nocov{position:absolute;z-index:4;inset-inline:10px;bottom:10px;
   padding:9px 12px;border-radius:10px;text-align:center;
-  background:rgba(11,20,32,.9);border:1px solid var(--rule2);
+  background:var(--veil);border:1px solid var(--rule2);
   font-size:12.5px;color:var(--dim);font-weight:300;line-height:1.5}
 .radar-ctl{display:flex;align-items:center;gap:12px;padding:11px 4px 4px}
 .rd-play{width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;
@@ -2370,13 +2470,13 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .rd-time.soon{color:var(--sky)}
 .rd-time.soon em{color:var(--sky)}
 .radar-credit{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 4px 2px;
-  border-top:1px solid var(--rule2);margin-top:6px;font-size:11px;color:#6E819F;font-weight:300}
-.radar-credit a{color:#6E819F;text-decoration:underline;text-underline-offset:2px}
+  border-top:1px solid var(--rule2);margin-top:6px;font-size:11px;color:var(--faint);font-weight:300}
+.radar-credit a{color:var(--faint);text-decoration:underline;text-underline-offset:2px}
 /* tiles */
 .cond-wrap{margin-top:18px;border-top:1px solid var(--rule2);padding-top:14px}
 .cond-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .cond-title{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em}
-.cond-elev{font-size:11.5px;color:#6E819F;font-weight:300}
+.cond-elev{font-size:11.5px;color:var(--faint);font-weight:300}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
 .tile{background:var(--panel2);border:1px solid var(--rule2);border-radius:11px;
   padding:10px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -2398,7 +2498,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .d-verdict{display:flex;flex-direction:column;gap:2px;text-align:end;min-width:200px;max-width:320px}
 .d-verdict b{font-size:16px}
 .d-verdict span{font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.5}
-.v-high b{color:var(--mint)} .v-mid b{color:var(--warm)} .v-split b{color:var(--rose)} .v-dry b{color:#6E819F}
+.v-high b{color:var(--mint)} .v-mid b{color:var(--warm)} .v-split b{color:var(--rose)} .v-dry b{color:var(--faint)}
 .d-scale{margin-top:16px}
 .d-chips:first-child{margin-top:0}
 .d-track{position:relative;height:16px;border-bottom:1px solid var(--rule)}
@@ -2406,7 +2506,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .d-nums{display:flex;justify-content:space-between;margin-top:6px;font-size:11.5px;color:var(--muted);font-weight:300}
 .d-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .d-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid;border-radius:999px;
-  padding:4px 11px;font-size:12.5px;background:rgba(255,255,255,.02)}
+  padding:4px 11px;font-size:12.5px;background:var(--tint-s)}
 .d-chip i{width:7px;height:7px;border-radius:50%;flex:none}
 .d-chip b{font-weight:600}
 .d-chip em{font-style:normal;color:var(--dim);font-weight:300}
@@ -2419,12 +2519,12 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .pens h2{font-size:24px}
 .pen-row{display:flex;flex-wrap:wrap;gap:8px}
 .pen{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--rule);
-  color:#6E819F;padding:7px 15px;border-radius:999px;font-size:13.5px;font-weight:500;transition:.15s}
+  color:var(--faint);padding:7px 15px;border-radius:999px;font-size:13.5px;font-weight:500;transition:.15s}
 .nib{width:9px;height:9px;border-radius:999px;border:1.5px solid;display:inline-block}
 .pen-star{width:11px;height:11px;display:block;flex:none;margin-inline-start:-2px}
 .pen-star svg,.sk-star svg,.chip-star svg{width:100%;height:100%;display:block}
 .chip-star{width:9px;height:9px;display:block;flex:none;margin-inline-start:-2px}
-.d-chip.lead{background:rgba(255,255,255,.05)}
+.d-chip.lead{background:var(--tint)}
 .skill{display:flex;align-items:flex-start;gap:9px;margin-top:12px;
   font-size:13px;color:var(--dim);font-weight:300;line-height:1.6;max-width:74ch}
 .skill.thin{color:var(--muted);font-size:12.5px}
@@ -2436,15 +2536,15 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .gbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .vars{display:flex;background:var(--panel);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
 .vtab{background:transparent;border:0;padding:8px 15px;font-size:13.5px;color:var(--muted);font-weight:500;white-space:nowrap}
-.vtab.on{background:var(--sky);color:#0E1728;font-weight:600}
+.vtab.on{background:var(--sky);color:var(--night);font-weight:600}
 .panel{position:relative;background:var(--panel);border:1px solid var(--rule2);border-radius:14px;padding:10px 12px 0}
 /* שורת הימים תמיד מוצגת — הימים נראים כמו כפתורים, ומתחת שורה שלעולם לא ריקה */
 .daystrip{margin-bottom:8px}
 .bands{display:flex;gap:5px}
 .band{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
-  background:rgba(255,255,255,.025);border:1px solid var(--rule2);
+  background:var(--tint-s);border:1px solid var(--rule2);
   border-radius:10px;padding:8px 2px;transition:.15s;min-width:0;cursor:pointer}
-.band.on{background:#22314D;border-color:var(--sky);box-shadow:0 0 0 1px var(--sky) inset}
+.band.on{background:var(--rule2);border-color:var(--sky);box-shadow:0 0 0 1px var(--sky) inset}
 .b-ic{width:30px;height:30px}
 .b-day{font-size:13.5px;font-weight:600;white-space:nowrap;line-height:1.2}
 .b-day .sm{display:none;font-style:normal}
@@ -2459,7 +2559,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .back-week{display:inline-flex;align-items:center;gap:8px;flex:none;
   background:var(--panel2);border:1px solid var(--rule);border-radius:999px;padding:8px 16px;
   font-size:13.5px;font-weight:600;color:var(--sky);transition:.15s;cursor:pointer}
-.back-week:active{background:#26385A;border-color:var(--sky)}
+.back-week:active{background:var(--line);border-color:var(--sky)}
 .bw-ic{width:15px;height:15px;display:block;flex:none}
 .bw-ic svg{width:100%;height:100%;display:block}
 .dn-day{display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -2481,9 +2581,9 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   font-size:11px;color:var(--muted);font-weight:300;white-space:nowrap;
   text-align:right;padding-right:5px;direction:ltr}
 .chart-unit.right{left:auto;right:0;text-align:left;padding-right:0;padding-left:5px}
-.kb{width:26px;height:11px;border-radius:3px;background:#9BB6E8;opacity:.3;flex:none;margin-top:3px}
+.kb{width:26px;height:11px;border-radius:3px;background:var(--ink2);opacity:.3;flex:none;margin-top:3px}
 .veil{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
-  background:rgba(14,23,40,.86);border-radius:14px;font-size:13.5px;color:var(--muted)}
+  background:var(--veil);border-radius:14px;font-size:13.5px;color:var(--muted)}
 
 .readout{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:38px;
   border-top:1px solid var(--rule2);margin-top:8px;padding:9px 2px 3px}
@@ -2498,7 +2598,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .ro-time em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}
 .ro-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ro-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:999px;
-  padding:3px 9px;font-size:12px;background:rgba(255,255,255,.02)}
+  padding:3px 9px;font-size:12px;background:var(--tint-s)}
 .ro-chip i{width:6px;height:6px;border-radius:50%;flex:none}
 .ro-chip b{font-weight:600}
 .ro-chip em{font-style:normal;color:var(--text);font-weight:500}
@@ -2519,14 +2619,14 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .hlegend span{display:inline-flex;align-items:center;gap:7px}
 .sw{width:16px;height:9px;border-radius:3px;flex:none}
 .sw.solid{background:var(--sky)}
-.sw.ghost{background:#9BB6E8;opacity:.28}
+.sw.ghost{background:var(--ink2);opacity:.28}
 .sw.warm{background:var(--warm)}
 .sw.dash{background:repeating-linear-gradient(90deg,var(--warm) 0 4px,transparent 4px 7px);opacity:.7}
 .sw.grad{background:linear-gradient(90deg,rgba(90,179,240,.15),var(--sky))}
 
-.tip{background:#1C2B47;border:1px solid #3A507A;border-radius:10px;padding:10px 12px;font-size:13px;min-width:158px;
-  box-shadow:0 12px 30px rgba(0,0,0,.5)}
-.tip-h{font-size:12px;color:var(--muted);padding-bottom:7px;margin-bottom:6px;border-bottom:1px solid #33486F}
+.tip{background:var(--deep3);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;font-size:13px;min-width:158px;
+  box-shadow:0 12px 30px var(--shadow)}
+.tip-h{font-size:12px;color:var(--muted);padding-bottom:7px;margin-bottom:6px;border-bottom:1px solid var(--line4)}
 .tip-r{display:flex;align-items:center;gap:8px;padding:2px 0}
 .tip-nib{width:9px;height:3px;border-radius:2px;flex:none}
 .tip-n{flex:1;font-weight:500}
@@ -2538,7 +2638,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .s-ctl{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
 .s-grp{display:flex;flex-direction:column;gap:6px}
 .s-lab{font-size:12px;color:var(--muted);font-weight:500}
-.s-run{background:var(--sky);color:#0E1728;border:0;border-radius:10px;padding:10px 22px;font-weight:600;font-size:14px}
+.s-run{background:var(--sky);color:var(--night);border:0;border-radius:10px;padding:10px 22px;font-weight:600;font-size:14px}
 .s-run:disabled{opacity:.55}
 .s-empty,.s-err,.s-note{font-size:13.5px;color:var(--muted);font-weight:300;padding:10px 0}
 .s-err{color:var(--rose)}
@@ -2553,7 +2653,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 .s-name{font-weight:600;display:flex;flex-direction:column;gap:1px}
 .s-crown{font-style:normal;font-size:10.5px;color:var(--mint);font-weight:500}
 .s-mae{display:flex;align-items:center;gap:9px}
-.s-bar{flex:1;height:7px;background:#101A2E;border-radius:4px;overflow:hidden;display:block;min-width:36px}
+.s-bar{flex:1;height:7px;background:var(--deep2);border-radius:4px;overflow:hidden;display:block;min-width:36px}
 .s-bar em{display:block;height:100%;border-radius:4px}
 .s-mae b{font-weight:600;white-space:nowrap;font-size:13px}
 .s-n{color:var(--dim);font-weight:300}
@@ -2597,7 +2697,7 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
   font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.75}
 .foot p{margin:0}
 .foot-credit{margin-top:10px!important;padding-top:10px;border-top:1px solid var(--rule2);
-  font-size:12px;color:#6E819F;letter-spacing:.01em;
+  font-size:12px;color:var(--faint);letter-spacing:.01em;
   display:flex;flex-wrap:wrap;align-items:baseline;gap:7px}
 .foot-name{font-size:13px;font-weight:600;color:var(--dim);letter-spacing:.01em;direction:ltr}
 .foot-dot{color:var(--rule)}
@@ -2708,16 +2808,16 @@ html[lang="he"] .head h1{font-size:clamp(26px,4.6vw,42px)}
 /* ריחוף רק במכשירים עם מצביע אמיתי.
    ב-iOS כלל :hover גורם ללחיצה הראשונה "להדליק" ריחוף ורק לשנייה להפעיל. */
 @media (hover:hover) and (pointer:fine){
-  .lang-btn:hover{border-color:#42598A;color:var(--text)}
-  .lang-menu button:hover{background:#26385A}
+  .lang-btn:hover{border-color:var(--line3);color:var(--text)}
+  .lang-menu button:hover{background:var(--line)}
   .utog button:hover{color:var(--dim)}
-  .res button:hover{background:#26385A}
+  .res button:hover{background:var(--line)}
   .nav-arrow:hover:not(:disabled){background:var(--panel2);border-color:var(--sky);color:var(--sky)}
   .wcell:hover{background:var(--panel2)}
-  .pen:hover{border-color:#42598A}
-  .band:hover{background:#22314D;border-color:#42598A}
+  .pen:hover{border-color:var(--line3)}
+  .band:hover{background:var(--rule2);border-color:var(--line3)}
   .band.on:hover{border-color:var(--sky)}
-  .back-week:hover{background:#26385A;border-color:var(--sky)}
+  .back-week:hover{background:var(--line);border-color:var(--sky)}
 }
 @media (prefers-reduced-motion:reduce){.wx *{transition:none!important;animation:none!important}}
 `;
