@@ -2276,18 +2276,22 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 
 .head{position:relative;display:flex;gap:36px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
   max-width:1120px;margin:0 auto;padding:16px 0 26px;border-bottom:1px solid var(--rule)}
+/* שתי העמודות גדלות יחד ולא רק הכותרת. קודם head-l בלעה את כל השארית,
+   וכותרת קצרה ממנה הותירה חלל מולה; עכשיו החצי השני עובר ל-head-r,
+   שפשוט מקבל תיבת חיפוש רחבה יותר. הבסיס 400 נשמר כדי שנקודת השבירה
+   לשורה נפרדת תישאר איפה שהייתה (772px). */
 .head-l{flex:1 1 400px;min-width:0}
 .eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--sky);font-weight:500;line-height:1.4}
 .head h1{font-size:clamp(30px,5.5vw,50px)}
 /* הכותרת בעברית ארוכה משאר השפות וצריכה לשבת בשורה אחת. תקרה קבועה לא
    מספיקה: עמודת הכותרת היא בערך 372px-100vw עד שהמכולה נעצרת על 1120,
    ומעליו היא קבועה על 784. לכן הגודל נגזר מרוחב העמודה עצמה — חלוקה
-   ב-13.6 היא יחס הרוחב-לגובה של המחרוזת הזו בגופן, עם מרווח ביטחון.
-   קודם היה clamp(26px,4.6vw,42px): ב-1700px זה הותיר 245px של חלל מול
-   תיבת החיפוש, וזה מה שנקרא כרווח מיותר. */
-html[lang="he"] .head h1{font-size:clamp(26px,calc((100vw - 372px) / 13.6),58px)}
+   העמודה היא 32px+ מחצית המכולה, ולכן הגודל נגזר מ-3.68vw ולא מ-vw מלא.
+   התקרה 43 (מול 50 של שאר השפות) היא הרוחב שהעמודה מרשה כשהמכולה
+   נעצרת על 1120 — וזה גם מונע שבירה לשתי שורות בטלפון אופקי. */
+html[lang="he"] .head h1{font-size:clamp(26px,calc(3.68vw + 1px),43px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
-.head-r{flex:0 1 300px;position:relative}
+.head-r{flex:1 1 300px;max-width:520px;position:relative}
 .lab{display:block;font-size:15px;color:var(--dim);margin-bottom:8px;font-weight:500;letter-spacing:.02em}
 .srch-wrap{position:relative}
 .srch-ic{position:absolute;top:50%;inset-inline-start:13px;transform:translateY(-50%);
