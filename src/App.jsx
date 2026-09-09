@@ -2283,11 +2283,20 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .head-l{flex:1 1 320px;min-width:0}
 .eyebrow{font-size:11.5px;letter-spacing:.22em;color:var(--sky);font-weight:500;line-height:1.4}
 .head h1{font-size:clamp(30px,5.5vw,50px)}
-/* הכותרת בעברית ארוכה משאר השפות וצריכה לשבת בשורה אחת. עמודת הכותרת
-   היא בערך מחצית המכולה, ולכן הגודל נגזר מ-3.68vw ולא מ-vw מלא. התקרה
-   42 היא מה שהעמודה מרשה כשהמכולה נעצרת על 1120, והרצפה 26 היא שקובעת
-   בטלפון אופקי — שם היא מותירה מרווח מהגלישה. */
-html[lang="he"] .head h1{font-size:clamp(26px,calc(3.68vw - 0.4px),42px)}
+/* כותרת בשורה אחת בכל שפה. עמודת הכותרת היא 12px+ מחצית המכולה, ולכן
+   הגודל נגזר ממחצית ה-vw ולא מ-vw מלא. המקדם שונה לכל שפה כי היחס
+   בין רוחב המחרוזת לגודל הגופן שונה — נמדד: ערבית 10.5, אנגלית 12.8,
+   עברית 13.2, צרפתית 15.4, רוסית 18.1, ספרדית 19.1. משם גם התקרות:
+   הן הגודל שהעמודה (572px) מרשה, ולכן ספרדית עוצרת ב-29 וערבית ב-50.
+   הרצפה 30 היא הערך המקורי ונשמרת, כדי שמסכים צרים ייראו כמו קודם —
+   שם השפות הארוכות ממילא נשברות. ברוסית ובספרדית היא יורדת ל-28 ול-26,
+   כי התקרה שלהן נמוכה מ-30 ורצפה גבוהה ממנה הייתה מנטרלת אותה. */
+html[lang="ar"] .head h1{font-size:clamp(30px,calc(4.61vw - 0.55px),50px)}
+html[lang="en"] .head h1{font-size:clamp(30px,calc(3.78vw - 0.45px),43px)}
+html[lang="he"] .head h1{font-size:clamp(26px,calc(3.67vw - 0.44px),41px)}
+html[lang="fr"] .head h1{font-size:clamp(30px,calc(3.16vw - 0.38px),36px)}
+html[lang="ru"] .head h1{font-size:clamp(28px,calc(2.69vw - 0.32px),30px)}
+html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .dek{max-width:54ch;margin:13px 0 0;font-size:15px;color:var(--dim);font-weight:300}
 .head-r{flex:1 1 260px;min-width:0;max-width:520px;position:relative}
 .lab{display:block;font-size:15px;color:var(--dim);margin-bottom:8px;font-weight:500;letter-spacing:.02em}
