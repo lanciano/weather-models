@@ -2180,8 +2180,11 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
    הכהה, ולכן הניגודיות והאופי נשמרים במקום להפוך לשחור-לבן גולמי. */
 .wx[data-theme="light"]{
   --night:#F2F6FC; --panel:#FFFFFF; --panel2:#E9F0FA; --rule:#C6D5E9; --rule2:#DCE5F2;
-  --text:#16223A; --muted:#67788F; --dim:#3E5170;
-  --faint:#8494AC; --faint2:#9AA8BE; --dim2:#5B6E8C; --muted2:#6D7E96; --ink2:#2F5488;
+  /* כל גוני הטקסט נמדדו מול הרקע הבהיר ביותר (F2F6FC#) ומכהים עד AA.
+     המטרות נבחרו מדורגות ולא אחידות, כדי לשמור על ההיררכיה: 5.4 ,6.1
+     ,5.0 ,4.6 ,4.5 במקום לרסק את כולם ל-4.5. */
+  --text:#16223A; --muted:#576679; --dim:#3E5170;
+  --faint:#5E708C; --faint2:#5E7292; --dim2:#4E5E78; --muted2:#5C6B80; --ink2:#2F5488;
   --line:#D3DFEF; --line2:#C7D5E8; --line3:#B0C3DC; --line4:#BACBE0; --edge:#B7C8DE;
   --sel:#DCE9FB; --deep:#EAF0F8; --deep2:#EEF3FA; --deep3:#E4EBF5; --pure:#16223A;
   --ic-cloud:#8FA3C0; --ic-cloud2:#6C82A6; --ic-sun:#F0B429;
@@ -2189,7 +2192,7 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   --shadow:rgba(22,34,58,.16);
   --tint:rgba(22,34,58,.045); --tint-s:rgba(22,34,58,.022);
   --veil:rgba(255,255,255,.92);
-  --sky:#2A80C4;
+  --sky:#2673B1;
 }
 .wx *{box-sizing:border-box}
 .wx h1,.wx h2,.wx h3{margin:0;letter-spacing:-.02em;line-height:1.15}
@@ -2225,17 +2228,22 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 .eyebrow-row{max-width:1120px;margin:0 auto;padding-top:14px}
 .lang{position:relative}
 .topbar-r{display:inline-flex;align-items:center;gap:10px}
-/* הגלולה נעה בין שני הסמלים; inset-inline מטפל ב-RTL לבד */
-.thm{position:relative;display:inline-flex;align-items:center;justify-content:space-between;
-  gap:4px;width:62px;padding:4px 6px;background:var(--panel);border:1px solid var(--rule);
-  border-radius:999px;transition:.15s;flex:none}
+/* גאומטריה שמתחלקת בדיוק: מסגרת 1 + ריפוד 3 + גלולה 24 + ריפוד 3 + מסגרת 1
+   = 32 גובה, ורוחב 56 לשתי משבצות של 24. כך המרווח סביב הגלולה הוא 4
+   מכל הכיוונים בשני המצבים. קודם הכפתור היה 25 גובה עם גלולה 24 ב-top:4,
+   ולכן היא בלטה 3px החוצה. */
+.thm{position:relative;display:inline-flex;align-items:center;flex:none;
+  width:56px;height:32px;padding:3px;background:var(--panel);
+  border:1px solid var(--rule);border-radius:999px;transition:.15s}
 .thm-knob{position:absolute;top:3px;inset-inline-start:3px;width:24px;height:24px;
-  border-radius:999px;background:var(--sel);border:1px solid var(--rule);
+  border-radius:999px;background:var(--sel);
   transition:transform .22s cubic-bezier(.4,0,.2,1)}
-.thm.on .thm-knob{transform:translateX(var(--thm-shift,28px))}
-.wx[dir="rtl"] .thm.on .thm-knob,[dir="rtl"] .thm.on .thm-knob{--thm-shift:-28px}
-.thm-ic{position:relative;z-index:1;width:15px;height:15px;flex:none;transition:.15s}
-.thm-ic svg{width:100%;height:100%;display:block}
+.thm.on .thm-knob{transform:translateX(24px)}
+[dir="rtl"] .thm.on .thm-knob{transform:translateX(-24px)}
+/* כל סמל ממורכז במשבצת 24 משלו, ולכן הגלולה נוחתת עליו בדיוק */
+.thm-ic{position:relative;z-index:1;width:24px;height:24px;flex:none;
+  display:flex;align-items:center;justify-content:center;transition:.15s}
+.thm-ic svg{width:15px;height:15px;display:block}
 .thm-moon{color:var(--ic-moon)}
 .thm-sun{color:var(--faint)}
 .thm.on .thm-moon{color:var(--faint)}
