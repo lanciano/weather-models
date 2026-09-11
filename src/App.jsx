@@ -340,6 +340,12 @@ function LangSwitch({ lang, setLang }) {
 
 /* ═══════════════════════ app ═══════════════════════ */
 
+/* מוסתר בכוונה. הנוסח אומר "אין אנליטיקס ואין עוגיות", וזה לא נכון כל
+   עוד GA4 מוזרק דרך Netlify ושותל _ga ו-_ga_3NJG9SJ8BW. עדיף בלי
+   מדיניות מאשר מדיניות שקרית. להחזרה: להפוך את הדגל ל-true, ולוודא
+   קודם שהנוסח תואם למה שרץ בפועל. */
+const SHOW_PRIVACY = false;
+
 /** מדיניות הפרטיות. חלון ולא עמוד נפרד, כדי שיירש את הערכה, את השפה
  *  ואת כיוון הכתיבה בלי לשכפל שום דבר מזה. */
 function PrivacyDialog({ onClose }) {
@@ -1302,12 +1308,16 @@ function Weather({ lang, setLang }) {
           <span className="foot-name">{SITE_NAME}</span>
           <span className="foot-dot">·</span>
           <span>{t("credit")}</span>
-          <span className="foot-dot">·</span>
-          <button className="foot-link" onClick={() => setPrivacyOpen(true)}>{t("privacy.link")}</button>
+          {SHOW_PRIVACY && (
+            <>
+              <span className="foot-dot">·</span>
+              <button className="foot-link" onClick={() => setPrivacyOpen(true)}>{t("privacy.link")}</button>
+            </>
+          )}
         </p>
       </footer>
 
-      {privacyOpen && <PrivacyDialog onClose={() => setPrivacyOpen(false)} />}
+      {SHOW_PRIVACY && privacyOpen && <PrivacyDialog onClose={() => setPrivacyOpen(false)} />}
     </div>
   );
 }
