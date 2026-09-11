@@ -340,10 +340,54 @@ function LangSwitch({ lang, setLang }) {
 
 /* ═══════════════════════ app ═══════════════════════ */
 
+/** מדיניות הפרטיות. חלון ולא עמוד נפרד, כדי שיירש את הערכה, את השפה
+ *  ואת כיוון הכתיבה בלי לשכפל שום דבר מזה. */
+function PrivacyDialog({ onClose }) {
+  const { t } = useI18n();
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  return (
+    <div className="pv-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="pv" role="dialog" aria-modal="true" aria-label={t("privacy.title")}>
+        <div className="pv-head">
+          <h2>{t("privacy.title")}</h2>
+          <button className="pv-x" onClick={onClose} aria-label={t("privacy.close")}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round">
+              <path d="M6 6 18 18M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+        <div className="pv-body">
+          <p className="pv-lead">{t("privacy.intro")}</p>
+          <h3>{t("privacy.h1")}</h3><p>{t("privacy.p1")}</p>
+          <h3>{t("privacy.h2")}</h3><p>{t("privacy.p2")}</p>
+          <ul className="pv-list">
+            <li>{t("privacy.li1")}</li>
+            <li>{t("privacy.li2")}</li>
+            <li>{t("privacy.li3")}</li>
+            <li>{t("privacy.li4")}</li>
+          </ul>
+          <h3>{t("privacy.h3")}</h3><p>{t("privacy.p3")}</p>
+          <h3>{t("privacy.h4")}</h3><p>{t("privacy.p4")}</p>
+          <h3>{t("privacy.h5")}</h3><p>{t("privacy.p5")}</p>
+          <p className="pv-updated">{t("privacy.updated")}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Weather({ lang, setLang }) {
   const { t, dir, dates } = useI18n();
 
   /* כהה היא ברירת המחדל — גם כשאין ערך שמור וגם כשה-localStorage חסום */
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem("wx-theme") === "light" ? "light" : "dark"; }
     catch { return "dark"; }
@@ -1258,8 +1302,12 @@ function Weather({ lang, setLang }) {
           <span className="foot-name">{SITE_NAME}</span>
           <span className="foot-dot">·</span>
           <span>{t("credit")}</span>
+          <span className="foot-dot">·</span>
+          <button className="foot-link" onClick={() => setPrivacyOpen(true)}>{t("privacy.link")}</button>
         </p>
       </footer>
+
+      {privacyOpen && <PrivacyDialog onClose={() => setPrivacyOpen(false)} />}
     </div>
   );
 }
@@ -2257,6 +2305,33 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   white-space:nowrap;direction:ltr}
 .eyebrow-row{max-width:1120px;margin:0 auto;padding-top:14px}
 .lang{position:relative}
+.foot-link{background:none;border:0;padding:0;font-size:inherit;color:var(--sky);
+  text-decoration:underline;text-underline-offset:3px}
+.pv-back{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:var(--veil);backdrop-filter:blur(3px)}
+.pv{width:100%;max-width:640px;max-height:min(84vh,720px);display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--rule);border-radius:16px;
+  box-shadow:0 24px 60px var(--shadow);overflow:hidden}
+.pv-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex:none;
+  padding:16px 20px;border-bottom:1px solid var(--rule2)}
+.pv-head h2{font-size:19px}
+.pv-x{width:30px;height:30px;flex:none;padding:6px;background:none;border:0;
+  color:var(--muted);border-radius:8px;transition:.15s}
+.pv-x:hover{color:var(--text);background:var(--panel2)}
+.pv-x svg{width:100%;height:100%;display:block}
+.pv-body{overflow-y:auto;padding:18px 20px 22px;font-size:14px;line-height:1.75;color:var(--dim);font-weight:300}
+.pv-body h3{font-size:14.5px;color:var(--text);margin:20px 0 5px}
+.pv-body p{margin:0}
+.pv-lead{color:var(--text);font-weight:400;border-inline-start:2px solid var(--sky);
+  padding-inline-start:13px;margin-bottom:4px}
+.pv-list{margin:8px 0 0;padding-inline-start:18px;list-style:disc}
+.pv-list li{margin-bottom:5px}
+.pv-updated{margin-top:22px;padding-top:14px;border-top:1px solid var(--rule2);
+  font-size:12.5px;color:var(--muted)}
+@media (max-width:760px){
+  .pv-back{padding:0;align-items:flex-end}
+  .pv{max-width:none;max-height:92vh;border-radius:16px 16px 0 0;border-bottom:0}
+}
 .topbar-r{display:inline-flex;align-items:center;gap:10px}
 /* גאומטריה שמתחלקת בדיוק: מסגרת 1 + ריפוד 3 + גלולה 24 + ריפוד 3 + מסגרת 1
    = 32 גובה, ורוחב 56 לשתי משבצות של 24. כך המרווח סביב הגלולה הוא 4
