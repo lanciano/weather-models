@@ -379,6 +379,7 @@ function PrivacyDialog({ onClose }) {
             <li>{t("privacy.li3")}</li>
             <li>{t("privacy.li4")}</li>
           </ul>
+          <h3>{t("privacy.h6")}</h3><p>{t("privacy.p6")}</p>
           <h3>{t("privacy.h3")}</h3><p>{t("privacy.p3")}</p>
           <h3>{t("privacy.h4")}</h3><p>{t("privacy.p4")}</p>
           <h3>{t("privacy.h5")}</h3><p>{t("privacy.p5")}</p>
