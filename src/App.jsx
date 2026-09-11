@@ -2179,7 +2179,6 @@ function Scorecard({ place, models, unitT }) {
 /* ═══════════════════════ styles ═══════════════════════ */
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap');
 
 html,body,#root{margin:0;padding:0;min-height:100%;background:var(--night)}
 body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
