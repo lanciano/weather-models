@@ -1625,6 +1625,17 @@ const ENSO_FROM = 1950;
 const ENSO_KEY = "wx-enso";
 const ENSO_TTL = 12 * 60 * 60 * 1000;
 
+/** ההסתברות לקבל k הצלחות או יותר מתוך n בהטלת מטבע הוגן.
+    בלי זה "3 מתוך 4 היו רטובים" נראה כמו נטייה, בעוד שהוא מקרי לגמרי. */
+function binomTail(k, n) {
+  let c = 1, sum = 0;
+  for (let i = 0; i <= n; i++) {
+    if (i >= k) sum += c;
+    c = (c * (n - i)) / (i + 1);
+  }
+  return sum / 2 ** n;
+}
+
 /** סך משקעים לכל עונת נוב׳–מרץ, ממופה לפי שנת הינואר שלה */
 function seasonTotals(days, mm) {
   const by = new Map();
@@ -1782,8 +1793,13 @@ function Enso({ place }) {
   if (!state) return null;
   const nino = state.phase === "elNino";
   const hist = data?.hist, look = data?.look;
-  /* פיזור של יותר מפי שניים בין הקצוות — אין מכאן מה ללמוד */
-  const noisy = hist && hist.hi > hist.lo * 2;
+  /* השאלה אינה כמה רחב הפיזור — משקעים עונתיים פרושים רחב בכל מקום,
+     ולכן מבחן פיזור היה מתריע תמיד. השאלה היא אם האירועים נוטים לצד אחד
+     יותר מכפי שמטבע הוגן היה נוטה. 8 מתוך 10 עוברים את הסף, 7 לא. */
+  const n = hist?.events.length ?? 0, up = hist?.above ?? 0;
+  const lean = !hist ? null
+    : binomTail(up, n) <= 0.06 ? "Wet"
+    : binomTail(n - up, n) <= 0.06 ? "Dry" : null;
 
   return (
     <section className="enso" ref={ref}>
@@ -1825,8 +1841,10 @@ function Enso({ place }) {
           </ul>
           <p className="enso-note">
             <Rich text={t("enso.histAbove", { above: hist.above, n: hist.events.length,
-              normal: hist.normal })} />
-            {noisy && <> <b>{t("enso.spreadWarn")}</b></>}
+              normal: hist.normal })} />{" "}
+            <b className={lean ? "ev-lean" : "ev-flat"}>
+              {t(lean ? `enso.lean${lean}` : "enso.noLean")}
+            </b>
           </p>
         </div>
       )}
@@ -2839,7 +2857,9 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .enso-lead{max-width:74ch;margin:0 0 14px;font-size:13.5px;color:var(--dim);
   font-weight:300;line-height:1.7}
 .enso-note{margin:12px 0 0;font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.65}
-.enso-note b{color:var(--warm);font-weight:500}
+.enso-note b{font-weight:500}
+.enso-note .ev-flat{color:var(--warm)}
+.enso-note .ev-lean{color:var(--text)}
 .enso-hist,.enso-look{background:var(--panel);border:1px solid var(--rule2);
   border-radius:14px;padding:15px 17px;margin-bottom:12px}
 /* עמודה אחת לשנה, מול קו החציון הרב-שנתי */
