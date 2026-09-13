@@ -1827,9 +1827,10 @@ function Enso({ place }) {
           </p>
           <ul className="enso-bars">
             {/* לפי ציר זמן ולא לפי גודל: כך רואים אם התגובה כאן משתנה עם
-                השנים, וזו בדיוק השאלה כשמסיקים על החורף הבא. המיון כאן
-                ולא רק באחסון, כדי שגם מטמון ישן יוצג נכון. */}
-            {[...hist.events].sort((a, b) => a.year - b.year).map((e) => (
+                השנים, וזו בדיוק השאלה כשמסיקים על החורף הבא. האחרון למעלה,
+                כי הוא ההשוואה הרלוונטית ביותר. המיון כאן ולא רק באחסון,
+                כדי שגם מטמון ישן יוצג נכון. */}
+            {[...hist.events].sort((a, b) => b.year - a.year).map((e) => (
               <li key={e.year}>
                 <span className="eh-year">{e.year - 1}/{String(e.year).slice(2)}</span>
                 <span className="eh-track">
