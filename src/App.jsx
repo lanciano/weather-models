@@ -1118,6 +1118,9 @@ function Weather({ lang, setLang }) {
 
       <Radar place={place} theme={theme} />
 
+      {/* ── ENSO: רק כשיש אירוע פעיל ── */}
+      <Enso place={place} />
+
       {/* ── pens ── */}
       <section className="pens">
         <div className="sec-head"><h2>{t("pensTitle")}</h2><span className="sub">{t("pensSub")}</span></div>
@@ -1607,6 +1610,252 @@ const Refresh = () => (
     <path d="M21 12a9 9 0 1 1-2.6-6.4" /><path d="M21 3v6h-6" />
   </svg>
 );
+
+/* ═══════════════════════ ENSO ═══════════════════════ */
+
+/* חורפי ENSO בעצמה בינונית ומעלה (|ONI| של DJF ≥ 1.0), לפי שנת ינואר.
+   ערכים היסטוריים אינם משתנים, ולכן מוטמעים ולא נמשכים. */
+const ENSO_WINTERS = {
+  elNino: [1958, 1966, 1973, 1983, 1987, 1992, 1998, 2010, 2016, 2024],
+  laNina: [1950, 1956, 1971, 1974, 1976, 1985, 1989, 1999, 2000, 2008, 2011],
+};
+/* נובמבר–מרץ: שם ENSO מגיע לשיאו, בכל חצי כדור */
+const ENSO_MONTHS = [11, 12, 1, 2, 3];
+const ENSO_FROM = 1950;
+const ENSO_KEY = "wx-enso";
+const ENSO_TTL = 12 * 60 * 60 * 1000;
+
+/** סך משקעים לכל עונת נוב׳–מרץ, ממופה לפי שנת הינואר שלה */
+function seasonTotals(days, mm) {
+  const by = new Map();
+  days.forEach((d, i) => {
+    const v = mm[i];
+    if (typeof v !== "number") return;
+    const y = +d.slice(0, 4), m = +d.slice(5, 7);
+    if (!ENSO_MONTHS.includes(m)) return;
+    const label = m >= 11 ? y + 1 : y;
+    by.set(label, (by.get(label) || 0) + v);
+  });
+  /* העונות בקצוות חלקיות — מוותרים עליהן */
+  by.delete(ENSO_FROM); by.delete(Math.max(...by.keys()));
+  return by;
+}
+
+/** מה קרה כאן בחורפי ENSO קודמים, מול החציון הרב-שנתי.
+ *  הבקשה הכי כבדה באתר — 76 שנות נתונים יומיים, כחצי מגה. אבל התוצאה
+ *  היא עבר, והיא לא תשתנה לעולם, ולכן נשמרת לצמיתות לכל מיקום. */
+async function ensoHistory(lat, lon, phase) {
+  const ck = `${ENSO_KEY}:${lat.toFixed(1)},${lon.toFixed(1)}:${phase}`;
+  try {
+    const c = JSON.parse(localStorage.getItem(ck));
+    if (c && c.events) return c;
+  } catch { /* private */ }
+  const r = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}` +
+    `&longitude=${lon}&start_date=${ENSO_FROM}-01-01&end_date=${new Date().getFullYear() - 1}-12-31` +
+    "&daily=precipitation_sum&timezone=auto");
+  const j = await r.json();
+  if (j.error || !j.daily?.time) throw new Error(j.reason || "archive");
+  const by = seasonTotals(j.daily.time, j.daily.precipitation_sum);
+  const all = nums([...by.values()]);
+  if (all.length < 25) throw new Error("thin");
+  const normal = median(all);
+  if (!normal) throw new Error("dry");
+  const events = ENSO_WINTERS[phase]
+    .filter((y) => by.has(y))
+    .map((y) => ({ year: y, mm: by.get(y), pct: Math.round((100 * by.get(y)) / normal) }))
+    .sort((a, b) => b.pct - a.pct);
+  if (events.length < 4) throw new Error("few");
+  const pcts = events.map((e) => e.pct);
+  const out = {
+    normal: Math.round(normal), events,
+    lo: Math.min(...pcts), hi: Math.max(...pcts),
+    mid: Math.round(median(pcts)),
+    above: pcts.filter((p) => p > 100).length,
+  };
+  try { localStorage.setItem(ck, JSON.stringify(out)); } catch { /* private */ }
+  return out;
+}
+
+/** התחזית העונתית לנקודה — CFSv2, אנסמבל מלא, מקובץ לחודשים */
+async function ensoOutlook(lat, lon) {
+  const ck = `${ENSO_KEY}:look:${lat.toFixed(1)},${lon.toFixed(1)}`;
+  try {
+    const c = JSON.parse(localStorage.getItem(ck));
+    if (c && Date.now() - c.at < ENSO_TTL) return c.v;
+  } catch { /* private */ }
+  const r = await fetch(`https://seasonal-api.open-meteo.com/v1/seasonal?latitude=${lat}` +
+    `&longitude=${lon}&daily=precipitation_sum&forecast_days=210&timezone=auto`);
+  const j = await r.json();
+  const dd = j.daily;
+  if (j.error || !dd?.time) throw new Error(j.reason || "seasonal");
+  const members = Object.keys(dd).filter((k) => k.startsWith("precipitation_sum_member"));
+  if (!members.length) throw new Error("no members");
+  const by = new Map();
+  dd.time.forEach((d, i) => {
+    const key = d.slice(0, 7);
+    if (!by.has(key)) by.set(key, members.map(() => 0));
+    const row = by.get(key);
+    members.forEach((m, k) => { const v = dd[m][i]; if (typeof v === "number") row[k] += v; });
+  });
+  /* חודש ראשון ואחרון חלקיים */
+  const keys = [...by.keys()].slice(1, -1);
+  const out = { members: members.length, months: keys.map((k) => {
+    const v = [...by.get(k)].sort((a, b) => a - b);
+    return { month: k, lo: Math.round(v[0]), mid: Math.round(median(v)), hi: Math.round(v[v.length - 1]) };
+  }) };
+  try { localStorage.setItem(ck, JSON.stringify({ at: Date.now(), v: out })); } catch { /* private */ }
+  return out;
+}
+
+/** מוצג רק כשיש אירוע ENSO פעיל. אינו חוזה — מראה מה קרה כאן בעבר,
+ *  ולצדו את התחזית העונתית לנקודה. הפיזור הוא המסר. */
+function Enso({ place }) {
+  const { t, dates } = useI18n();
+  const { lat, lon } = place;
+  const [state, setState] = useState(null);
+  const [data, setData] = useState(null);
+  const [seen, setSeen] = useState(false);
+  const ref = useRef(null);
+
+  /* מצב ENSO — זול, נטען תמיד, ומכריע אם הסעיף קיים בכלל */
+  useEffect(() => {
+    let dead = false;
+    (async () => {
+      /* גם תשובת "נייטרלי" נשמרת: היא נכונה לרוב השנים, ובלי לשמור אותה
+         היינו קוראים לפונקציה בכל טעינת דף רק כדי לא להציג כלום */
+      try {
+        const c = JSON.parse(localStorage.getItem(ENSO_KEY));
+        if (c && Date.now() - c.at < ENSO_TTL) {
+          if (c.v.phase !== "neutral") setState(c.v);
+          return;
+        }
+      } catch { /* private */ }
+      try {
+        const r = await fetch("/.netlify/functions/enso");
+        const v = await r.json();
+        /* בדיקת צורה ולא רק שדה error: תחת vite dev, וגם מול דף שגיאה של
+           ה-CDN, הנתיב מחזיר 200 עם HTML או עם JSON שאינו מה שציפינו לו */
+        if (dead || typeof v?.oni !== "number" || !v.phase) return;
+        if (v.phase !== "neutral") setState(v);
+        try { localStorage.setItem(ENSO_KEY, JSON.stringify({ at: Date.now(), v })); } catch { /* private */ }
+      } catch { /* הסעיף פשוט לא יוצג */ }
+    })();
+    return () => { dead = true; };
+  }, []);
+
+  /* ההיסטוריה כבדה (חצי מגה), ולכן נטענת רק כשמתקרבים אליה בגלילה.
+     בדיקת מיקום ולא IntersectionObserver: ה-observer לא יורה בהקשרים
+     שבהם הדף לא מצויר, ואז הסעיף היה נתקע על "טוען" לנצח. */
+  useEffect(() => {
+    if (!state || seen) return;
+    const near = () => {
+      const el = ref.current;
+      if (el && el.getBoundingClientRect().top < window.innerHeight + 300) {
+        setSeen(true); return true;
+      }
+      return false;
+    };
+    if (near()) return;
+    const onMove = () => { if (near()) cleanup(); };
+    const cleanup = () => {
+      window.removeEventListener("scroll", onMove);
+      window.removeEventListener("resize", onMove);
+    };
+    window.addEventListener("scroll", onMove, { passive: true });
+    window.addEventListener("resize", onMove);
+    return cleanup;
+  }, [state, seen]);
+
+  useEffect(() => {
+    if (!seen || !state) return;
+    let dead = false;
+    setData(null);
+    (async () => {
+      const [h, o] = await Promise.allSettled([ensoHistory(lat, lon, state.phase), ensoOutlook(lat, lon)]);
+      if (dead) return;
+      setData({ hist: h.status === "fulfilled" ? h.value : null,
+                look: o.status === "fulfilled" ? o.value : null });
+    })();
+    return () => { dead = true; };
+  }, [seen, state, lat, lon]);
+
+  if (!state) return null;
+  const nino = state.phase === "elNino";
+  const hist = data?.hist, look = data?.look;
+  /* פיזור של יותר מפי שניים בין הקצוות — אין מכאן מה ללמוד */
+  const noisy = hist && hist.hi > hist.lo * 2;
+
+  return (
+    <section className="enso" ref={ref}>
+      <div className="sec-head">
+        <h2>{t(nino ? "enso.elNino" : "enso.laNina")}</h2>
+        <span className="sub">{t("enso.sub")}</span>
+      </div>
+
+      <div className="enso-badge">
+        <span className={`eb-dot ${nino ? "warm" : "cool"}`} />
+        <span className="eb-txt">
+          <b>{t(`enso.strength.${state.strength}`)}</b>
+          <em>{t(state.rising ? "enso.rising" : "enso.falling")}</em>
+        </span>
+        <span className="eb-oni">ONI <b>{state.oni > 0 ? "+" : ""}{state.oni.toFixed(1)}</b></span>
+      </div>
+
+      {seen && !data && <div className="enso-load">{t("loading")}</div>}
+
+      {hist && (
+        <div className="enso-hist">
+          <h3>{t("enso.histTitle")}</h3>
+          <p className="enso-lead">
+            <Rich text={t("enso.histLead", { n: hist.events.length, from: ENSO_FROM,
+              lo: hist.lo, hi: hist.hi, mid: hist.mid })} />
+          </p>
+          <ul className="enso-bars">
+            {hist.events.map((e) => (
+              <li key={e.year}>
+                <span className="eh-year">{e.year - 1}/{String(e.year).slice(2)}</span>
+                <span className="eh-track">
+                  <i className={e.pct >= 100 ? "eh-wet" : "eh-dry"}
+                    style={{ width: `${Math.min(100, (e.pct / Math.max(200, hist.hi)) * 100)}%` }} />
+                  <b className="eh-norm" style={{ insetInlineStart: `${(100 / Math.max(200, hist.hi)) * 100}%` }} />
+                </span>
+                <span className="eh-pct">{e.pct}%</span>
+              </li>
+            ))}
+          </ul>
+          <p className="enso-note">
+            <Rich text={t("enso.histAbove", { above: hist.above, n: hist.events.length,
+              normal: hist.normal })} />
+            {noisy && <> <b>{t("enso.spreadWarn")}</b></>}
+          </p>
+        </div>
+      )}
+
+      {look && (
+        <div className="enso-look">
+          <h3>{t("enso.lookTitle")}</h3>
+          <p className="enso-lead">{t("enso.lookLead", { n: look.members })}</p>
+          <ul className="enso-months">
+            {look.months.map((m) => {
+              const top = Math.max(...look.months.map((x) => x.hi)) || 1;
+              return (
+                <li key={m.month}>
+                  <span className="em-name">{dates.monthShort(new Date(m.month + "-15"))}</span>
+                  <span className="em-track">
+                    <i style={{ insetInlineStart: `${(m.lo / top) * 100}%`,
+                      width: `${((m.hi - m.lo) / top) * 100}%` }} />
+                    <b style={{ insetInlineStart: `${(m.mid / top) * 100}%` }} />
+                  </span>
+                  <span className="em-val">{m.mid}<em>{t("unitMm")}</em></span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function Radar({ place, theme }) {
   const { t, dir, locale } = useI18n();
@@ -2280,7 +2529,9 @@ body{-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
   --shadow:rgba(22,34,58,.16);
   --tint:rgba(22,34,58,.045); --tint-s:rgba(22,34,58,.022);
   --veil:rgba(255,255,255,.92);
-  --sky:#2673B1;
+  /* גם --warm נמדד מול הרקע הבהיר: הכתום של המצב הכהה יצא 1.9:1 כטקסט
+     ו-1.5:1 כפס מול המסילה. כאן 4.65 מול הדף ו-4.4 מול המסילה. */
+  --sky:#2673B1; --warm:#A85B0A;
 }
 .wx *{box-sizing:border-box}
 .wx h1,.wx h2,.wx h3{margin:0;letter-spacing:-.02em;line-height:1.15}
@@ -2571,6 +2822,59 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .dt-more>span+span::before{content:" · ";color:var(--rule)}
 
 /* radar */
+/* ── ENSO ── */
+.enso{max-width:1120px;margin:40px auto 0}
+.enso-badge{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:0 0 18px;
+  background:var(--panel);border:1px solid var(--rule2);border-radius:12px;padding:11px 15px}
+.eb-dot{width:9px;height:9px;border-radius:999px;flex:none}
+.eb-dot.warm{background:var(--warm);box-shadow:0 0 0 4px rgba(245,162,75,.16)}
+.eb-dot.cool{background:var(--sky);box-shadow:0 0 0 4px rgba(90,179,240,.16)}
+.eb-txt{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.eb-txt b{font-size:15px;font-weight:600}
+.eb-txt em{font-style:normal;font-size:13px;color:var(--muted);font-weight:300}
+.eb-oni{margin-inline-start:auto;font-size:12.5px;color:var(--muted);font-weight:300;white-space:nowrap}
+.eb-oni b{font-weight:600;color:var(--dim);font-variant-numeric:tabular-nums}
+.enso-load{font-size:13px;color:var(--muted);font-weight:300;padding:4px 2px 18px}
+.enso h3{font-size:15px;margin:0 0 6px}
+.enso-lead{max-width:74ch;margin:0 0 14px;font-size:13.5px;color:var(--dim);
+  font-weight:300;line-height:1.7}
+.enso-note{margin:12px 0 0;font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.65}
+.enso-note b{color:var(--warm);font-weight:500}
+.enso-hist,.enso-look{background:var(--panel);border:1px solid var(--rule2);
+  border-radius:14px;padding:15px 17px;margin-bottom:12px}
+/* עמודה אחת לשנה, מול קו החציון הרב-שנתי */
+.enso-bars,.enso-months{list-style:none;margin:0;padding:0;display:flex;
+  flex-direction:column;gap:5px}
+.enso-bars li,.enso-months li{display:flex;align-items:center;gap:10px}
+.eh-year,.em-name{flex:none;width:58px;font-size:11.5px;color:var(--muted);
+  font-weight:300;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}
+.eh-track,.em-track{position:relative;flex:1;height:14px;min-width:0;
+  background:var(--deep);border-radius:4px;overflow:hidden}
+.eh-track i{position:absolute;inset-block:0;inset-inline-start:0;border-radius:4px;display:block}
+/* בקידומת eh-: .wet לבדו כבר תפוס על ידי פאנל הגשם העולמי, וה-margin שלו
+   מעך את הפס לגובה אפס */
+.eh-track i.eh-wet{background:var(--sky)}
+.eh-track i.eh-dry{background:var(--warm);opacity:.72}
+/* בבהיר הכתום כבר מכהה מספיק, והשקיפות הייתה מחזירה אותו מתחת ל-3:1 */
+.wx[data-theme="light"] .eh-track i.eh-dry{opacity:1}
+/* סמן החציון הרב-שנתי — נקודת הייחוס של כל השורות */
+.eh-norm{position:absolute;inset-block:-2px;width:2px;background:var(--text);
+  opacity:.55;border-radius:2px}
+.eh-pct,.em-val{flex:none;width:46px;text-align:end;font-size:12px;font-weight:600;
+  color:var(--dim);font-variant-numeric:tabular-nums}
+/* טווח האנסמבל: הרצועה היא מינימום עד מקסימום, הסמן הוא החציון */
+.em-track i{position:absolute;inset-block:2px;background:var(--sky);opacity:.3;
+  border-radius:3px;display:block;min-width:2px}
+.em-track b{position:absolute;inset-block:0;width:2px;background:var(--sky);border-radius:2px}
+.em-val{width:64px}
+.em-val em{font-style:normal;font-size:10.5px;color:var(--muted);
+  font-weight:300;margin-inline-start:3px}
+@media (max-width:760px){
+  .enso{margin-top:30px}
+  .eh-year,.em-name{width:48px;font-size:10.5px}
+  .eh-pct{width:40px}
+  .em-val{width:58px}
+}
 .radar{max-width:1120px;margin:40px auto 0}
 .radar h2{font-size:24px}
 .radar-lead{font-size:14px;color:var(--dim);font-weight:300;line-height:1.7;

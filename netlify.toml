@@ -1,0 +1,4 @@
+# תוספתי בלבד. הגדרות הבנייה נשארות בממשק של Netlify כדי לא לדרוס אותן.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
