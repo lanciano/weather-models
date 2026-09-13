@@ -50,11 +50,9 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- ספירת ביקורים. Cloudflare Web Analytics ולא Google Analytics: בלי
-         עוגיות, בלי מזהה קבוע ובלי יכולת לעקוב לאתרים אחרים, ולכן גם בלי
-         צורך בבאנר הסכמה. יושב כאן בריפו ולא כהזרקה בממשק של Netlify,
-         כדי שמה שרץ אצל המבקרים יהיה גלוי בקוד. -->
-    <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js"
-            data-cf-beacon='{"token": "38290206b45e4c8b967701addd6f54f3"}'></script>
+    <!-- אין כאן אנליטיקס. הביקון של Cloudflare Web Analytics הוסר: הוא שולח
+         ל-/cdn-cgi/rum, נתיב שנוצר רק כשהתעבורה עוברת דרך הפרוקסי של
+         Cloudflare, והדומיין הזה יושב ישירות על Netlify. התוצאה הייתה 404
+         בכל טעינה אצל כל מבקר, ואפס צפיות שנרשמו אי פעם. -->
   </body>
 </html>
