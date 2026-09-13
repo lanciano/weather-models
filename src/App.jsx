@@ -1921,11 +1921,42 @@ function Radar({ place, theme }) {
     return () => ro.disconnect();
   }, []);
 
+  const nowIdx = useMemo(() => {
+    if (!frames?.length) return 0;
+    const t0 = Date.now() / 1000;
+    let best = 0;
+    frames.forEach((f, k) => { if (f.time <= t0) best = k; });
+    return best;
+  }, [frames]);
+
+  /* טעינה מדורגת. כל פריים הוא רשת שלמה של אריחים, ולכן הרכבת כל
+     הסדרה בבת אחת יורה מאות בקשות ל-RainViewer ברגע אחד — ובהחלפת
+     עיר שלישית זה חוזר כ-429. מתחילים מפריים ההווה ומוסיפים אחד כל
+     350 מ״ש: אותה כמות בסוף, אבל בלי הפרץ. */
+  const [nReady, setReady] = useState(1);
+  useEffect(() => { setReady(1); }, [frames, place.lat, place.lon]);
+  useEffect(() => {
+    if (!visible || !frames?.length || nReady >= frames.length) return;
+    const t = setTimeout(() => setReady((n) => n + 1), 350);
+    return () => clearTimeout(t);
+  }, [visible, frames, nReady]);
+
+  const shown = useMemo(() => {
+    const set = new Set();
+    if (!frames?.length) return set;
+    for (let k = 0; k < nReady; k++) set.add((nowIdx + k) % frames.length);
+    return set;
+  }, [frames, nReady, nowIdx]);
+
   useEffect(() => {
     if (!playing || !visible || !frames?.length) return;
-    const timer = setInterval(() => setI((n) => (n + 1) % frames.length), 700);
+    /* מתקדמים רק בין פריימים שכבר נטענו, אחרת הלולאה מהבהבת בריק */
+    const timer = setInterval(() => setI((n) => {
+      const next = (n + 1) % frames.length;
+      return shown.has(next) ? next : nowIdx;
+    }), 700);
     return () => clearInterval(timer);
-  }, [playing, visible, frames]);
+  }, [playing, visible, frames, shown, nowIdx]);
 
   /* לא מנפישים פאנל שלא רואים */
   useEffect(() => {
@@ -1940,6 +1971,8 @@ function Radar({ place, theme }) {
     if (!box.w) return null;
     const fx = lonToTile(place.lon, RADAR_Z), fy = latToTile(place.lat, RADAR_Z);
     const x0 = Math.floor(fx), y0 = Math.floor(fy);
+    /* הריפוד הוא 2 ולא 1. נמדד: ב-1 נפתח פער של 30 פיקסל בקצה הימני
+       ברוחב טאבלט, כי המפה ממורכזת על נקודה ולא על גבול אריח. */
     const cols = Math.ceil(box.w / TILE) + 2, rows = Math.ceil(box.h / TILE) + 2;
     const cx = Math.floor(cols / 2), cy = Math.floor(rows / 2);
     return {
@@ -1952,14 +1985,6 @@ function Radar({ place, theme }) {
 
   const frame = frames?.[i];
   const stamp = frame ? new Date(frame.time * 1000) : null;
-  const nowIdx = useMemo(() => {
-    if (!frames?.length) return 0;
-    const t0 = Date.now() / 1000;
-    let best = 0;
-    frames.forEach((f, k) => { if (f.time <= t0) best = k; });
-    return best;
-  }, [frames]);
-
   /* אריח ריק לגמרי מ-RainViewer שוקל בדיוק 334 בייט, ולכן הגודל מבדיל
      בין "יש מכ״ם" ל"אין מכ״ם" — RainViewer לא חושף מפת כיסוי בשום צורה
      אחרת. אבל חובה לדגום את כל הלולאה ולא פריים בודד: נמדד שאתונה
@@ -2004,7 +2029,11 @@ function Radar({ place, theme }) {
                 url={(x, y) => `https://basemaps.cartocdn.com/${theme === "light" ? "light_all" : "dark_all"}/${RADAR_Z}/${x}/${y}.png?key=${CARTO_KEY}`} />
               {/* כל פריים נטען פעם אחת ומוחלף בשקיפות. החלפת src בכל צעד
                   הייתה מושכת את כל האריחים מחדש — ומכאן ה-429. */}
-              {host && visible && frames?.map((f, k) => (
+              {/* `k === i` ולא רק shown: הסליידר מאפשר לקפוץ לפריים שהתור
+                  המדורג עוד לא הגיע אליו, ובלי זה שכבת המכ״ם הייתה נעלמת.
+                  לא מוסיפים את i ל-shown עצמו, כדי שאפקט ההנפשה לא ייבנה
+                  מחדש בכל צעד. */}
+              {host && visible && frames?.map((f, k) => (shown.has(k) || k === i) && (
                 <TileGrid key={f.time} cls="rd-fall" {...grid} opacity={k === i ? 1 : 0}
                   url={(x, y) => `${host}${f.path}/${TILE}/${RADAR_Z}/${x}/${y}/2/1_1.png`} />
               ))}
