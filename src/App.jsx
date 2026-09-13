@@ -1673,8 +1673,7 @@ async function ensoHistory(lat, lon, phase) {
   if (!normal) throw new Error("dry");
   const events = ENSO_WINTERS[phase]
     .filter((y) => by.has(y))
-    .map((y) => ({ year: y, mm: by.get(y), pct: Math.round((100 * by.get(y)) / normal) }))
-    .sort((a, b) => b.pct - a.pct);
+    .map((y) => ({ year: y, mm: by.get(y), pct: Math.round((100 * by.get(y)) / normal) }));
   if (events.length < 4) throw new Error("few");
   const pcts = events.map((e) => e.pct);
   const out = {
@@ -1827,7 +1826,10 @@ function Enso({ place }) {
               lo: hist.lo, hi: hist.hi, mid: hist.mid })} />
           </p>
           <ul className="enso-bars">
-            {hist.events.map((e) => (
+            {/* לפי ציר זמן ולא לפי גודל: כך רואים אם התגובה כאן משתנה עם
+                השנים, וזו בדיוק השאלה כשמסיקים על החורף הבא. המיון כאן
+                ולא רק באחסון, כדי שגם מטמון ישן יוצג נכון. */}
+            {[...hist.events].sort((a, b) => a.year - b.year).map((e) => (
               <li key={e.year}>
                 <span className="eh-year">{e.year - 1}/{String(e.year).slice(2)}</span>
                 <span className="eh-track">
