@@ -1615,9 +1615,16 @@ const Refresh = () => (
 
 /* חורפי ENSO בעצמה בינונית ומעלה (|ONI| של DJF ≥ 1.0), לפי שנת ינואר.
    ערכים היסטוריים אינם משתנים, ולכן מוטמעים ולא נמשכים. */
+/* לכל אירוע גם ה-ONI שלו בעונת DJF — זו ההגדרה המקובלת לעוצמת אירוע,
+   ולפיה "סופר אל ניניו" הוא מי שחצה 2.0. ערכים מ-NOAA CPC.
+   שים לב שאף לה ניניה לא חוצה 2.0, וזה לא פער בנתונים: הצד הקר של
+   התופעה חסום בטווח צר יותר מהחם. */
+const ENSO_SUPER = 2;
 const ENSO_WINTERS = {
-  elNino: [1958, 1966, 1973, 1983, 1987, 1992, 1998, 2010, 2016, 2024],
-  laNina: [1950, 1956, 1971, 1974, 1976, 1985, 1989, 1999, 2000, 2008, 2011],
+  elNino: { 1958: 1.81, 1966: 1.37, 1973: 1.84, 1983: 2.18, 1987: 1.23,
+    1992: 1.71, 1998: 2.24, 2010: 1.5, 2016: 2.63, 2024: 1.92 },
+  laNina: { 1950: -1.53, 1956: -1.11, 1971: -1.36, 1974: -1.84, 1976: -1.56,
+    1985: -1.04, 1989: -1.69, 1999: -1.55, 2000: -1.66, 2008: -1.64, 2011: -1.31 },
 };
 /* נובמבר–מרץ: שם ENSO מגיע לשיאו, בכל חצי כדור */
 const ENSO_MONTHS = [11, 12, 1, 2, 3];
@@ -1671,7 +1678,7 @@ async function ensoHistory(lat, lon, phase) {
   if (all.length < 25) throw new Error("thin");
   const normal = median(all);
   if (!normal) throw new Error("dry");
-  const events = ENSO_WINTERS[phase]
+  const events = Object.keys(ENSO_WINTERS[phase]).map(Number)
     .filter((y) => by.has(y))
     .map((y) => ({ year: y, mm: by.get(y), pct: Math.round((100 * by.get(y)) / normal) }));
   if (events.length < 4) throw new Error("few");
@@ -1795,6 +1802,12 @@ function Enso({ place }) {
   /* השאלה אינה כמה רחב הפיזור — משקעים עונתיים פרושים רחב בכל מקום,
      ולכן מבחן פיזור היה מתריע תמיד. השאלה היא אם האירועים נוטים לצד אחד
      יותר מכפי שמטבע הוגן היה נוטה. 8 מתוך 10 עוברים את הסף, 7 לא. */
+  /* ה-ONI נגזר כאן ולא נשמר באירוע עצמו, כדי שגם מטמון שנשמר לפני
+     השינוי — והוא נשמר לצמיתות — יקבל את הסימון */
+  const oniOf = ENSO_WINTERS[nino ? "elNino" : "laNina"];
+  const isSuper = (y) => Math.abs(oniOf[y] ?? 0) >= ENSO_SUPER;
+  const anySuper = !!hist?.events.some((e) => isSuper(e.year));
+
   const n = hist?.events.length ?? 0, up = hist?.above ?? 0;
   const lean = !hist ? null
     : binomTail(up, n) <= 0.06 ? "Wet"
@@ -1833,6 +1846,10 @@ function Enso({ place }) {
             {[...hist.events].sort((a, b) => b.year - a.year).map((e) => (
               <li key={e.year}>
                 <span className="eh-year">{e.year - 1}/{String(e.year).slice(2)}</span>
+                {/* משבצת קבועה גם כשאין תווית, אחרת הפסים יאבדו יישור */}
+                <span className="eh-sup">
+                  {isSuper(e.year) && <b>{t("enso.superTag")}</b>}
+                </span>
                 <span className="eh-track">
                   <i className={e.pct >= 100 ? "eh-wet" : "eh-dry"}
                     style={{ width: `${Math.min(100, (e.pct / Math.max(200, hist.hi)) * 100)}%` }} />
@@ -1848,6 +1865,9 @@ function Enso({ place }) {
             <b className={lean ? "ev-lean" : "ev-flat"}>
               {t(lean ? `enso.lean${lean}` : "enso.noLean")}
             </b>
+            {/* בלי המשפט הזה הסימון היה משתיל בדיוק את המסקנה ההפוכה —
+                שאירוע חזק יותר פירושו תגובה חזקה יותר */}
+            {anySuper && <> {t("enso.superNote")}</>}
           </p>
         </div>
       )}
@@ -2898,6 +2918,12 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .enso-bars,.enso-months{list-style:none;margin:0;padding:0;display:flex;
   flex-direction:column;gap:5px}
 .enso-bars li,.enso-months li{display:flex;align-items:center;gap:10px}
+/* רוחב קבוע גם בשורות בלי תווית — אחרת תחילת הפס זזה משורה לשורה
+   וההשוואה הוויזואלית, שהיא כל העניין כאן, נשברת */
+.eh-sup{flex:none;width:38px;display:flex;align-items:center}
+.eh-sup b{font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--warm);border:1px solid var(--warm);border-radius:4px;
+  padding:1px 4px;line-height:1.35;opacity:.9;white-space:nowrap}
 .eh-year,.em-name{flex:none;width:58px;font-size:11.5px;color:var(--muted);
   font-weight:300;font-variant-numeric:tabular-nums;direction:ltr;text-align:start}
 .eh-track,.em-track{position:relative;flex:1;height:14px;min-width:0;
@@ -2926,6 +2952,8 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
   .eh-year,.em-name{width:48px;font-size:10.5px}
   .eh-pct{width:40px}
   .em-val{width:58px}
+  .eh-sup{width:32px}
+  .eh-sup b{font-size:8px;padding:1px 3px}
 }
 .radar{max-width:1120px;margin:40px auto 0}
 .radar h2{font-size:24px}
