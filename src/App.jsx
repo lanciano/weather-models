@@ -1807,6 +1807,12 @@ function Enso({ place }) {
   const oniOf = ENSO_WINTERS[nino ? "elNino" : "laNina"];
   const isSuper = (y) => Math.abs(oniOf[y] ?? 0) >= ENSO_SUPER;
   const anySuper = !!hist?.events.some((e) => isSuper(e.year));
+  /* דירוג האירוע החזק ביותר לפי המשקעים כאן. עובדה נקודתית למקום הזה
+     במקום הכללה על "רוב המקומות", שנשענה על ארבע ערים בלבד. */
+  const topEvent = anySuper && hist.events
+    .reduce((a, b) => (Math.abs(oniOf[b.year] ?? 0) > Math.abs(oniOf[a.year] ?? 0) ? b : a));
+  const topRank = topEvent && [...hist.events]
+    .sort((a, b) => b.pct - a.pct).findIndex((e) => e.year === topEvent.year) + 1;
 
   const n = hist?.events.length ?? 0, up = hist?.above ?? 0;
   const lean = !hist ? null
@@ -1867,7 +1873,9 @@ function Enso({ place }) {
             </b>
             {/* בלי המשפט הזה הסימון היה משתיל בדיוק את המסקנה ההפוכה —
                 שאירוע חזק יותר פירושו תגובה חזקה יותר */}
-            {anySuper && <> {t("enso.superNote")}</>}
+            {anySuper && <> {t("enso.superNote", {
+              year: `${topEvent.year - 1}/${String(topEvent.year).slice(2)}`,
+              rank: topRank, n: hist.events.length })}</>}
           </p>
         </div>
       )}
