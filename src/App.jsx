@@ -3155,9 +3155,9 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .ro-time{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
 .ro-time b{font-size:15px;font-weight:700;color:var(--text);line-height:1}
 .ro-time em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}
-/* תווית "עכשיו" בקריאון — אומרת שזו ברירת המחדל ולא בחירה של המשתמש */
-.ro-now{font-size:10px;font-weight:600;letter-spacing:.03em;color:var(--sky);
-  border:1px solid var(--sky);border-radius:4px;padding:1px 5px;opacity:.85}
+/* תווית "עכשיו" בקריאון — אומרת שזו ברירת המחדל ולא בחירה של המשתמש.
+   מדורג תחת .ro-time כי .ro-time em גובר אחרת על הגודל, המשקל והצבע */
+.ro-time .ro-now{font-weight:700;border:none;padding:0}
 .ro-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ro-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:999px;
   padding:3px 9px;font-size:12px;background:var(--tint-s)}
