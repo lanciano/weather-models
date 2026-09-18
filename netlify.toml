@@ -1,4 +1,11 @@
-# תוספתי בלבד. הגדרות הבנייה נשארות בממשק של Netlify כדי לא לדרוס אותן.
+# הגדרות הבנייה יושבות כאן ולא רק בממשק של Netlify, כדי שהן ייכללו
+# בגיבוי: ריפו נקי צריך לדעת לבנות את עצמו גם אם האתר ב-Netlify נמחק
+# ונוצר מחדש. הערכים הועתקו מלוג הפריסה, מהשורה
+# "Build command from Netlify app", ולכן זהים למה שרץ ממילא.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
