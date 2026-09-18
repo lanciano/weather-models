@@ -3159,14 +3159,23 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .ro-time em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}
 /* תווית "עכשיו" בקריאון — אומרת שזו ברירת המחדל ולא בחירה של המשתמש.
    מדורג תחת .ro-time כי .ro-time em גובר אחרת על הגודל, המשקל והצבע */
-.ro-time .ro-now{font-weight:700;border:none;padding:0}
+/* line-height:1 כמו ה-b שלצידו. בלעדיו התג הוא 17.6px מול 15px, והוא
+   זה שקובע את גובה השורה — כך שברגע שמגיעים לשעה הנוכחית כל הקריאון
+   יורד ב-2.6 פיקסל. */
+.ro-time .ro-now{font-weight:700;border:none;padding:0;line-height:1}
 /* השורה נפרשת על כל רוחב הגרף. בטלפון הבלונים מתחלקים בו שווה בשווה,
    ובדסקטופ ה-max-width עוצר אותם לפני שהם הופכים לקפסולות ריקות —
    שם space-between הוא שמותח את השורה מקצה לקצה. */
 .ro-chips{display:flex;align-items:stretch;justify-content:space-between;
   gap:6px;flex-wrap:wrap;width:100%}
+/* basis:auto — כל בלון מתחיל ברוחב התוכן שלו ורק אז גדל למלא את השורה.
+   עם basis קבוע הוא נלחם ב-min-width, ובאנגלית וברוסית זה שבר את
+   השורה לשתיים עם בלון בודד מתוח. ו-min-width:max-content גובר על
+   max-width, ולכן התקרה רכה ולעולם לא חותכת טקסט — בלעדיה
+   "Медиана 0.0 мм" חרג מהמסגרת. */
 .ro-chip{display:inline-flex;align-items:center;justify-content:center;gap:5px;
-  flex:1 1 92px;max-width:200px;border:1px solid;border-radius:999px;
+  flex:1 1 auto;min-width:max-content;max-width:165px;
+  border:1px solid;border-radius:999px;
   padding:3px 9px;font-size:12px;background:var(--tint-s)}
 .ro-chip i{width:6px;height:6px;border-radius:50%;flex:none}
 .ro-chip b{font-weight:600}
