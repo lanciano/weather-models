@@ -3144,13 +3144,15 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .veil{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
   background:var(--veil);border-radius:14px;font-size:13.5px;color:var(--muted)}
 
-.readout{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:38px;
+/* עמודה ולא שורה: קודם השעה במרכז ואז הנתונים מתחתיה. כשזה היה שורה
+   עם flex-wrap, אורך התוכן הוא שקבע את הפריסה — עם תג "עכשיו" השורה
+   נשברה והשעה נחתה במרכז, ובלעדיו הכול נכנס לשורה אחת והשעה נצמדה
+   לקצה. אותו עיצוב, שתי תוצאות. */
+.readout{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:38px;
   border-top:1px solid var(--rule2);margin-top:8px;padding:9px 2px 3px}
 .readout.empty{font-size:12.5px;color:var(--muted);font-weight:300}
 .readout.top{border-top:0;margin:0 0 10px;padding:8px 11px;min-height:40px;
-  background:var(--panel2);border:1px solid var(--rule);border-radius:11px;
-  justify-content:center;gap:10px}
-.readout.top .ro-chips{justify-content:center}
+  background:var(--panel2);border:1px solid var(--rule);border-radius:11px}
 .readout.top .ro-chip em{font-weight:600}
 .ro-time{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
 .ro-time b{font-size:15px;font-weight:700;color:var(--text);line-height:1}
@@ -3158,8 +3160,13 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 /* תווית "עכשיו" בקריאון — אומרת שזו ברירת המחדל ולא בחירה של המשתמש.
    מדורג תחת .ro-time כי .ro-time em גובר אחרת על הגודל, המשקל והצבע */
 .ro-time .ro-now{font-weight:700;border:none;padding:0}
-.ro-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.ro-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:999px;
+/* השורה נפרשת על כל רוחב הגרף. בטלפון הבלונים מתחלקים בו שווה בשווה,
+   ובדסקטופ ה-max-width עוצר אותם לפני שהם הופכים לקפסולות ריקות —
+   שם space-between הוא שמותח את השורה מקצה לקצה. */
+.ro-chips{display:flex;align-items:stretch;justify-content:space-between;
+  gap:6px;flex-wrap:wrap;width:100%}
+.ro-chip{display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  flex:1 1 92px;max-width:200px;border:1px solid;border-radius:999px;
   padding:3px 9px;font-size:12px;background:var(--tint-s)}
 .ro-chip i{width:6px;height:6px;border-radius:50%;flex:none}
 .ro-chip b{font-weight:600}
