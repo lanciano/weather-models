@@ -677,13 +677,22 @@ function Weather({ lang, setLang }) {
     });
   }, [data, amb, marine, active, dates, unitT]);
 
+  /* אינדקס השעה הנוכחית בסדרה השעתית, בשעון המקום.
+     החותמות מגיעות בשעון המקום ובלי סיומת אזור ("2026-09-18T21:00"),
+     ולכן new Date(iso) היה מפרש אותן בשעון הדפדפן — פספוס של שש שעות
+     בטוקיו כשצופים בה מישראל. משווים בפריים אחד: "עכשיו" מוזז בהיסט
+     של המקום, והחותמות נקראות כ-UTC. */
+  const nowIdx = useMemo(() => {
+    if (!data?.hourly?.time) return -1;
+    const t0 = Date.now() + (data.utc_offset_seconds ?? 0) * 1000;
+    const i = data.hourly.time.findIndex((iso) => Date.parse(`${iso}Z`) > t0);
+    return i <= 0 ? 0 : i - 1;
+  }, [data]);
+
   /* מה קורה עכשיו ומה צפוי בשעה הקרובה — נגזר מהשעה הנוכחית בסדרה השעתית */
   const now = useMemo(() => {
     if (!data?.hourly?.time) return null;
-    const t0 = Date.now();
-    let idx = data.hourly.time.findIndex((iso) => new Date(iso).getTime() > t0);
-    if (idx <= 0) idx = 1;
-    const cur = idx - 1;
+    const cur = nowIdx, idx = nowIdx + 1;
 
     const at = (base, i) => nums(active.map((m) => pick(data.hourly, base, m)?.[i]));
     const temps = at("temperature_2m", cur);
@@ -714,7 +723,7 @@ function Weather({ lang, setLang }) {
       rain: medRain,
       snowy,
     };
-  }, [data, amb, active, unitT]);
+  }, [data, amb, active, unitT, nowIdx]);
 
   const sel = days[daySel];
   const pages = Math.max(1, Math.ceil(days.length / PAGE));
@@ -785,6 +794,16 @@ function Weather({ lang, setLang }) {
   const peak = useMemo(
     () => hourly24.reduce((a, b) => (b.med > (a?.med ?? -1) ? b : a), null), [hourly24]
   );
+
+  /* השעה הנוכחית בתוך היום המוצג. יוצא null מאליו כשמסתכלים על יום אחר,
+     כי אז האינדקס פשוט לא נמצא בפרוסה. */
+  /* יוצא -1 מאליו כשמסתכלים על יום אחר, כי אז האינדקס לא בפרוסה */
+  const nowRow = useMemo(
+    () => hourly24.findIndex((r) => r.i === nowIdx), [hourly24, nowIdx]
+  );
+  const nowHour = nowRow >= 0 ? hourly24[nowRow].label : null;
+  /* מה שמוצג בקריאון: מה שהאצבע נוגעת בו, וכברירת מחדל השעה הנוכחית */
+  const hRow = hourly24.find((r) => r.label === hHover) ?? null;
 
   const weekTotals = useMemo(() => {
     if (!data?.daily?.time) return [];
@@ -1067,7 +1086,7 @@ function Weather({ lang, setLang }) {
               } />
             </div>
 
-            {narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} pos="top" />}
+            {narrow && <HourReadout row={hRow} now={nowHour} pos="top" />}
 
             <div className="chart-box" dir="ltr" style={{ width: "100%", height: narrow ? 200 : 240 }}>
               <span className="chart-unit" style={{ width: 38 }}>{mm}</span>
@@ -1080,7 +1099,13 @@ function Weather({ lang, setLang }) {
                     axisLine={false} tickLine={false} />
                   <YAxis yAxisId="r" orientation="right" domain={["auto", "auto"]} width={38}
                     tick={{ fontSize: 11, fill: "#F5A24B" }} axisLine={false} tickLine={false} />
+                  {/* defaultIndex — אותו מצג בדיוק שמופיע בנגיעה, על כל
+                      מרכיביו: הפס, בועת הטמפרטורה הכתומה וה-tooltip. הוא רק
+                      מונח מראש על השעה הנוכחית במקום להיות מוסתר. משנוגעים
+                      הוא זז, ומשעוזבים הוא נעלם ולא חוזר — מי שכבר שיחק בו
+                      לא צריך שיקפוץ לו בחזרה. */}
                   <Tooltip cursor={{ fill: "var(--pure)", fillOpacity: 0.05 }} offset={54}
+                    defaultIndex={nowRow >= 0 ? nowRow : undefined}
                     content={<HourTip narrow={narrow} onHover={setHHover} />} />
                   <Bar yAxisId="l" dataKey="med" stackId="p" fill="#5AB3F0" animationDuration={700} />
                   <Bar yAxisId="l" dataKey="extra" stackId="p" fill="var(--ink2)" fillOpacity={0.28}
@@ -1094,7 +1119,7 @@ function Weather({ lang, setLang }) {
               </ResponsiveContainer>
             </div>
 
-            {!narrow && <HourReadout row={hHover ? hourly24.find((r) => r.label === hHover) : null} />}
+            {!narrow && <HourReadout row={hRow} now={nowHour} />}
 
             <div className="hagree" dir={dir}>
               {hourly24.map((r) => (
@@ -2340,14 +2365,17 @@ function HourTip({ active, payload, label, narrow, onHover }) {
   );
 }
 
-function HourReadout({ row, pos }) {
+function HourReadout({ row, now, pos }) {
   const { t } = useI18n();
   const cls = `readout${pos === "top" ? " top" : ""}`;
   if (!row) return <div className={`${cls} empty`}>{t("hourHint")}</div>;
   const mm = t("unitMm");
   return (
     <div className={cls}>
-      <span className="ro-time"><b>{row.label}</b></span>
+      <span className="ro-time">
+        <b>{row.label}</b>
+        {row.label === now && <em className="ro-now">{t("nowLabel")}</em>}
+      </span>
       <div className="ro-chips">
         <span className="ro-chip" style={{ borderColor: "#5AB3F055" }}>
           <i style={{ background: "#5AB3F0" }} /><b style={{ color: "#5AB3F0" }}>{t("roMedian")}</b><em>{fmt(row.med)} {mm}</em>
@@ -3127,6 +3155,9 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
 .ro-time{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
 .ro-time b{font-size:15px;font-weight:700;color:var(--text);line-height:1}
 .ro-time em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}
+/* תווית "עכשיו" בקריאון — אומרת שזו ברירת המחדל ולא בחירה של המשתמש */
+.ro-now{font-size:10px;font-weight:600;letter-spacing:.03em;color:var(--sky);
+  border:1px solid var(--sky);border-radius:4px;padding:1px 5px;opacity:.85}
 .ro-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ro-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:999px;
   padding:3px 9px;font-size:12px;background:var(--tint-s)}
