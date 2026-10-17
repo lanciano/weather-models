@@ -83,6 +83,51 @@ const Moon = ({ cx = 24, cy = 20, r = 7.5, stars = false }) => {
   );
 };
 
+/* ספי שכבות הלבוש, לפי תחושת החום ב-°C. הראשון שהערך עובר אותו נבחר,
+   ומתחת לכולם — "freezing". */
+const DRESS_LAYERS = [[28, "hot"], [22, "warm"], [17, "mild"], [12, "cool"], [6, "cold"], [0, "chilly"]];
+
+/* חולצה באותו סגנון של אייקוני מזג האוויר: צורה שטוחה במילוי, בצבע
+   שמתחלף עם ערכת הנושא */
+const IcShirt = () => (
+  <svg viewBox="0 0 48 48">
+    <path fill={C.cloud} d="M17 9 L10 12 L4 19 L8.5 25 L13 22.5 L13 40 Q13 41.5 14.5 41.5 L33.5 41.5
+      Q35 41.5 35 40 L35 22.5 L39.5 25 L44 19 L38 12 L31 9 Q24 15.5 17 9 Z" />
+  </svg>
+);
+
+/* בוקר 6–12, צהריים 12–17, ערב 17–21, לילה 21–6 */
+const periodOf = (h) => (h >= 21 || h < 6 ? "night" : h < 12 ? "morning" : h < 17 ? "noon" : "evening");
+
+function Dress({ periods }) {
+  const { t } = useI18n();
+  const [sel, setSel] = useState(0);
+  const cur = periods[Math.min(sel, periods.length - 1)];
+  const range = cur.lo == null ? null
+    : Math.round(cur.lo) === Math.round(cur.hi) ? `${fmt(cur.lo, 0)}°`
+      : `${fmt(cur.lo, 0)}°–${fmt(cur.hi, 0)}°`;
+  return (
+    <div className="dress">
+      <span className="dress-ic"><IcShirt /></span>
+      <div className="dress-body">
+        <div className="dress-tabs" role="tablist">
+          {periods.map((p, i) => (
+            <button key={i} role="tab" aria-selected={i === sel}
+              className={i === sel ? "on" : ""} onClick={() => setSel(i)}>
+              {p.now ? t("nowLabel") : t(`dress.p.${p.key}`)}
+              {p.tomorrow && !p.now && <em>{t("dress.tomorrow")}</em>}
+            </button>
+          ))}
+        </div>
+        <div className="dress-rec">
+          <span><b>{t("dress.title")}</b> {cur.items.map((k) => t(`dress.${k}`)).join(" · ")}</span>
+          {range && <span className="dress-range" dir="ltr">{range}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const ICONS = {
   clear: () => <svg viewBox="0 0 48 48"><Sun cx={24} cy={24} r={9} /></svg>,
   partly: () => <svg viewBox="0 0 48 48"><Sun cx={31} cy={16} r={6.5} /><Cloud y={2} /></svg>,
@@ -725,6 +770,59 @@ function Weather({ lang, setLang }) {
     };
   }, [data, amb, active, unitT, nowIdx]);
 
+  /* המלצת לבוש לארבע התקופות הבאות, החל מעכשיו. "עכשיו" הוא מהשעה הנוכחית
+     ועד סוף התקופה שהיא בתוכה, ואחריו שלוש תקופות מלאות — כך שבשמונה בערב
+     רואים ערב, לילה ובוקר וצהריים של מחר, ולא בוקר שכבר עבר.
+     השכבה לפי תחושת החום הנמוכה בתקופה, כי מתלבשים לשעה הקרה ביותר שבחוץ.
+     גשם לפי הסכמת המודלים כמו בשאר האתר: בשעה כלשהי רוב → מטרייה, מיעוט
+     של שניים לפחות → "ליתר ביטחון". UV בלילה ממילא אפס. */
+  const dressPeriods = useMemo(() => {
+    if (!data?.hourly?.time || nowIdx < 0) return null;
+    const T = data.hourly.time;
+    const at = (base, i) => nums(active.map((m) => pick(data.hourly, base, m)?.[i]));
+    const hourOf = (i) => new Date(T[i]).getHours();
+    const dayOf = (i) => T[i].slice(0, 10);
+    const off = amb?.hourly?.time ? amb.hourly.time.indexOf(T[0]) : -1;
+
+    const groups = [];
+    for (let i = nowIdx; i < T.length && groups.length <= 4; i++) {
+      const k = periodOf(hourOf(i));
+      if (!groups.length || groups[groups.length - 1].key !== k) groups.push({ key: k, i0: i, i1: i + 1 });
+      else groups[groups.length - 1].i1 = i + 1;
+    }
+    return groups.slice(0, 4).map((g, n) => {
+      let minF = Infinity, lo = Infinity, hi = -Infinity, gust = 0, uv = 0;
+      let maj = false, min2 = false, snow = false;
+      for (let i = g.i0; i < g.i1; i++) {
+        const fl = at("apparent_temperature", i), tp = at("temperature_2m", i);
+        const f = fl.length ? median(fl) : tp.length ? median(tp) : null;
+        if (f != null) minF = Math.min(minF, f);
+        if (tp.length) { const t0 = median(tp); lo = Math.min(lo, t0); hi = Math.max(hi, t0); }
+        const pr = at("precipitation", i), wet = pr.filter((v) => v >= 0.1).length;
+        if (pr.length && wet > pr.length / 2) {
+          maj = true;
+          const sn = at("snowfall", i);
+          if (sn.length && median(sn) > 0.05) snow = true;
+        } else if (wet >= 2) min2 = true;
+        const gs = at("wind_gusts_10m", i);
+        if (gs.length) gust = Math.max(gust, median(gs));
+        const u = off >= 0 ? amb.hourly.uv_index?.[i + off] : null;
+        if (typeof u === "number") uv = Math.max(uv, u);
+      }
+      if (minF === Infinity) return null;
+      const items = [DRESS_LAYERS.find(([b]) => minF >= b)?.[1] ?? "freezing"];
+      if (maj) items.push(snow ? "boots" : "umbrella");
+      else if (min2) items.push("umbrellaMaybe");
+      if (gust >= 45) items.push("wind");
+      if (uv >= 3) items.push("sun");
+      if (uv >= 6) items.push("sunStrong");
+      return {
+        key: g.key, now: n === 0, tomorrow: dayOf(g.i0) !== dayOf(nowIdx), items,
+        lo: lo === Infinity ? null : toT(lo, unitT), hi: hi === -Infinity ? null : toT(hi, unitT),
+      };
+    }).filter(Boolean);
+  }, [data, active, amb, nowIdx, unitT]);
+
   const sel = days[daySel];
   const pages = Math.max(1, Math.ceil(days.length / PAGE));
   const view = useMemo(() => days.slice(page * PAGE, page * PAGE + PAGE), [days, page]);
@@ -935,6 +1033,8 @@ function Weather({ lang, setLang }) {
             </span>
           </div>
         )}
+
+        {!!dressPeriods?.length && <Dress key={`${place.lat},${place.lon}`} periods={dressPeriods} />}
 
         {now && now.total > 0 && now.wet > now.total / 2 && (
           <div className="soon">
@@ -2916,6 +3016,29 @@ html[lang="es"] .head h1{font-size:clamp(26px,calc(2.55vw - 0.31px),29px)}
   padding:10px 14px;font-size:13.5px;color:var(--dim);font-weight:300;line-height:1.55}
 .soon b{color:var(--text);font-weight:600}
 .soon-ic{width:32px;height:32px;flex:none}
+/* אותו מבנה כמו התרעת הגשם שמתחתיה, אבל ניטרלי — זו המלצה, לא התרעה */
+.dress{display:flex;align-items:center;gap:11px;margin-bottom:10px;
+  background:var(--panel);border:1px solid var(--rule2);border-radius:12px;
+  padding:10px 14px;font-size:13.5px;color:var(--dim);font-weight:300;line-height:1.55}
+.dress b{color:var(--text);font-weight:600;margin-inline-end:3px}
+.dress-ic{width:32px;height:32px;flex:none}
+.dress-ic svg{width:100%;height:100%;display:block}
+.dress-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+/* מדורג תחת .wx כי .wx button גובר אחרת על הצבע — אותה מלכודת של .s-run.
+   min-width:max-content כדי שבשפות ארוכות הלשונית תגדל ולא תגלוש. */
+.dress-tabs{display:flex;flex-wrap:wrap;gap:4px;background:var(--tint);
+  border:1px solid var(--rule2);border-radius:999px;padding:2px}
+/* עמודה: "מחר" יושב כשורה קטנה מתחת לשם התקופה ולא לצידו. לצידו,
+   "Afternoon tomorrow" שבר את הלשוניות לשתי שורות באנגלית וברוסית. */
+.wx .dress-tabs button{flex:1 1 auto;min-width:max-content;background:none;border:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;
+  color:var(--muted);line-height:1.35;transition:.15s}
+.wx .dress-tabs button.on{background:var(--rule);color:var(--text);font-weight:600}
+.dress-tabs em{display:block;font-style:normal;font-size:9.5px;font-weight:400;
+  opacity:.75;line-height:1.2}
+.dress-rec{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.dress-range{flex:none;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .detail{margin-top:10px;background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:16px 16px 14px}
 .d-main{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .d-ic{width:66px;height:66px;flex:none}
