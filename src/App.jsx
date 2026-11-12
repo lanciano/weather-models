@@ -9,7 +9,11 @@ import { LANGS, LANG_BY, detectLang, createT, I18nCtx, useI18n, makeDates } from
 /* טקסט תיאורי חי ב-i18n.js — כאן רק מה שלא תלוי שפה */
 
 const MODELS = [
-  { id: "ecmwf_ifs025",         short: "ECMWF",  ink: "#5AB3F0", name: "IFS",                    runs: "00 · 06 · 12 · 18 UTC" },
+  /* ecmwf_ifs ולא ecmwf_ifs025: אותו מודל ואותן ריצות, אבל ברזולוציה המקורית
+     של 9 ק״מ ולא אחרי הדללה לרשת של 25. נמדד בנובמבר 2026: הפער בטמפרטורה
+     בין השניים מגיע ל-0.8° בממוצע בתל אביב ו-0.7° באילת — על קו החוף,
+     משבצת של 25 ק״מ מערבבת ים ויבשה. */
+  { id: "ecmwf_ifs",            short: "ECMWF",  ink: "#5AB3F0", name: "IFS",                    runs: "00 · 06 · 12 · 18 UTC" },
   { id: "gfs_seamless",         short: "GFS",    ink: "#F5A24B", name: "Global Forecast System", runs: "00 · 06 · 12 · 18 UTC" },
   { id: "icon_seamless",        short: "ICON",   ink: "#6FD99A", name: "ICON",                   runs: "00 · 06 · 12 · 18 UTC" },
   { id: "ukmo_seamless",        short: "UKMO",   ink: "#C58BF0", name: "Unified Model",          runs: "00 · 06 · 12 · 18 UTC" },
@@ -19,7 +23,7 @@ const MODELS = [
 ];
 
 const M = Object.fromEntries(MODELS.map((m) => [m.id, m]));
-const DEFAULT_ON = ["ecmwf_ifs025", "gfs_seamless", "icon_seamless", "ukmo_seamless", "gem_seamless"];
+const DEFAULT_ON = ["ecmwf_ifs", "gfs_seamless", "icon_seamless", "ukmo_seamless", "gem_seamless"];
 
 /* 14 יום. מעבר לזה נשאר בעיקר GFS לבדו, וקו יחיד הוא לא השוואה. */
 const DAYS_N = 14, PAGE = 7;
@@ -1457,7 +1461,9 @@ const SKILL_LEAD = 3, SKILL_PAST = 90, MIN_WET = 8;
 /** רץ פעם ביום לכל מיקום, ברקע, ונשמר מקומית. אף פעם לא חוסם את התחזית. */
 function useSkill(place, t) {
   const [skill, setSkill] = useState(null);
-  const key = `wx-skill:${place.lat.toFixed(2)},${place.lon.toFixed(2)}:${isoDate(new Date())}`;
+  /* v2: מטמון מלפני המעבר ל-ecmwf_ifs מחזיק את המזהה הישן, ובאותו יום
+     הוא היה נטען במקום חישוב חדש */
+  const key = `wx-skill2:${place.lat.toFixed(2)},${place.lon.toFixed(2)}:${isoDate(new Date())}`;
 
   useEffect(() => {
     let dead = false;

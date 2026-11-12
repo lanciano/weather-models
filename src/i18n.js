@@ -243,7 +243,7 @@ he: {
   wetSub: "לחץ על עיר כדי להציג",
   wetRefresh: "ערים אחרות",
   models: {
-    ecmwf_ifs025: { agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "9 ק״מ · מוגש בגריד 25 ק״מ",
+    ecmwf_ifs: { agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "9 ק״מ",
       note: "המודל הגלובלי המדויק ביותר שקיים, כבר יותר מעשור ברציפות. אם מודל אחר סותר אותו, ברוב המקרים הטעות אצל האחר. חלש יותר בפירוט מקומי — הוא מכוון לתמונה הגדולה ולטווח של 3–10 ימים." },
     gfs_seamless: { agency: "NOAA / NCEP", home: "ארצות הברית", grid: "13 ק״מ · עד 16 ימים",
       note: "המודל הפתוח והנפוץ בעולם — רוב אפליקציות מזג האוויר החינמיות רצות עליו. נוטה להגזים בכמויות משקעים ולהמציא סופות שלא יקרו בטווח הארוך. אם הוא היחיד שחוזה גשם, כדאי להתייחס לתחזית בזהירות." },
@@ -473,7 +473,7 @@ en: {
   wetSub: "Tap a city for its forecast",
   wetRefresh: "Other cities",
   models: {
-    ecmwf_ifs025: { agency: "European Centre for Medium-Range Weather Forecasts", home: "Reading, England · Bologna, Italy", grid: "9 km · served on a 25 km grid",
+    ecmwf_ifs: { agency: "European Centre for Medium-Range Weather Forecasts", home: "Reading, England · Bologna, Italy", grid: "9 km",
       note: "The most accurate global model in existence, and has been for over a decade. When another model contradicts it, the error is usually the other one's. Weaker on local detail — it aims at the big picture and the 3–10 day range." },
     gfs_seamless: { agency: "NOAA / NCEP", home: "United States", grid: "13 km · out to 16 days",
       note: "The most open and widely used model in the world — most free weather apps run on it. Tends to overstate precipitation totals and invent storms that never arrive in the long range. If it is the only one shouting rain, take it with salt." },
@@ -703,7 +703,7 @@ ru: {
   wetSub: "Нажмите на город, чтобы увидеть прогноз",
   wetRefresh: "Другие города",
   models: {
-    ecmwf_ifs025: { agency: "Европейский центр среднесрочных прогнозов погоды", home: "Рединг, Англия · Болонья, Италия", grid: "9 км · выдаётся на сетке 25 км",
+    ecmwf_ifs: { agency: "Европейский центр среднесрочных прогнозов погоды", home: "Рединг, Англия · Болонья, Италия", grid: "9 км",
       note: "Самая точная глобальная модель из существующих, и остаётся такой уже больше десяти лет. Если другая модель ей противоречит, ошибка обычно у неё. Слабее в локальных деталях — она нацелена на общую картину и диапазон 3–10 дней." },
     gfs_seamless: { agency: "NOAA / NCEP", home: "США", grid: "13 км · до 16 суток",
       note: "Самая открытая и распространённая модель в мире — на ней работает большинство бесплатных погодных приложений. Склонна завышать осадки и выдумывать штормы на дальних сроках. Если только она кричит о дожде, отнеситесь с осторожностью." },
@@ -933,7 +933,7 @@ es: {
   wetSub: "Toca una ciudad para ver su pronóstico",
   wetRefresh: "Otras ciudades",
   models: {
-    ecmwf_ifs025: { agency: "Centro Europeo de Predicción Meteorológica a Plazo Medio", home: "Reading, Inglaterra · Bolonia, Italia", grid: "9 km · servido en malla de 25 km",
+    ecmwf_ifs: { agency: "Centro Europeo de Predicción Meteorológica a Plazo Medio", home: "Reading, Inglaterra · Bolonia, Italia", grid: "9 km",
       note: "El modelo global más preciso que existe, y lo es desde hace más de una década. Cuando otro modelo lo contradice, el error suele estar en el otro. Más flojo en el detalle local: apunta al cuadro general y al rango de 3 a 10 días." },
     gfs_seamless: { agency: "NOAA / NCEP", home: "Estados Unidos", grid: "13 km · hasta 16 días",
       note: "El modelo más abierto y extendido del mundo: la mayoría de las apps gratuitas funcionan con él. Tiende a exagerar las cantidades de precipitación y a inventar temporales en el largo plazo. Si es el único que grita lluvia, tómalo con cautela." },
@@ -1163,7 +1163,7 @@ fr: {
   wetSub: "Touchez une ville pour sa prévision",
   wetRefresh: "Autres villes",
   models: {
-    ecmwf_ifs025: { agency: "Centre européen pour les prévisions météorologiques à moyen terme", home: "Reading, Angleterre · Bologne, Italie", grid: "9 km · fourni sur une grille de 25 km",
+    ecmwf_ifs: { agency: "Centre européen pour les prévisions météorologiques à moyen terme", home: "Reading, Angleterre · Bologne, Italie", grid: "9 km",
       note: "Le modèle global le plus précis qui existe, et cela depuis plus de dix ans. Quand un autre modèle le contredit, l'erreur vient le plus souvent de l'autre. Plus faible sur le détail local : il vise la vue d'ensemble et l'échéance de 3 à 10 jours." },
     gfs_seamless: { agency: "NOAA / NCEP", home: "États-Unis", grid: "13 km · jusqu'à 16 jours",
       note: "Le modèle le plus ouvert et le plus répandu au monde — la plupart des applications météo gratuites tournent dessus. Il a tendance à surestimer les cumuls et à inventer des tempêtes à longue échéance. S'il est le seul à annoncer la pluie, restez prudent." },
@@ -1393,7 +1393,7 @@ ar: {
   wetSub: "اضغط على مدينة لعرض توقعاتها",
   wetRefresh: "مدن أخرى",
   models: {
-    ecmwf_ifs025: { agency: "المركز الأوروبي للتنبؤات الجوية متوسطة المدى", home: "ريدينغ، إنجلترا · بولونيا، إيطاليا", grid: "9 كم · يُقدَّم على شبكة 25 كم",
+    ecmwf_ifs: { agency: "المركز الأوروبي للتنبؤات الجوية متوسطة المدى", home: "ريدينغ، إنجلترا · بولونيا، إيطاليا", grid: "9 كم",
       note: "أدقّ نموذج عالمي موجود، ومنذ أكثر من عقد. حين يخالفه نموذج آخر، يكون الخطأ عند الآخر في الغالب. أضعف في التفصيل المحلي — فهو موجّه للصورة الكبرى ولمدى 3 إلى 10 أيام." },
     gfs_seamless: { agency: "NOAA / NCEP", home: "الولايات المتحدة", grid: "13 كم · حتى 16 يومًا",
       note: "النموذج الأكثر انفتاحًا وانتشارًا في العالم — معظم تطبيقات الطقس المجانية تعمل عليه. يميل إلى المبالغة في كميات الهطول واختلاق عواصف على المدى البعيد. إن كان وحده من ينادي بالمطر، فتعامل معه بحذر." },
