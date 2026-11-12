@@ -132,7 +132,7 @@ he: {
   primer1: "מודל חיזוי מחלק את האטמוספירה לתאים — כל תא הוא קופסה של כמה קילומטרים על כמה קילומטרים, בעשרות שכבות מהקרקע ועד לסטרטוספירה. הוא מכניס לכל תא את מה שנמדד עכשיו, מריץ את משוואות זרימת הנוזלים קדימה בצעדים של דקות, וחוזר על זה מאות אלפי פעמים.",
   primer2: "שני דברים מייצרים את ההבדלים. הראשון הוא **איך כל מודל מטפל במה שקטן מדי מכדי להיכנס לתא** — ענן בודד, טיפה שמתעבה, ערבול מעל שדה חרוש. אין דרך לחשב את זה ישירות, אז כל מכון כותב לזה קירוב משלו. הקירובים האלה הם מקור המחלוקת האמיתי.",
   primer3: "השני הוא **הכאוס**. הפרש זעיר בתנאי ההתחלה תופח לתחזיות שונות לגמרי בתוך ימים. לכן הפער בין המודלים מתרחב ככל שמתרחקים — **רוחב אזור אי־ההסכמה הוא מדד ישיר לכמה כדאי לסמוך על התחזית**.",
-  foot: "נתונים דרך Open-Meteo, שמוריד את קבצי ה־GRIB2 הגולמיים משרתי NOAA, ECMWF, DWD, Met Office, Environment Canada, Météo-France ו־JMA. כרטיס הציונים מבוסס על ארכיון הריצות הקודמות מול סדרת האנליזה.",
+  foot: "נתונים דרך Open-Meteo, שמוריד את קבצי ה־GRIB2 הגולמיים משרתי NOAA, ECMWF, DWD, Met Office, Environment Canada, Météo-France ו־JMA. כרטיס הציונים מבוסס על ארכיון הריצות הקודמות מול סדרת האנליזה. חיפוש היישובים בעברית נעזר גם ברשימת היישובים של הלמ״ס וב-GeoNames (CC BY 4.0).",
 
   condTitle: "תנאים נוספים",
   feelsLike: "מרגיש כמו",
@@ -364,7 +364,7 @@ en: {
   primer1: "A forecast model divides the atmosphere into cells — each one a box a few kilometres across, in dozens of layers from the ground to the stratosphere. It loads each cell with what is measured now, steps the fluid-dynamics equations forward in increments of minutes, and repeats that hundreds of thousands of times.",
   primer2: "Two things create the differences. The first is **how each model handles what is too small to fit in a cell** — a single cloud, a droplet condensing, turbulence over a ploughed field. There is no way to compute that directly, so every institute writes its own approximation. Those approximations are the real source of the disagreement.",
   primer3: "The second is **chaos**. A minute difference in initial conditions swells into entirely different forecasts within days. That is why the gap between models widens the further out you look — **the width of the disagreement band is a direct measure of how much the forecast deserves your trust**.",
-  foot: "Data via Open-Meteo, which downloads the raw GRIB2 files from the servers of NOAA, ECMWF, DWD, the Met Office, Environment Canada, Météo-France and JMA. The scorecard is built from the archive of past runs against the analysis series.",
+  foot: "Data via Open-Meteo, which downloads the raw GRIB2 files from the servers of NOAA, ECMWF, DWD, the Met Office, Environment Canada, Météo-France and JMA. The scorecard is built from the archive of past runs against the analysis series. Hebrew place search also draws on the Israel CBS locality list and GeoNames (CC BY 4.0).",
 
   condTitle: "More conditions",
   feelsLike: "Feels like",
@@ -596,7 +596,7 @@ ru: {
   primer1: "Прогностическая модель делит атмосферу на ячейки — каждая размером в несколько километров, в десятках слоёв от земли до стратосферы. В каждую ячейку загружается то, что измерено сейчас, затем уравнения гидродинамики продвигаются вперёд шагами в минуты, и так сотни тысяч раз.",
   primer2: "Различия порождают две вещи. Первая — **как каждая модель обходится с тем, что слишком мало для ячейки**: отдельное облако, конденсация капли, турбулентность над вспаханным полем. Напрямую это посчитать нельзя, поэтому каждый институт пишет собственное приближение. Именно эти приближения и есть настоящий источник разногласий.",
   primer3: "Вторая — **хаос**. Мельчайшая разница в начальных условиях за несколько дней разрастается в совершенно разные прогнозы. Поэтому разрыв между моделями расширяется с удалением — **ширина полосы разногласия и есть прямая мера того, насколько прогнозу стоит доверять**.",
-  foot: "Данные через Open-Meteo, который загружает исходные файлы GRIB2 с серверов NOAA, ECMWF, DWD, Met Office, Environment Canada, Météo-France и JMA. Оценки построены на архиве прошлых расчётов в сравнении с рядом анализа.",
+  foot: "Данные через Open-Meteo, который загружает исходные файлы GRIB2 с серверов NOAA, ECMWF, DWD, Met Office, Environment Canada, Météo-France и JMA. Оценки построены на архиве прошлых расчётов в сравнении с рядом анализа. Поиск мест на иврите также использует список населённых пунктов ЦСБ Израиля и GeoNames (CC BY 4.0).",
 
   condTitle: "Другие показатели",
   feelsLike: "Ощущается как",
@@ -828,7 +828,7 @@ es: {
   primer1: "Un modelo de predicción divide la atmósfera en celdas — cada una una caja de unos pocos kilómetros de lado, en decenas de capas desde el suelo hasta la estratosfera. Carga en cada celda lo que se mide ahora, avanza las ecuaciones de la dinámica de fluidos en pasos de minutos y repite eso cientos de miles de veces.",
   primer2: "Dos cosas generan las diferencias. La primera es **cómo trata cada modelo lo que es demasiado pequeño para caber en una celda**: una nube aislada, una gota que condensa, la turbulencia sobre un campo arado. No hay forma de calcularlo directamente, así que cada instituto escribe su propia aproximación. Esas aproximaciones son la verdadera fuente del desacuerdo.",
   primer3: "La segunda es **el caos**. Una diferencia mínima en las condiciones iniciales se hincha hasta dar pronósticos completamente distintos en cuestión de días. Por eso la brecha entre modelos se ensancha cuanto más lejos se mira — **el ancho de la franja de desacuerdo es una medida directa de cuánta confianza merece el pronóstico**.",
-  foot: "Datos a través de Open-Meteo, que descarga los ficheros GRIB2 originales de los servidores de NOAA, ECMWF, DWD, Met Office, Environment Canada, Météo-France y JMA. La tabla de puntuaciones se construye con el archivo de pasadas anteriores frente a la serie de análisis.",
+  foot: "Datos a través de Open-Meteo, que descarga los ficheros GRIB2 originales de los servidores de NOAA, ECMWF, DWD, Met Office, Environment Canada, Météo-France y JMA. La tabla de puntuaciones se construye con el archivo de pasadas anteriores frente a la serie de análisis. La búsqueda de lugares en hebreo también usa la lista de localidades de la Oficina Central de Estadística de Israel y GeoNames (CC BY 4.0).",
 
   condTitle: "Más condiciones",
   feelsLike: "Sensación",
@@ -1060,7 +1060,7 @@ fr: {
   primer1: "Un modèle de prévision découpe l'atmosphère en mailles — chacune une boîte de quelques kilomètres de côté, sur des dizaines de couches du sol à la stratosphère. Il charge dans chaque maille ce qui est mesuré maintenant, fait avancer les équations de la mécanique des fluides par pas de quelques minutes, et répète cela des centaines de milliers de fois.",
   primer2: "Deux choses créent les différences. La première : **la façon dont chaque modèle traite ce qui est trop petit pour tenir dans une maille** — un nuage isolé, une gouttelette qui se condense, la turbulence au-dessus d'un champ labouré. Impossible de le calculer directement, alors chaque institut écrit sa propre approximation. Ces approximations sont la véritable source du désaccord.",
   primer3: "La seconde, c'est **le chaos**. Un écart infime dans les conditions initiales enfle en prévisions totalement différentes en quelques jours. C'est pourquoi l'écart entre modèles s'élargit à mesure qu'on regarde loin — **la largeur de la bande de désaccord est une mesure directe de la confiance que mérite la prévision**.",
-  foot: "Données via Open-Meteo, qui télécharge les fichiers GRIB2 bruts sur les serveurs de la NOAA, du CEPMMT, du DWD, du Met Office, d'Environnement Canada, de Météo-France et de la JMA. Le tableau de scores s'appuie sur l'archive des passages antérieurs comparée à la série d'analyse.",
+  foot: "Données via Open-Meteo, qui télécharge les fichiers GRIB2 bruts sur les serveurs de la NOAA, du CEPMMT, du DWD, du Met Office, d'Environnement Canada, de Météo-France et de la JMA. Le tableau de scores s'appuie sur l'archive des passages antérieurs comparée à la série d'analyse. La recherche de lieux en hébreu s'appuie aussi sur la liste des localités du Bureau central des statistiques d'Israël et sur GeoNames (CC BY 4.0).",
 
   condTitle: "Autres paramètres",
   feelsLike: "Ressenti",
@@ -1292,7 +1292,7 @@ ar: {
   primer1: "يقسّم نموذج التنبؤ الغلاف الجوي إلى خلايا — كل خلية صندوق طوله بضعة كيلومترات، في عشرات الطبقات من سطح الأرض إلى الستراتوسفير. يُحمّل كل خلية بما يُقاس الآن، ثم يدفع معادلات ديناميكا الموائع إلى الأمام بخطوات من الدقائق، ويكرّر ذلك مئات آلاف المرات.",
   primer2: "أمران يصنعان الاختلافات. الأول هو **كيف يعالج كل نموذج ما هو أصغر من أن يتّسع في خلية** — سحابة مفردة، قطرة تتكثّف، اضطراب فوق حقل محروث. لا سبيل لحساب ذلك مباشرة، فيكتب كل معهد تقريبه الخاص. هذه التقريبات هي المصدر الحقيقي للاختلاف.",
   primer3: "والثاني هو **الفوضى**. فارق ضئيل في الشروط الابتدائية ينتفخ إلى تنبؤات مختلفة تمامًا خلال أيام. لذلك تتّسع الفجوة بين النماذج كلما نظرنا أبعد — **عرض نطاق الاختلاف مقياس مباشر لمقدار الثقة التي يستحقّها التنبؤ**.",
-  foot: "بيانات عبر Open-Meteo، الذي يُنزّل ملفات GRIB2 الخام من خوادم NOAA وECMWF وDWD وMet Office وEnvironment Canada وMétéo-France وJMA. تستند بطاقة النتائج إلى أرشيف التشغيلات السابقة مقابل سلسلة التحليل.",
+  foot: "بيانات عبر Open-Meteo، الذي يُنزّل ملفات GRIB2 الخام من خوادم NOAA وECMWF وDWD وMet Office وEnvironment Canada وMétéo-France وJMA. تستند بطاقة النتائج إلى أرشيف التشغيلات السابقة مقابل سلسلة التحليل. يستعين البحث عن الأماكن بالعبرية أيضاً بقائمة البلدات الصادرة عن دائرة الإحصاء المركزية الإسرائيلية وبـ GeoNames (CC BY 4.0).",
 
   condTitle: "مؤشرات إضافية",
   feelsLike: "الإحساس الفعلي",

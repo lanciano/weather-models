@@ -27,7 +27,7 @@ const MODELS = [
 ];
 
 const M = Object.fromEntries(MODELS.map((m) => [m.id, m]));
-const DEFAULT_ON = ["ecmwf_ifs", "gfs_seamless", "icon_seamless", "ukmo_seamless", "gem_seamless"];
+const DEFAULT_ON = ["ecmwf_ifs", "ecmwf_aifs025_single", "gfs_seamless", "icon_seamless", "ukmo_seamless", "gem_seamless"];
 
 /* 14 יום. מעבר לזה נשאר בעיקר GFS לבדו, וקו יחיד הוא לא השוואה. */
 const DAYS_N = 14, PAGE = 7;
@@ -612,9 +612,11 @@ function Weather({ lang, setLang }) {
     const tm = setTimeout(async () => {
       setSearching(true);
       try {
-        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=${LANG_BY[lang].geo}&format=json`);
-        const j = await r.json();
-        const list = j.results || [];
+        const [j, local] = await Promise.all([
+          fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=${LANG_BY[lang].geo}&format=json`).then((r) => r.json()),
+          searchHe(query).catch(() => []),
+        ]);
+        const list = mergePlaces(local, j.results || []);
         if (dead) return;
         setResults(list);
         setSearching(false);
@@ -2559,6 +2561,57 @@ function score(pred, obs) {
     if (ow && pw) hit++; else if (ow) miss++; else if (pw) fa++; else dry++;
   }
   return n >= 5 ? { n, mae: sae / n, hit, miss, fa, dry } : null;
+}
+
+/* ═══════════════════ חיפוש יישובים בעברית ═══════════════════ */
+/* החיפוש של Open-Meteo לא מוצא בעברית חלק גדול מהיישובים בישראל — אריאל,
+   ראש העין, קצרין, מעלה אדומים, אפרת (נבדק בנובמבר 2026: 6 מתוך 12). הטבלה
+   נבנית מרשימת היישובים של הלמ״ס ומ-GeoNames, ב-scripts/build-he-places.py.
+   היא נטענת רק כשמקלידים אותיות עבריות, פעם אחת. */
+const HE_DIST = { 1: "מחוז ירושלים", 2: "מחוז הצפון", 3: "מחוז חיפה", 4: "מחוז המרכז",
+  5: "מחוז תל אביב", 6: "מחוז הדרום", 7: "יהודה והשומרון" };
+const heNorm = (s) => s.normalize("NFD").replace(/[\u0591-\u05C7]/g, "")
+  .replace(/["'׳״`‘’\-–־()]/g, " ").replace(/(^|\s)קרית(?=\s|$)/g, "$1קריית")
+  .replace(/\s+/g, " ").trim();
+let hePlaces = null;
+
+async function searchHe(q) {
+  if (!/[\u05D0-\u05EA]/.test(q)) return [];
+  if (!hePlaces) {
+    const rows = (await import("./he-places.json")).default;
+    hePlaces = rows.map(([name, lat, lon, d, pop], i) => ({ name, lat, lon, d, pop, i, n: heNorm(name) }));
+  }
+  const nq = heNorm(q);
+  const out = [];
+  for (const p of hePlaces) {   // ממוינת לפי אוכלוסייה, והמיון למטה יציב
+    const rank = p.n === nq ? 0 : p.n.startsWith(nq) ? 1
+      : p.n.split(" ").some((w) => w.startsWith(nq)) ? 2 : -1;
+    if (rank >= 0) out.push({ rank, p });
+  }
+  out.sort((a, b) => a.rank - b.rank);
+  return out.map(({ rank, p }) => ({
+    id: `he-${p.i}`, name: p.name, latitude: p.lat, longitude: p.lon, local: true, exact: rank === 0,
+    admin1: HE_DIST[p.d], country: p.d === 7 ? "" : "ישראל",
+  }));
+}
+
+/** מאחד תוצאות מקומיות עם של Open-Meteo, עד שש. התאמה מדויקת מהטבלה ראשונה,
+    אחריה Open-Meteo (כדי ש"פריז" עדיין ימצא את פריז) עם שני מקומות שמורים
+    להשלמות מהטבלה. מקום שמופיע בשני המקורות מוצג פעם אחת. */
+function mergePlaces(local, api) {
+  const near = (a, b) => Math.abs(a.latitude - b.latitude) < 0.03 && Math.abs(a.longitude - b.longitude) < 0.03;
+  const list = [];
+  const add = (p) => {
+    if (list.length < 6 && !list.includes(p) &&
+      !list.some((x) => !!x.local !== !!p.local && near(x, p))) list.push(p);
+  };
+  const exact = local.filter((p) => p.exact), rest = local.filter((p) => !p.exact);
+  exact.forEach(add);
+  const room = 6 - Math.min(2, rest.length);
+  api.forEach((p) => { if (list.length < room) add(p); });
+  rest.forEach(add);
+  api.forEach(add);
+  return list;
 }
 
 /** fetch שמנסה שוב פעם אחת אחרי 429. אם גם השני נדחה, מחזיר את תשובת
