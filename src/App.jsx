@@ -20,6 +20,10 @@ const MODELS = [
   { id: "gem_seamless",         short: "GEM",    ink: "#F27878", name: "GEM",                    runs: "00 · 12 UTC" },
   { id: "meteofrance_seamless", short: "ARPEGE", ink: "#4FD8D0", name: "ARPEGE / AROME",         runs: "00 · 06 · 12 · 18 UTC" },
   { id: "jma_seamless",         short: "JMA",    ink: "#F0D45E", name: "GSM",                    runs: "00 · 06 · 12 · 18 UTC" },
+  /* AIFS Single — המודל הדטרמיניסטי. ecmwf_aifs025 בלי _single מחזיר היום
+     רק ערכים ריקים. אין לו משבי רוח: nums() מסנן את ה-null, ולכן כשהוא
+     לבדו אריח המשבים פשוט לא מוצג. */
+  { id: "ecmwf_aifs025_single", short: "AIFS",   ink: "#F28BC4", name: "AIFS Single",            runs: "00 · 06 · 12 · 18 UTC" },
 ];
 
 const M = Object.fromEntries(MODELS.map((m) => [m.id, m]));
@@ -1461,9 +1465,9 @@ const SKILL_LEAD = 3, SKILL_PAST = 90, MIN_WET = 8;
 /** רץ פעם ביום לכל מיקום, ברקע, ונשמר מקומית. אף פעם לא חוסם את התחזית. */
 function useSkill(place, t) {
   const [skill, setSkill] = useState(null);
-  /* v2: מטמון מלפני המעבר ל-ecmwf_ifs מחזיק את המזהה הישן, ובאותו יום
-     הוא היה נטען במקום חישוב חדש */
-  const key = `wx-skill2:${place.lat.toFixed(2)},${place.lon.toFixed(2)}:${isoDate(new Date())}`;
+  /* הגרסה במפתח עולה בכל שינוי ברשימת המודלים, אחרת מטמון מאותו יום
+     נטען במקום חישוב חדש. v2: המעבר ל-ecmwf_ifs. v3: הוספת AIFS. */
+  const key = `wx-skill3:${place.lat.toFixed(2)},${place.lon.toFixed(2)}:${isoDate(new Date())}`;
 
   useEffect(() => {
     let dead = false;
@@ -1487,7 +1491,16 @@ function useSkill(place, t) {
         };
         if (dead) return;
         setSkill(slim);
-        try { localStorage.setItem(key, JSON.stringify(slim)); } catch { /* private */ }
+        /* תוצאה חלקית לא נשמרת — אחרת מודל שנדחה פעם אחת נעלם מהדירוג
+           עד מחר. בכניסה הבאה פשוט מנסים שוב. ובאותה הזדמנות מנקים
+           מפתחות של ימים קודמים, שאחרת נערמים בלי סוף. */
+        if (res.failed.length) return;
+        try {
+          Object.keys(localStorage)
+            .filter((k) => k.startsWith("wx-skill") && !k.endsWith(`:${isoDate(new Date())}`))
+            .forEach((k) => localStorage.removeItem(k));
+          localStorage.setItem(key, JSON.stringify(slim));
+        } catch { /* private */ }
       } catch { /* לא קריטי — פשוט לא תהיה הבלטה */ }
     }, 2500);
 
@@ -2548,6 +2561,15 @@ function score(pred, obs) {
   return n >= 5 ? { n, mae: sae / n, hit, miss, fa, dry } : null;
 }
 
+/** fetch שמנסה שוב פעם אחת אחרי 429. אם גם השני נדחה, מחזיר את תשובת
+    השגיאה של Open-Meteo כמו שהיא ({error, reason}) והקורא מטפל בה. */
+async function fetchJsonRetry(url) {
+  const r = await fetch(url);
+  if (r.status !== 429) return r.json();
+  await new Promise((ok) => setTimeout(ok, 2000));
+  return (await fetch(url)).json();
+}
+
 /** מריץ את כל ההשוואה מול העבר. משמש גם את כרטיס הציונים וגם את החישוב ברקע. */
 async function computeSkill({ lat, lon, models, lead, past, msg }) {
   const geo = `latitude=${lat}&longitude=${lon}&timezone=auto`;
@@ -2567,12 +2589,11 @@ async function computeSkill({ lat, lon, models, lead, past, msg }) {
   });
   if (!oRain.size) throw new Error(msg.noTruth);
 
-  const rows = await Promise.all(models.map(async (m) => {
+  const one = async (m) => {
     try {
-      const r = await fetch(`https://previous-runs-api.open-meteo.com/v1/forecast?${geo}` +
+      const j = await fetchJsonRetry(`https://previous-runs-api.open-meteo.com/v1/forecast?${geo}` +
         `&hourly=precipitation_previous_day${lead},temperature_2m_previous_day${lead}` +
         `&models=${m}&past_days=${past}&forecast_days=1`);
-      const j = await r.json();
       if (j.error) return { id: m, err: j.reason };
       const pr = findSeries(j.hourly, "precipitation", lead, m);
       const pt = findSeries(j.hourly, "temperature_2m", lead, m);
@@ -2583,7 +2604,13 @@ async function computeSkill({ lat, lon, models, lead, past, msg }) {
         temp: score(bucketDaily(j.hourly.time, pt, "max"), oTemp),
       };
     } catch (e) { return { id: m, err: e.message }; }
-  }));
+  };
+  /* ארבע בכל פעם ולא כולן יחד: previous-runs דוחה פרץ של שמונה בקשות
+     בבת אחת ב-429. נמדד בנובמבר 2026 עם הוספת AIFS — שתיים משמונה נדחו,
+     וזו לא הייתה המכסה היומית: אותה בקשה לבדה עברה מיד אחר כך. */
+  const rows = [];
+  for (let i = 0; i < models.length; i += 4)
+    rows.push(...await Promise.all(models.slice(i, i + 4).map(one)));
 
   const ok = rows.filter((r) => r.rain);
   if (!ok.length) {

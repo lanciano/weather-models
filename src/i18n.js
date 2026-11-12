@@ -257,6 +257,8 @@ he: {
       note: "בנוי במשותף עם ECMWF ומתמחה בים התיכון המערבי. מטפל יפה בסופות שמתפתחות מעל ים חם — בדיוק הסוג שמגיע אלינו בחורף." },
     jma_seamless: { agency: "הסוכנות המטאורולוגית היפנית", home: "טוקיו, יפן", grid: "20 ק״מ",
       note: "מכויל סביב מונסונים וטייפונים באסיה. מחוץ לאזור שלו הוא לא הכי חד, אבל מוסיף זווית שונה לגמרי ולכן שימושי כבדיקת שפיות." },
+    ecmwf_aifs025_single: { agency: "המרכז האירופי לתחזיות לטווח בינוני", home: "רדינג, אנגליה · בולוניה, איטליה", grid: "31 ק״מ",
+      note: "מודל הבינה המלאכותית של ECMWF, מבצעי מאז 2025. לא פותר את משוואות הפיזיקה אלא למד מעשרות שנות נתוני עבר איך האטמוספירה מתנהגת. בטמפרטורה ובמסלולי מערכות הוא משתווה ל-IFS ולפעמים עוקף אותו; בגשם מקומי וקיצוני הוא נוטה להחליק את הפרטים. לא מספק משבי רוח. שים לב: כשהוא מסכים עם ECMWF זו לא בדיוק דעה שנייה — שניהם יוצאים מאותו מצב התחלתי." },
   },
 },
 
@@ -487,6 +489,8 @@ en: {
       note: "Developed jointly with ECMWF and specialised in the western Mediterranean. Handles storms that build over warm sea well — exactly the kind that reach the eastern basin in winter." },
     jma_seamless: { agency: "Japan Meteorological Agency", home: "Tokyo, Japan", grid: "20 km",
       note: "Calibrated around Asian monsoons and typhoons. Outside its home region it is not the sharpest, but it adds an entirely different angle and so works well as a sanity check." },
+    ecmwf_aifs025_single: { agency: "European Centre for Medium-Range Weather Forecasts", home: "Reading, England · Bologna, Italy", grid: "31 km",
+      note: "ECMWF's machine-learning model, operational since 2025. Instead of solving the equations of physics, it learned from decades of past data how the atmosphere behaves. On temperature and storm tracks it matches IFS and sometimes beats it; with local and extreme rain it tends to smooth out the detail. It does not provide wind gusts. Note: when it agrees with ECMWF, that is not quite a second opinion — both start from the same initial state." },
   },
 },
 
@@ -717,6 +721,8 @@ ru: {
       note: "Разработана совместно с ECMWF и специализируется на западном Средиземноморье. Хорошо справляется со штормами, что формируются над тёплым морем." },
     jma_seamless: { agency: "Японское метеорологическое агентство", home: "Токио, Япония", grid: "20 км",
       note: "Настроена на азиатские муссоны и тайфуны. За пределами своего региона она не самая острая, но добавляет совершенно иной взгляд и потому полезна как проверка на здравый смысл." },
+    ecmwf_aifs025_single: { agency: "Европейский центр среднесрочных прогнозов погоды", home: "Рединг, Англия · Болонья, Италия", grid: "31 км",
+      note: "Модель машинного обучения ECMWF, в оперативной работе с 2025 года. Она не решает уравнения физики, а научилась поведению атмосферы на десятилетиях архивных данных. По температуре и траекториям циклонов она не уступает IFS, а иногда и превосходит его; локальные и экстремальные осадки она склонна сглаживать. Порывы ветра не выдаёт. Учтите: когда она согласна с ECMWF, это не совсем второе мнение — обе модели стартуют из одного начального состояния." },
   },
 },
 
@@ -947,6 +953,8 @@ es: {
       note: "Desarrollado junto con el ECMWF y especializado en el Mediterráneo occidental. Maneja bien los temporales que se forman sobre mar cálido." },
     jma_seamless: { agency: "Agencia Meteorológica de Japón", home: "Tokio, Japón", grid: "20 km",
       note: "Calibrado en torno a los monzones y tifones asiáticos. Fuera de su región no es el más afilado, pero aporta un ángulo completamente distinto y sirve como comprobación de cordura." },
+    ecmwf_aifs025_single: { agency: "Centro Europeo de Predicción Meteorológica a Plazo Medio", home: "Reading, Inglaterra · Bolonia, Italia", grid: "31 km",
+      note: "El modelo de aprendizaje automático del ECMWF, operativo desde 2025. En lugar de resolver las ecuaciones de la física, aprendió de décadas de datos pasados cómo se comporta la atmósfera. En temperatura y trayectorias de borrascas iguala a IFS y a veces lo supera; con la lluvia local y extrema tiende a suavizar el detalle. No ofrece rachas de viento. Ojo: cuando coincide con ECMWF no es exactamente una segunda opinión — ambos parten del mismo estado inicial." },
   },
 },
 
@@ -1177,6 +1185,8 @@ fr: {
       note: "Développé conjointement avec le CEPMMT et spécialisé sur la Méditerranée occidentale. Il gère bien les épisodes qui se forment au-dessus d'une mer chaude." },
     jma_seamless: { agency: "Agence météorologique du Japon", home: "Tokyo, Japon", grid: "20 km",
       note: "Calibré autour des moussons et des typhons asiatiques. Hors de sa région il n'est pas le plus fin, mais il apporte un angle totalement différent et sert de contrôle de bon sens." },
+    ecmwf_aifs025_single: { agency: "Centre européen pour les prévisions météorologiques à moyen terme", home: "Reading, Angleterre · Bologne, Italie", grid: "31 km",
+      note: "Le modèle d'apprentissage automatique du CEPMMT, opérationnel depuis 2025. Au lieu de résoudre les équations de la physique, il a appris sur des décennies de données passées comment se comporte l'atmosphère. En température et en trajectoires de dépressions, il égale IFS et le dépasse parfois ; pour la pluie locale et extrême, il a tendance à lisser les détails. Il ne fournit pas les rafales. Attention : quand il est d'accord avec ECMWF, ce n'est pas vraiment un second avis — les deux partent du même état initial." },
   },
 },
 
@@ -1407,6 +1417,8 @@ ar: {
       note: "طُوّر بالاشتراك مع ECMWF ومتخصّص في غرب المتوسط. يتعامل جيدًا مع العواصف التي تتكوّن فوق بحر دافئ." },
     jma_seamless: { agency: "وكالة الأرصاد اليابانية", home: "طوكيو، اليابان", grid: "20 كم",
       note: "مُعاير حول الرياح الموسمية والأعاصير الآسيوية. خارج منطقته ليس الأحدّ، لكنه يضيف زاوية مختلفة تمامًا فيصلح اختبارًا للتعقّل." },
+    ecmwf_aifs025_single: { agency: "المركز الأوروبي للتنبؤات الجوية متوسطة المدى", home: "ريدينغ، إنجلترا · بولونيا، إيطاليا", grid: "31 كم",
+      note: "نموذج التعلّم الآلي التابع لـ ECMWF، يعمل تشغيلياً منذ 2025. بدلاً من حلّ معادلات الفيزياء، تعلّم من عقود من البيانات السابقة كيف يتصرف الغلاف الجوي. في الحرارة ومسارات المنخفضات يضاهي IFS ويتفوق عليه أحياناً؛ أما في الأمطار المحلية والمتطرفة فيميل إلى تنعيم التفاصيل. لا يوفّر هبّات الرياح. انتبه: حين يتفق مع ECMWF فليس ذلك رأياً ثانياً تماماً — فكلاهما ينطلق من الحالة الابتدائية نفسها." },
   },
 },
 
